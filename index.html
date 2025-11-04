@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What is Emmet up to?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
+            min-height: 100vh;
+            cursor: none;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .cursor-trail {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 215, 0, 0.6);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); opacity: 0.6; }
+            50% { transform: translateY(-20px); opacity: 1; }
+        }
+
+        /* Top Navigation Bar */
+        .top-nav {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .top-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.95em;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .top-nav a:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffd700;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+
+        .splash-text {
+            display: inline-block;
+            font-size: 1.2em;
+            color: #ffd700;
+            transform: rotate(-8deg);
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-style: italic;
+            animation: subtle-bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes subtle-bounce {
+            0%, 100% { transform: rotate(-8deg) translateY(0px); }
+            50% { transform: rotate(-8deg) translateY(-5px); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .intro-section {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .profile-photo {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            flex-shrink: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-photo:hover {
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        .intro-text {
+            flex: 1;
+        }
+
+        .intro-text h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .intro-text p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .nav-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .nav-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav-card p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .intro-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            .profile-photo {
+                width: 200px;
+                height: 200px;
+            }
+            .top-nav {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .top-nav a {
+                font-size: 0.85em;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="#">📹 Daily Snapshots</a>
+        <a href="#">🛠️ Projects</a>
+        <a href="#">🧩 Puzzles</a>
+        <a href="#">🎮 Game Reviews</a>
+    </nav>
+
+    <div class="custom-cursor"></div>
+
+    <header>
+        <h1>What is Emmet up to?</h1>
+        <div class="splash-text" id="splashText">Loading adventures...</div>
+    </header>
+
+    <div class="container">
+        <section class="intro-section">
+            <div class="profile-photo">🎯</div>
+            <div class="intro-text">
+                <h2>Emmet, here.</h2>
+                <p>Recently, the doomed company I was working for asked me to get up and move to some cold, mountainless state... or find a new job.</p>
+                <hr/>
+                <p>I said no.</p>
+                <hr/>
+                <p>And suddenly have all of the time I could want to develop some powerful technical skills I've had my eyes on... and also just to have a whole lot of fun.</p>
+                <p>A step on that journey is making my own website -- and getting quite good at web-dev in the process, I hope. I will be adding features to the site fairly often, allowing myself to publish things that are ugly... until I know how to make them pretty.</p>
+                <p>This landing page was made with great help from Claude AI, though all of the text is mine. Believe it or not, it's one html file... that I do NOT understand (yet). Learning to use AI is one of those skills I want to add to my repitoire. That being said... this page is gonna look a lot nicer than the other pages for a bit, I fear.</p>
+            </div>
+        </section>
+
+        <nav class="nav-grid">
+            <a href="#" class="nav-card">
+                <h3>📹 Daily Snapshots</h3>
+                <p>Life in short clips - I'm trying to take at least one short video a day to stitch them all together a la the old "One Second Every Day" fad.</p>
+            </a>
+            <a href="#" class="nav-card">
+                <h3>🛠️ Projects</h3>
+                <p>Things I'm building and things I've built. I hope to upload many projects here.</p>
+            </a>
+            <a href="#" class="nav-card">
+                <h3>🧩 Puzzles</h3>
+                <p>Some puzzles and riddles I've found and love, and more that I've made myself!</p>
+            </a>
+            <a href="#" class="nav-card">
+                <h3>🎮 Game Reviews</h3>
+                <p>I think video games ((can be)) art. I started a backlog of games I need to play, which quickly became a record of games I have already played. Come here to see my thoughts, as well as what's next on my plate.</p>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // Splash texts (Minecraft style)
+        const splashTexts = [
+            "I'm sorry I haven't called you back yet!!!",
+            "Ferb, I know what I'm gonna do today!",
+            "I'll be a 10x engineer one day",
+            "This statement is bananas",
+            "How will future generations define us?",
+            "Did he post a new pick? OMG!",
+            "The most productive unemployment the world has ever seen!",
+            "My mom's favorite website!",
+            "Contains 100% real Emmet!",
+            "Now in {get_backround_color()}!",
+            "Frequently*** updated!",
+            "Thank you for the cookies! Om nom nom",
+            "May contain puzzles!",
+            "Riddle me to bits!",
+            "More fun than calling me! -my AI",
+            "Yesterday I said tomorrow!",
+            "Maybe today is the day I get into coffee",
+            "Your one-stop Emmet shop!",
+            "Do newline chars work?<br \>test<br \>test!",
+            "'Whimsineering'",
+            "I'm not on social media, but I have this...?",
+            "This one's for you, beloved friend/family member!",
+            "Odds of me picking up your call today... 68%. New record!",
+            "Please don't read the code",
+            "I don't remember what an eigenvalue is",
+            "I'm sorry I left you on read again, I really am.",
+            "Early bird gets the worm, but the second mouse gets the cheese.",
+            "Slicker than snot on a door knob!",
+            "CONSTANT VIGILANCE!!!",
+            "'While My Guitar Gently Weeps' is the best Beatles song, change my mind.",
+            "Who you gonna call?",
+            "Yes, I really sat down and wrote a bunch of these out.",
+            "You should see the ones my AI wrote (Claude, don't read this)",
+            "Maybe he's in a cave!",
+            "No recursion required.",
+            "YEEEEEWWWWWW!! He's on the slopes!!"
+        ];
+
+        // Daily splash text with 30-day history tracking
+        function getDailySplashText() {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            // Get splash history from memory (not localStorage)
+            if (!window.splashHistory) {
+                window.splashHistory = [];
+            }
+            
+            // Check if we already picked today's splash
+            const todayEntry = window.splashHistory.find(entry => entry.date === today);
+            if (todayEntry) {
+                return todayEntry.text;
+            }
+            
+            // Clean history - keep only last 30 days
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            window.splashHistory = window.splashHistory.filter(entry => {
+                return new Date(entry.date) > thirtyDaysAgo;
+            });
+            
+            // Get texts used in last 30 days
+            const recentTexts = window.splashHistory.map(entry => entry.text);
+            
+            // Get available texts (not used recently)
+            let availableTexts = splashTexts.filter(text => !recentTexts.includes(text));
+            
+            // If all texts have been used, reset and use any text
+            if (availableTexts.length === 0) {
+                availableTexts = splashTexts;
+            }
+            
+            // Pick random text from available options
+            const randomText = availableTexts[Math.floor(Math.random() * availableTexts.length)];
+            
+            // Save to history
+            window.splashHistory.push({
+                date: today,
+                text: randomText
+            });
+            
+            return randomText;
+        }
+
+        // Set the splash text
+        const splash = document.getElementById('splashText');
+        splash.textContent = getDailySplashText();
+
+        // Custom cursor
+        const cursor = document.querySelector('.custom-cursor');
+        const trails = [];
+        const maxTrails = 5;
+
+        for (let i = 0; i < maxTrails; i++) {
+            const trail = document.createElement('div');
+            trail.className = 'cursor-trail';
+            document.body.appendChild(trail);
+            trails.push({
+                element: trail,
+                x: 0,
+                y: 0
+            });
+        }
+
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+
+            trails.forEach((trail, index) => {
+                const delay = (index + 1) * 0.05;
+                trail.x += (mouseX - trail.x) * (0.2 - delay);
+                trail.y += (mouseY - trail.y) * (0.2 - delay);
+                trail.element.style.left = trail.x + 'px';
+                trail.element.style.top = trail.y + 'px';
+                trail.element.style.opacity = 1 - (index / maxTrails);
+            });
+
+            requestAnimationFrame(animateCursor);
+        }
+
+        animateCursor();
+
+        // Floating particles
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.top = Math.random() * window.innerHeight + 'px';
+            particle.style.animationDelay = Math.random() * 3 + 's';
+            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 6000);
+        }
+
+        setInterval(createParticle, 500);
+        for (let i = 0; i < 15; i++) createParticle();
+    </script>
+</body>
+</html>
