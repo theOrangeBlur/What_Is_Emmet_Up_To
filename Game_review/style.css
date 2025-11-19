@@ -1,0 +1,35 @@
+html {
+    background-color: aquamarine;
+}
+
+.tab {
+    white-space:pre;
+}
+
+.image {
+    display: inline-block;
+    width: 20%;
+}
+
+img {
+    width: 100%;
+}
+
+.title {
+    color: blue;
+    display: inline-block;
+    width: 30%;
+    padding: 0% 14%;
+}
+
+.data {
+    color: green;
+    width: 20%;
+    position: relative;
+    display: inline-block;
+}
+
+.review {
+    color: purple;
+    display: inline;
+}
