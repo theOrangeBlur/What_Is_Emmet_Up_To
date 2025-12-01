@@ -1,0 +1,12 @@
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
+    min-height: 100vh;
+    cursor: none;
+    overflow-x: hidden;
+    color: #fff;
+}
+
+h2 {
+    text-align: center;
+}
