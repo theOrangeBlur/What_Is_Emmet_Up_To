@@ -52,64 +52,12 @@ function dateToSeed(dateString) {
     return parseInt(dateString.replace(/-/g, ''));
 }
 
-// Daily splash text with 30-day history tracking
+// Daily splash text - everyone sees the same text each day
 function getDailySplashText() {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-
-    // Get splash history from localStorage
-    let splashHistory = [];
-    try {
-        const stored = localStorage.getItem('splashHistory');
-        if (stored) {
-            splashHistory = JSON.parse(stored);
-        }
-    } catch (e) {
-        console.error('Error loading splash history:', e);
-    }
-
-    // Check if we already picked today's splash
-    const todayEntry = splashHistory.find(entry => entry.date === today);
-    if (todayEntry) {
-        return todayEntry.text;
-    }
-
-    // Clean history - keep only last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    splashHistory = splashHistory.filter(entry => {
-        return new Date(entry.date) > thirtyDaysAgo;
-    });
-
-    // Get texts used in last 30 days
-    const recentTexts = splashHistory.map(entry => entry.text);
-
-    // Get available texts (not used recently)
-    let availableTexts = splashTexts.filter(text => !recentTexts.includes(text));
-
-    // If all texts have been used, reset and use any text
-    if (availableTexts.length === 0) {
-        availableTexts = splashTexts;
-    }
-
-    // Use date-seeded random to pick text (everyone sees same text on same day)
     const seed = dateToSeed(today);
-    const randomIndex = Math.floor(seededRandom(seed) * availableTexts.length);
-    const randomText = availableTexts[randomIndex];
-
-    // Save to history
-    splashHistory.push({
-        date: today,
-        text: randomText
-    });
-
-    // Save to localStorage
-    try {
-        localStorage.setItem('splashHistory', JSON.stringify(splashHistory));
-    } catch (e) {
-        console.error('Error saving splash history:', e);
-    }
-
-    return randomText;
+    const randomIndex = Math.floor(seededRandom(seed) * splashTexts.length);
+    return splashTexts[randomIndex];
 }
 
 // Set the splash text

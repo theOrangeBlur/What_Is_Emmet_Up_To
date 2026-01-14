@@ -1,0 +1,58 @@
+name: Stitch Videos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Visaul-Stitch/media/**'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  stitch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Verify FFmpeg installation
+        run: |
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Process media files
+        run: |
+          cd Visaul-Stitch
+          python process-media.py
+
+      - name: Check if output was created
+        run: |
+          if [ -f "Visaul-Stitch/output/compilation.mp4" ]; then
+            echo "✓ Compilation video created successfully"
+            ls -lh Visaul-Stitch/output/compilation.mp4
+          else
+            echo "✗ Compilation video was not created"
+            exit 1
+          fi
+
+      - name: Commit and push output video
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add Visaul-Stitch/output/compilation.mp4
+          git diff --staged --quiet || git commit -m "Update compilation video [automated]"
+          git push || echo "No changes to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

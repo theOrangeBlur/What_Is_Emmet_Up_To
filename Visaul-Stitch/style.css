@@ -1,7 +1,172 @@
-html {
-    background-color: plum;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-h2 {
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
+    min-height: 100vh;
+    color: #fff;
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.top-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.top-nav a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+
+header {
     text-align: center;
+    padding: 40px 20px 20px;
+}
+
+h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    font-size: 1.2em;
+    color: #ffd700;
+    font-style: italic;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Video Container */
+.video-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+video {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 10px;
+    background: #000;
+}
+
+.error-message {
+    padding: 40px;
+    text-align: center;
+    font-size: 1.2em;
+    color: #ffd700;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+/* Info Section */
+.info-section {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.info-section h2 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #ffd700;
+}
+
+.info-section p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.info-section code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #ffd700;
+}
+
+/* TODO Section */
+.todo-section {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.todo-section h5 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #ffd700;
+}
+
+.todo-section ul {
+    list-style-type: disc;
+    padding-left: 25px;
+}
+
+.todo-section li {
+    font-size: 1em;
+    line-height: 1.8;
+    margin-bottom: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    .subtitle {
+        font-size: 1em;
+    }
+
+    .info-section, .todo-section {
+        padding: 20px;
+    }
+
+    .top-nav {
+        padding: 10px 15px;
+    }
+
+    .top-nav a {
+        font-size: 0.85em;
+        padding: 6px 12px;
+    }
 }

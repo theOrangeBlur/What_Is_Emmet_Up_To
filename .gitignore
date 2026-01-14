@@ -1,0 +1,19 @@
+# Visual Stitch temporary files
+Visaul-Stitch/temp_processed/*.mp4
+Visaul-Stitch/temp_processed/*.txt
+Visaul-Stitch/mylist.txt
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

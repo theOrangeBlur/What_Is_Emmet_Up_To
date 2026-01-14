@@ -2,16 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video game page</title>
+  <title>Daily Snapshots - What is Emmet up to?</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="" />
-  <link rel="icon" href="favicon.png">
+  <meta name="description" content="Life in short clips - a visual compilation of daily moments" />
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <h1>What has Emmet's life looked like?</h1>
-  <hr/>
-  <h2>(Coming soon!)</h2>
+  <nav class="top-nav">
+    <a href="../index.html">← Back to Home</a>
+  </nav>
 
+  <header>
+    <h1>Daily Snapshots</h1>
+    <p class="subtitle">Life in short clips - stitched together</p>
+  </header>
+
+  <div class="container">
+    <div class="video-container">
+      <video id="compilation-video" controls preload="metadata">
+        <source src="output/compilation.mp4" type="video/mp4">
+        Your browser doesn't support the video tag. Please try a different browser.
+      </video>
+    </div>
+
+    <div class="info-section">
+      <h2>About This Compilation</h2>
+      <p>This video is automatically compiled from photos and videos I've taken, inspired by the "One Second Every Day" concept. Each time I add new media, the compilation updates automatically.</p>
+      <p>Images display for a duration specified in their filename (e.g., <code>sunset_5s.jpg</code> shows for 5 seconds), while videos play at their natural length.</p>
+    </div>
+
+    <div class="todo-section">
+      <h5>Future Improvements:</h5>
+      <ul>
+        <li>Add date overlays to show when each clip was taken</li>
+        <li>Create monthly compilation views</li>
+        <li>Add playback speed controls</li>
+        <li>Display total duration and clip count</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Add video error handling
+    const video = document.getElementById('compilation-video');
+    video.addEventListener('error', function(e) {
+      console.error('Video error:', e);
+      const container = document.querySelector('.video-container');
+      container.innerHTML = '<div class="error-message">The compilation video is being generated. Please check back soon!</div>';
+    });
+
+    // Log video metadata when loaded
+    video.addEventListener('loadedmetadata', function() {
+      console.log('Video duration:', Math.floor(video.duration), 'seconds');
+    });
+  </script>
 </body>
 </html>
