@@ -1,7 +1,14 @@
 # Visual Stitch temporary files
 Visaul-Stitch/temp_processed/*.mp4
 Visaul-Stitch/temp_processed/*.txt
+Visaul-Stitch/temp_downloads/
 Visaul-Stitch/mylist.txt
+Visaul-Stitch/output/*.mp4
+
+# Google Cloud credentials (NEVER commit these!)
+Visaul-Stitch/client_secret.json
+Visaul-Stitch/token.json
+**/gcs-key.json
 
 # Python cache
 __pycache__/

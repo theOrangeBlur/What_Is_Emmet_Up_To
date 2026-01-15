@@ -1,35 +1,398 @@
-html {
-    background-color: aquamarine;
+/* ============================================
+   GAME REVIEWS PAGE STYLES
+   Matches main site design language
+   ============================================ */
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.tab {
-    white-space:pre;
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
 }
 
-.image {
-    display: inline-block;
-    width: 20%;
+/* Top Navigation Bar */
+.top-nav {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-img {
-    width: 100%;
+.top-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
 }
 
-.title {
-    color: blue;
-    display: inline-block;
-    width: 30%;
-    padding: 0% 14%;
+.top-nav a:hover,
+.top-nav a.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
 }
 
-.data {
-    color: green;
-    width: 20%;
-    position: relative;
-    display: inline-block;
+/* Page Header */
+.page-header {
+    text-align: center;
+    padding: 40px 20px;
 }
 
-.review {
-    color: purple;
-    display: inline;
+.page-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+}
+
+.page-header .intro-text {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+    opacity: 0.9;
+    font-size: 1.05em;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Glass Card Effect */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Section Headers */
+section h2 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    color: #ffd700;
+}
+
+.section-intro {
+    margin-bottom: 20px;
+    opacity: 0.85;
+}
+
+/* Stats Section */
+.stats-summary {
+    text-align: center;
+}
+
+.stat-grid {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+}
+
+.stat-value {
+    font-size: 2.5em;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+/* Backlog Section */
+.backlog-section {
+    margin-bottom: 40px;
+}
+
+.backlog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.backlog-card {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.backlog-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+    transform: translateY(-3px);
+}
+
+.backlog-card h3 {
+    font-size: 1em;
+    margin-bottom: 8px;
+}
+
+.backlog-card .notes {
+    font-size: 0.85em;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.backlog-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.8em;
+}
+
+.backlog-meta .genre {
+    color: #c4b5fd;
+}
+
+.backlog-meta .est-hours {
+    color: #7dd3fc;
+}
+
+.backlog-meta .platform {
+    color: #86efac;
+}
+
+/* Tracked Games Section */
+.tracked-section {
+    margin-bottom: 40px;
+}
+
+/* Controls (Filter/Sort) */
+.controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.controls select {
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.controls select:hover {
+    border-color: #ffd700;
+}
+
+.controls select option {
+    background: #1a1a3e;
+    color: #fff;
+}
+
+/* Game List */
+.game-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Game Cards */
+.game-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.game-card__header {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    align-items: center;
+}
+
+.game-card__info {
+    flex: 1;
+}
+
+.game-card__info h3 {
+    font-size: 1.4em;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.game-meta {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.game-meta span {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.game-meta .hours {
+    color: #7dd3fc;
+}
+
+.game-meta .date {
+    color: #a5b4fc;
+}
+
+.game-meta .genre {
+    color: #c4b5fd;
+}
+
+.game-meta .platform {
+    color: #86efac;
+}
+
+/* Status Badges */
+.status-badge {
+    font-size: 0.8em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.status-completed {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.status-in-progress {
+    background: rgba(234, 179, 8, 0.2);
+    color: #fbbf24;
+}
+
+.status-dropped {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+/* Review Content */
+.game-card__review {
+    padding: 0 25px 25px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+.game-card__review p {
+    line-height: 1.8;
+    margin-bottom: 15px;
+    text-indent: 2em;
+}
+
+.game-card__review p:first-child {
+    text-indent: 0;
+}
+
+.game-card__review p:last-child {
+    margin-bottom: 0;
+}
+
+/* Empty State */
+.empty-message {
+    text-align: center;
+    padding: 40px;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* Footer */
+.page-footer {
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.6;
+    font-size: 0.9em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+
+    .page-header .intro-text {
+        font-size: 0.95em;
+    }
+
+    .top-nav {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .top-nav a {
+        font-size: 0.85em;
+        padding: 6px 12px;
+    }
+
+    .stat-grid {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .stat-value {
+        font-size: 2em;
+    }
+
+    .backlog-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .game-card__header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .game-meta {
+        justify-content: center;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .controls select {
+        width: 100%;
+    }
 }

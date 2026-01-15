@@ -1,176 +1,252 @@
 # Visual Stitch - Automated Video Compilation
 
-An automated system that stitches photos and videos into one compilation video, updating automatically via GitHub Actions when new media is added.
+An automated system that stitches photos and videos from Google Photos into one compilation video, updating weekly via GitHub Actions.
+
+## 🚀 New: Google Photos Integration!
+
+This system now pulls media directly from your Google Photos albums. No more downloading files or committing large videos to git!
+
+### Quick Start
+
+**New to this system?** Follow [QUICK_START.md](./QUICK_START.md)
+
+**Migrating from local files?** See [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md)
+
+**Detailed setup?** Check [SETUP_GUIDE.md](./SETUP_GUIDE.md)
 
 ## How It Works
 
-1. **Add Media**: Drop photos/videos into monthly folders (`media/2025-01/`, `media/2025-02/`, etc.)
-2. **Name Files**: For images, add `_Xs` suffix to specify duration (e.g., `sunset_5s.jpg` = 5 seconds)
-3. **Push to GitHub**: Commit and push your changes
-4. **Automatic Processing**: GitHub Actions automatically runs the processing script
-5. **Video Updates**: The compilation video is generated and committed back to the repo
+```
+Google Photos Album → GitHub Actions (weekly) → Google Cloud Storage → Your Website
+```
+
+1. **Add Media**: Upload photos/videos to your Google Photos album
+2. **Name Files**: Use `_5s` suffix for duration, `_SKIP_` prefix to exclude
+3. **Automatic Processing**: GitHub Actions runs every Monday at 00:00 UTC
+4. **Video Hosted**: Compilation uploaded to Google Cloud Storage
+5. **Website Updates**: Your page loads the latest video automatically
 
 ## File Naming Convention
 
+Control video behavior with filenames in Google Photos:
+
 ### Images
-- With duration: `filename_5s.jpg` (displays for 5 seconds)
-- Without duration: `filename.jpg` (defaults to 3 seconds)
-- Supported formats: `.jpg`, `.jpeg`, `.png`
+- `photo.jpg` → 3 seconds (default)
+- `photo_5s.jpg` → 5 seconds
+- `photo_1s.jpg` → 1 second
+- `_SKIP_photo.jpg` → Excluded from compilation
 
 ### Videos
-- Standard naming: `filename.mp4`
-- Uses natural video duration
-- Supported formats: `.mp4`, `.mov`, `.avi`, `.mkv`
+- `video.mp4` → Full video duration
+- `_SKIP_video.mp4` → Excluded from compilation
+
+## Setup Checklist
+
+- [ ] Enable Google Photos API & Cloud Storage API
+- [ ] Create OAuth 2.0 credentials
+- [ ] Create GCS bucket for video hosting
+- [ ] Create service account for GitHub Actions
+- [ ] Authenticate locally to get token
+- [ ] Add 5 secrets to GitHub
+- [ ] Update HTML with your bucket name
+- [ ] Test!
+
+See [QUICK_START.md](./QUICK_START.md) for detailed steps.
 
 ## Folder Structure
 
 ```
 Visaul-Stitch/
-├── media/                  # Organized by month
-│   ├── 2025-01/
-│   ├── 2025-02/
-│   └── ...
 ├── output/
-│   └── compilation.mp4     # Generated video (tracked in git)
-├── temp_processed/         # Temporary processing files (gitignored)
-├── process-media.py        # Processing script
-├── snapshots.html          # Web page
-└── style.css               # Styling
+│   └── compilation.mp4        # Generated locally (not committed)
+├── temp_processed/            # Temporary clips (gitignored)
+├── temp_downloads/            # Downloaded from Google Photos (gitignored)
+├── process-media-gcloud.py    # Main script (Google Photos version)
+├── process-media.py           # Old script (local files - deprecated)
+├── requirements.txt           # Python dependencies
+├── client_secret.json         # OAuth credentials (gitignored)
+├── token.json                 # Auth token (gitignored)
+├── snapshots.html             # Web page
+├── style.css                  # Styling
+├── QUICK_START.md             # Quick setup guide
+├── SETUP_GUIDE.md             # Detailed setup instructions
+├── MIGRATION_SUMMARY.md       # Migration notes
+└── test-local.sh              # Local testing helper
 ```
 
-## Local Testing (Optional)
+## Local Testing
 
-If you want to test the processing locally before pushing to GitHub:
-
-### Prerequisites
-1. Install Python 3.x: https://www.python.org/downloads/
-2. Install FFmpeg: https://ffmpeg.org/download.html
-   - Windows: Use Chocolatey `choco install ffmpeg` or download binaries
-   - Mac: Use Homebrew `brew install ffmpeg`
-   - Linux: `sudo apt-get install ffmpeg`
-
-### Run Locally
 ```bash
 cd Visaul-Stitch
-python process-media.py
+pip install -r requirements.txt
+
+# Authenticate
+python process-media-gcloud.py --auth-only
+
+# List your albums
+python process-media-gcloud.py --list-albums
+
+# Process an album (no upload)
+export GOOGLE_PHOTOS_ALBUM_ID="your-album-id"
+python process-media-gcloud.py
+
+# Process and upload to GCS
+export GCS_BUCKET_NAME="your-bucket"
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account.json"
+python process-media-gcloud.py --upload-to-gcs
+
+# Or use the helper script
+bash test-local.sh
 ```
 
-The script will:
-1. Scan all monthly media folders
-2. Process images and videos
-3. Generate `output/compilation.mp4`
+## GitHub Actions Workflow
 
-### Check Output
-Open `output/compilation.mp4` in a video player to verify the compilation.
+The workflow runs automatically:
+- **Every Monday at 00:00 UTC** (weekly schedule)
+- **Manual trigger** via Actions tab
 
-## GitHub Actions Deployment
-
-The system uses GitHub Actions for automated processing:
-
-### Workflow Trigger
-- Automatically runs when you push changes to `Visaul-Stitch/media/**`
-- Can also be triggered manually from the Actions tab
-
-### Workflow Steps
-1. Checkout repository
-2. Install Python and FFmpeg
-3. Run `process-media.py`
-4. Commit and push the generated video
+### What it does:
+1. Authenticates with Google Photos
+2. Downloads media from specified album
+3. Processes and stitches video
+4. Uploads to Google Cloud Storage
+5. Your website loads the new video
 
 ### Monitor Progress
-1. Go to your GitHub repository
-2. Click the "Actions" tab
-3. View the "Stitch Videos" workflow runs
-4. Check logs if something goes wrong
+1. Go to GitHub repository → Actions tab
+2. Select "Stitch Videos from Google Photos"
+3. View recent runs and logs
 
-## Adding New Media
+## Album Management
 
-### Quick Steps
-1. Create or navigate to the appropriate monthly folder:
-   ```bash
-   mkdir -p Visaul-Stitch/media/2025-01
-   cd Visaul-Stitch/media/2025-01
-   ```
+### Monthly Albums
 
-2. Copy your media files:
-   - Rename images with duration if needed: `photo_5s.jpg`
-   - Videos can keep their original names
+Create albums with this naming pattern:
+- `Daily-Snapshots-2025-10` (October)
+- `Daily-Snapshots-2025-11` (November)
+- `Daily-Snapshots-2025-12` (December)
 
-3. Commit and push:
-   ```bash
-   git add Visaul-Stitch/media/
-   git commit -m "Add new snapshots for January 2025"
-   git push
-   ```
+### Switch Months
 
-4. Wait for GitHub Actions to process (usually 2-5 minutes)
+1. Get new album ID: `python process-media-gcloud.py --list-albums`
+2. Update GitHub Secret: `GOOGLE_PHOTOS_ALBUM_ID`
+3. Trigger workflow manually or wait for Monday
 
-5. Visit your website to see the updated compilation
+### Multiple Compilations
 
-## File Size Considerations
+Upload to different paths for different months:
+```bash
+python process-media-gcloud.py \
+  --upload-to-gcs \
+  --gcs-path "compilations/2025-10.mp4"
+```
 
-GitHub has a 100MB file size limit per file. The processing script compresses videos using:
-- `-crf 23` (Constant Rate Factor, good quality compression)
-- 1920x1080 max resolution
-- AAC audio at 128kbps
+Then update your HTML to reference the specific compilation.
 
-If your compilation exceeds 100MB:
-- Consider hosting the video externally (YouTube, Vimeo, etc.)
-- Create monthly compilations instead of one master video
-- Increase compression (higher `-crf` value in the script)
+## Cost Estimate
+
+### Google Cloud Storage
+
+For a 100MB video with 100 monthly views:
+- **Storage**: ~$0.0026/month
+- **Bandwidth**: ~$1.20/month
+- **Total**: ~$1.50/month
+
+Tips to reduce costs:
+1. Enable Cloud CDN (caching)
+2. Use Nearline storage for old videos
+3. Increase video compression
+
+See [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) for detailed cost breakdown.
+
+## Benefits vs Old System
+
+| Aspect | Old (Git) | New (Google Photos) |
+|--------|-----------|---------------------|
+| File Storage | In git repo | Google Photos |
+| Video Hosting | Git (100MB limit) | GCS (unlimited) |
+| Workflow | Download → commit → push | Automatic from Photos |
+| Repo Size | Growing (100MB per video) | Small (code only) |
+| Setup Complexity | Low | Medium (one-time) |
+| Monthly Maintenance | Manual file management | 0 minutes |
 
 ## Troubleshooting
 
-### Video not updating after push
-- Check the Actions tab for workflow errors
-- Ensure file paths are correct in commit
-- Verify FFmpeg installed successfully in workflow
+### "Invalid credentials" error
+```bash
+# Re-authenticate locally
+python process-media-gcloud.py --auth-only
 
-### Video won't play on website
-- Check browser console for errors
-- Verify `output/compilation.mp4` exists in repository
-- Try clearing browser cache
-- Check file path in `snapshots.html`
+# Update GitHub secret with new token.json contents
+```
 
-### Processing takes too long
-- GitHub Actions has a 6-hour timeout (should be plenty)
-- For very large media collections, consider splitting by month
+### "Album not found"
+```bash
+# List all albums
+python process-media-gcloud.py --list-albums
 
-### Image not displaying for correct duration
-- Verify filename format: `name_5s.jpg` (underscore, number, 's', extension)
-- Check Python script logs for parsing errors
+# Copy correct album ID to GitHub secret GOOGLE_PHOTOS_ALBUM_ID
+```
+
+### Video not showing on webpage
+- Verify bucket name in [snapshots.html](./snapshots.html) line 23
+- Check bucket is publicly readable
+- Try direct URL: `https://storage.googleapis.com/YOUR-BUCKET/compilation.mp4`
+
+### Videos in wrong order
+- Check EXIF metadata has correct dates
+- Files sorted by creation date, not filename
+- Manually re-touch files if needed
+
+See [SETUP_GUIDE.md](./SETUP_GUIDE.md) for more troubleshooting.
 
 ## Future Enhancements
 
-- [ ] Add date overlays showing when each clip was taken
-- [ ] Create monthly compilation views
-- [ ] Add playback speed controls
-- [ ] Display total duration and clip count
-- [ ] Support for GIF files
+- [ ] Multi-album support (combine all 2025 albums)
+- [ ] Date overlays showing when clips were taken
+- [ ] Month selector on webpage
+- [ ] Webhook triggers (update when album changes)
 - [ ] Fade transitions between clips
 - [ ] Background music support
+- [ ] Automatic monthly album creation
 
 ## Technical Details
 
-### Image Processing
-Images are converted to video clips using FFmpeg:
-```bash
-ffmpeg -loop 1 -i image.jpg -t 5 -c:v libx264 -pix_fmt yuv420p output.mp4
-```
+### Technologies
+- **Google Photos API**: Fetch media from albums
+- **Google Cloud Storage**: Host compiled videos
+- **FFmpeg**: Process and stitch videos
+- **GitHub Actions**: Weekly automation
+- **Python 3.11**: Orchestration
 
-### Video Standardization
-Videos are re-encoded for consistency:
-```bash
-ffmpeg -i input.mp4 -c:v libx264 -crf 23 -c:a aac output.mp4
-```
+### Processing Pipeline
+1. Authenticate with Google Photos API (OAuth 2.0)
+2. Fetch media items from album
+3. Download files temporarily
+4. Convert images to video clips (with duration)
+5. Standardize video formats (1920x1080, H.264)
+6. Concatenate all clips
+7. Upload to GCS with public access
+8. Clean up temporary files
 
-### Concatenation
-All clips are concatenated using FFmpeg's concat demuxer with a file list.
+### Security
+- OAuth tokens stored in GitHub Secrets
+- Service account has minimal permissions
+- No credentials committed to repository
+- Temporary files cleaned after processing
+
+## Documentation
+
+- [QUICK_START.md](./QUICK_START.md) - Setup checklist
+- [SETUP_GUIDE.md](./SETUP_GUIDE.md) - Detailed instructions
+- [MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md) - What changed and why
+- [test-local.sh](./test-local.sh) - Local testing helper script
 
 ## Credits
 
 Built with:
-- **Python 3** for orchestration
+- **Python 3.11** for orchestration
 - **FFmpeg** for video processing
+- **Google Photos API** for media fetching
+- **Google Cloud Storage** for video hosting
 - **GitHub Actions** for automation
-- **GitHub Pages** for hosting

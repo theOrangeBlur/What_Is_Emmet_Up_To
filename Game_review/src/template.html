@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Reviews | Emmet</title>
+    <meta name="description" content="Emmet's video game reviews, backlog, and gaming stats">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="../index.html">🏠 Home</a>
+        <a href="../Visaul-Stitch/snapshots.html">📹 Daily Snapshots</a>
+        <a href="../Projects/projects.html">🛠️ Projects</a>
+        <a href="../Puzzle/puzzle.html">🧩 Puzzles</a>
+        <a href="./games.html" class="active">🎮 Game Reviews</a>
+        <a href="../Blog/blog.html">📢 Blog</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>What did Emmet think of that game?</h1>
+        <p class="intro-text">
+            I see video games as an art, and you should too. That means I hold them
+            to a high standard... and there are far more games that do not meet my
+            standard than those that do. In late 2025, I started a "game backlog" so
+            I knew what I wanted to get into when precious free time floated my way.
+            I took the opportunity to start recording my thoughts about the games I
+            was playing. Here are my musings on the matter.
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- Stats Section -->
+        <section class="stats-summary glass-card">
+            <h2>📊 Stats</h2>
+            {{STATS}}
+        </section>
+
+        <!-- Must-Play Backlog -->
+        <section class="backlog-section">
+            <h2>📋 The Backlog</h2>
+            <p class="section-intro">Games I'm itching to play when time allows.</p>
+            <div class="backlog-grid">
+                {{MUST_PLAY}}
+            </div>
+        </section>
+
+        <!-- Tracked Games with Reviews -->
+        <section class="tracked-section">
+            <h2>🎮 Games I've Played</h2>
+
+            <div class="controls">
+                <select id="sort-by">
+                    <option value="date">Sort by Date</option>
+                    <option value="hours">Sort by Hours</option>
+                    <option value="name">Sort by Name</option>
+                </select>
+                <select id="filter-status">
+                    <option value="all">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="dropped">Dropped</option>
+                </select>
+            </div>
+
+            <div class="game-list" id="game-list">
+                {{TRACKED_GAMES}}
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="page-footer">
+            <p>Last updated: {{BUILD_DATE}}</p>
+        </footer>
+    </div>
+
+    <script src="./games.js"></script>
+</body>
+</html>
