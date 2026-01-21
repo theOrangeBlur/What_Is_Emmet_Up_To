@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Visaul-Stitch/media/**'
+      - 'Visual-Stitch/media/**'
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -36,14 +36,14 @@ jobs:
 
       - name: Process media files
         run: |
-          cd Visaul-Stitch
+          cd Visual-Stitch
           python process-media.py
 
       - name: Check if output was created
         run: |
-          if [ -f "Visaul-Stitch/output/compilation.mp4" ]; then
+          if [ -f "Visual-Stitch/output/compilation.mp4" ]; then
             echo "✓ Compilation video created successfully"
-            ls -lh Visaul-Stitch/output/compilation.mp4
+            ls -lh Visual-Stitch/output/compilation.mp4
           else
             echo "✗ Compilation video was not created"
             exit 1
@@ -53,7 +53,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add Visaul-Stitch/output/compilation.mp4
+          git add Visual-Stitch/output/compilation.mp4
           git diff --staged --quiet || git commit -m "Update compilation video [automated]"
           git push || echo "No changes to push"
         env:

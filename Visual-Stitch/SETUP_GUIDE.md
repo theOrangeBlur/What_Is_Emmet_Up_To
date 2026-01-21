@@ -36,7 +36,7 @@ This guide walks you through setting up Google Photos API integration for your D
    - Application type: **Desktop app**
    - Name: "Daily Snapshots Desktop"
    - Click **Create**
-5. **Download the JSON file** - save it as `client_secret.json` in the `Visaul-Stitch` folder
+5. **Download the JSON file** - save it as `client_secret.json` in the `Visual-Stitch` folder
 6. **IMPORTANT**: Add `client_secret.json` to `.gitignore` (we'll do this)
 
 ## Phase 2: Google Cloud Storage Setup

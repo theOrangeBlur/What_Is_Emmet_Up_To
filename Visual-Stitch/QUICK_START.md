@@ -33,7 +33,7 @@ Follow these steps in order:
 
 ### 3. Local Authentication (5 minutes)
 ```bash
-cd Visaul-Stitch
+cd Visual-Stitch
 pip install -r requirements.txt
 python process-media-gcloud.py --auth-only
 ```
@@ -150,7 +150,7 @@ If you get high traffic, consider:
 Once everything works:
 
 1. **Remove old workflow**: Delete `.github/workflows/stitch-video.yml`
-2. **Remove local media**: Delete files in `Visaul-Stitch/media/` (they're in Google Photos now)
+2. **Remove local media**: Delete files in `Visual-Stitch/media/` (they're in Google Photos now)
 3. **Create more albums**: For November, create `Daily-Snapshots-2025-11`
 4. **Update workflow**: Change `GOOGLE_PHOTOS_ALBUM_ID` to compile different months
 

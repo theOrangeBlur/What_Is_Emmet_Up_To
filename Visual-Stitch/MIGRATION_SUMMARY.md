@@ -3,7 +3,7 @@
 ## What Changed?
 
 ### Before
-- Media files stored in `Visaul-Stitch/media/` folders in git
+- Media files stored in `Visual-Stitch/media/` folders in git
 - Compiled video (`compilation.mp4`) committed to git (~100MB)
 - Hit GitHub's 50MB file size warning
 - Required downloading files to local machine, then pushing to git
@@ -71,7 +71,7 @@ Your Webpage (loads video from GCS)
 Once the new system works:
 
 - `.github/workflows/stitch-video.yml` (old workflow)
-- `Visaul-Stitch/media/**/*` (media files now in Google Photos)
+- `Visual-Stitch/media/**/*` (media files now in Google Photos)
 - `process-media.py` (replaced by `process-media-gcloud.py`)
 
 ## What You Need to Do

@@ -56,7 +56,7 @@ See [QUICK_START.md](./QUICK_START.md) for detailed steps.
 ## Folder Structure
 
 ```
-Visaul-Stitch/
+Visual-Stitch/
 ├── output/
 │   └── compilation.mp4        # Generated locally (not committed)
 ├── temp_processed/            # Temporary clips (gitignored)
@@ -77,7 +77,7 @@ Visaul-Stitch/
 ## Local Testing
 
 ```bash
-cd Visaul-Stitch
+cd Visual-Stitch
 pip install -r requirements.txt
 
 # Authenticate

@@ -12,7 +12,7 @@ echo ""
 
 # Check if running from correct directory
 if [ ! -f "process-media-gcloud.py" ]; then
-    echo "Error: Must run from Visaul-Stitch directory"
+    echo "Error: Must run from Visual-Stitch directory"
     exit 1
 fi
 
