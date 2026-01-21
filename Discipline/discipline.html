@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discipline Tracker | Emmet</title>
+    <meta name="description" content="Emmet's daily discipline tracker for Mind, Body, and Spirit">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="../index.html">🏠 Home</a>
+        <a href="../Visaul-Stitch/snapshots.html">📹 Daily Snapshots</a>
+        <a href="../Projects/projects.html">🛠️ Projects</a>
+        <a href="../Puzzle/puzzle.html">🧩 Puzzles</a>
+        <a href="../Game_review/games.html">🎮 Game Reviews</a>
+        <a href="../Blog/blog.html">📢 Blog</a>
+        <a href="./discipline.html" class="active">🧘 Discipline</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Discipline Tracker</h1>
+        <p class="intro-text">
+            Tracking daily growth across three pillars: Mind, Body, and Spirit.
+            Each day is an opportunity to nurture all aspects of who I am.
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- Legend -->
+        <section class="legend glass-card">
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="dot mind filled"></span>
+                    <span>Mind</span>
+                </div>
+                <div class="legend-item">
+                    <span class="dot body filled"></span>
+                    <span>Body</span>
+                </div>
+                <div class="legend-item">
+                    <span class="dot spirit filled"></span>
+                    <span>Spirit</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendar Section -->
+        <section class="calendar-section glass-card">
+            <div class="calendar-header">
+                <button class="nav-btn" id="prevMonth">◀</button>
+                <h2 id="monthYear">January 2026</h2>
+                <button class="nav-btn" id="nextMonth">▶</button>
+            </div>
+            <div class="calendar-grid">
+                <div class="day-header">Sun</div>
+                <div class="day-header">Mon</div>
+                <div class="day-header">Tue</div>
+                <div class="day-header">Wed</div>
+                <div class="day-header">Thu</div>
+                <div class="day-header">Fri</div>
+                <div class="day-header">Sat</div>
+            </div>
+            <div class="calendar-days" id="calendarDays">
+                <!-- Days will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Explanation Section -->
+        <section class="explanation glass-card">
+            <h2>What is this?</h2>
+            <p>
+                I believe that a fulfilling life requires attention to three key areas:
+                the <strong class="text-mind">Mind</strong> (learning, creating, problem-solving),
+                the <strong class="text-body">Body</strong> (physical activity, health, movement),
+                and the <strong class="text-spirit">Spirit</strong> (reflection, connection, purpose).
+            </p>
+            <p>
+                Each day, I try to do at least one activity in each category. This calendar
+                helps me visualize my consistency and reminds me to maintain balance. Hover
+                over any filled circle to see what activity I completed that day.
+            </p>
+        </section>
+
+        <br>
+        <hr>
+        <br>
+
+        <!-- Improvements Section -->
+        <div class="TODO">
+            <h5>Things Emmet is going to work on for this page:</h5>
+            <p>
+                <ul>
+                    <li>Add stats section (streaks, completion rates, etc.)</li>
+                    <li>Add ability to view past months</li>
+                    <li>Make mobile-friendly calendar view</li>
+                    <li>Add weekly/yearly view options</li>
+                </ul>
+            </p>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
