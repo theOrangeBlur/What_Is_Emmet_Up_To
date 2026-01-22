@@ -161,7 +161,6 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
 
     if (isOtherMonth) cell.classList.add('other-month');
     if (isToday) cell.classList.add('today');
-    if (isPastDate(dateStr) && !isToday) cell.classList.add('past-day');
 
     const dayNumber = document.createElement('div');
     dayNumber.className = 'day-number';

@@ -1,0 +1,45 @@
+name: Sync Discipline Data
+
+on:
+  schedule:
+    # Runs daily at 6:00 AM UTC (adjust as needed)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch Google Sheet data
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/14xd6PvDOmxeAN6PT5hHFlqL2LQ_OQ2an/export?format=csv" -o Discipline/log.csv
+          echo "Downloaded CSV content:"
+          cat Discipline/log.csv
+
+      - name: Check if data changed
+        id: check_changes
+        run: |
+          if git diff --quiet Discipline/log.csv; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add Discipline/log.csv
+          git commit -m "Update discipline data [automated]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
