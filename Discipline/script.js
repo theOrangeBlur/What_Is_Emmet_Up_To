@@ -7,6 +7,9 @@ let currentDate = new Date();
 const MIN_YEAR = 2026;
 const MIN_MONTH = 0; // January (0-indexed)
 
+// First day of tracking (for dimming past days)
+const TRACKING_START_DATE = '2026-01-20';
+
 // Dance animation state
 let danceInterval = null;
 
@@ -44,12 +47,13 @@ function parseCsvData(csvText) {
             disciplineData[normalizedDate] = {
                 mind: [],
                 body: [],
-                spirit: []
+                spirit: [],
+                exceptional: []
             };
         }
 
         const categoryLower = category.toLowerCase();
-        if (disciplineData[normalizedDate][categoryLower]) {
+        if (disciplineData[normalizedDate][categoryLower] !== undefined) {
             disciplineData[normalizedDate][categoryLower].push(action);
         }
     }
@@ -153,6 +157,11 @@ function isPastDate(dateStr) {
     return checkDate < today;
 }
 
+// Check if a date is before the tracking start date
+function isBeforeTrackingStart(dateStr) {
+    return dateStr < TRACKING_START_DATE;
+}
+
 // Create a single day cell
 function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     const cell = document.createElement('div');
@@ -161,6 +170,8 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
 
     if (isOtherMonth) cell.classList.add('other-month');
     if (isToday) cell.classList.add('today');
+    if (isBeforeTrackingStart(dateStr)) cell.classList.add('before-tracking');
+    if (isPastDate(dateStr) && !isToday && !isBeforeTrackingStart(dateStr)) cell.classList.add('past-day');
 
     const dayNumber = document.createElement('div');
     dayNumber.className = 'day-number';
@@ -170,23 +181,32 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     const dots = document.createElement('div');
     dots.className = 'day-dots';
 
-    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [] };
+    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [], exceptional: [] };
 
     // Mind dot
-    dots.appendChild(createDot('mind', dayData.mind));
+    dots.appendChild(createDot('mind', dayData.mind, dateStr));
     // Body dot
-    dots.appendChild(createDot('body', dayData.body));
+    dots.appendChild(createDot('body', dayData.body, dateStr));
     // Spirit dot
-    dots.appendChild(createDot('spirit', dayData.spirit));
+    dots.appendChild(createDot('spirit', dayData.spirit, dateStr));
+    // Exceptional dot (only if there's data)
+    if (dayData.exceptional && dayData.exceptional.length > 0) {
+        dots.appendChild(createDot('exceptional', dayData.exceptional, dateStr));
+    }
 
     cell.appendChild(dots);
     return cell;
 }
 
 // Create a discipline dot with tooltip
-function createDot(category, activities) {
+function createDot(category, activities, dateStr) {
     const dot = document.createElement('div');
     dot.className = `dot ${category}`;
+
+    // Mark unfilled dots on past days for shame animation
+    if ((!activities || activities.length === 0) && isPastDate(dateStr) && !isBeforeTrackingStart(dateStr)) {
+        dot.classList.add('unfilled-past');
+    }
 
     if (activities && activities.length > 0) {
         dot.classList.add('filled');
@@ -215,56 +235,85 @@ document.getElementById('nextMonth').addEventListener('click', () => {
     restartDanceAnimation();
 });
 
-// Dance animation for filled dots
+// Dance animation for filled dots and shame animation for unfilled past dots
 function startDanceAnimation() {
     if (danceInterval) {
         clearInterval(danceInterval);
         danceInterval = null;
     }
 
-    // Get all filled dots in calendar order
-    function getFilledDots() {
+    // Get all animatable dots in calendar order (filled + unfilled-past)
+    function getAnimatableDots() {
         const dots = [];
-        const dayCells = document.querySelectorAll('#calendarDays .day-cell:not(.other-month)');
+        const dayCells = document.querySelectorAll('#calendarDays .day-cell:not(.other-month):not(.before-tracking)');
         dayCells.forEach(cell => {
-            const filledDots = cell.querySelectorAll('.dot.filled');
-            filledDots.forEach(dot => dots.push(dot));
+            const allDots = cell.querySelectorAll('.dot.filled, .dot.unfilled-past');
+            allDots.forEach(dot => dots.push(dot));
         });
         return dots;
     }
 
     let currentIndex = 0;
     let isPaused = false;
+    let pendingTimeout = null;
 
     function danceNextDot() {
         if (isPaused) return;
 
-        const dots = getFilledDots();
+        const dots = getAnimatableDots();
         if (dots.length === 0) return;
 
         // If we've gone through all dots, pause for 3 seconds then restart
         if (currentIndex >= dots.length) {
             isPaused = true;
-            setTimeout(() => {
+            pendingTimeout = setTimeout(() => {
                 currentIndex = 0;
                 isPaused = false;
+                scheduleNextDot(100);
             }, 3000);
             return;
         }
 
         const dot = dots[currentIndex];
-        dot.classList.add('dancing');
 
-        // Remove the class after animation completes
-        setTimeout(() => {
-            dot.classList.remove('dancing');
-        }, 300);
+        // Check what type of dot this is
+        const isUnfilledPast = dot.classList.contains('unfilled-past');
+        const isExceptional = dot.classList.contains('exceptional');
 
-        currentIndex++;
+        if (isUnfilledPast) {
+            // Shame animation: pause, horizontal shake with pale glow
+            dot.classList.add('dancing-shame');
+            setTimeout(() => {
+                dot.classList.remove('dancing-shame');
+            }, 400);
+            currentIndex++;
+            // Longer pause before next dot (500ms total)
+            scheduleNextDot(500);
+        } else if (isExceptional) {
+            // Exceptional animation: double bounce with bright glow
+            dot.classList.add('dancing-exceptional');
+            setTimeout(() => {
+                dot.classList.remove('dancing-exceptional');
+            }, 300);
+            currentIndex++;
+            scheduleNextDot(100);
+        } else {
+            // Normal filled dot animation
+            dot.classList.add('dancing');
+            setTimeout(() => {
+                dot.classList.remove('dancing');
+            }, 300);
+            currentIndex++;
+            scheduleNextDot(100);
+        }
     }
 
-    // Start the dance cycle - trigger every 100ms for wave effect
-    danceInterval = setInterval(danceNextDot, 100);
+    function scheduleNextDot(delay) {
+        pendingTimeout = setTimeout(danceNextDot, delay);
+    }
+
+    // Start the dance cycle
+    scheduleNextDot(100);
 }
 
 function restartDanceAnimation() {
