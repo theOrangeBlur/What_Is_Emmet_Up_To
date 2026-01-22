@@ -161,7 +161,7 @@ section h2 {
 
 /* Calendar Section */
 .calendar-section {
-    overflow: hidden;
+    overflow: visible;
 }
 
 .calendar-header {
@@ -196,6 +196,51 @@ section h2 {
     opacity: 0.3;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+/* Navigation button wrapper for tooltips */
+.nav-btn-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 100;
+    pointer-events: none;
+    margin-bottom: 8px;
+}
+
+.nav-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.nav-btn-wrapper:hover .nav-tooltip {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.nav-btn-wrapper:has(.nav-btn.disabled):hover .nav-tooltip {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Calendar Grid */

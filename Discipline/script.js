@@ -83,15 +83,33 @@ function isAtMinMonth() {
     return currentDate.getFullYear() === MIN_YEAR && currentDate.getMonth() === MIN_MONTH;
 }
 
+// Check if we're at the current month (can't go into the future)
+function isAtCurrentMonth() {
+    const now = new Date();
+    return currentDate.getFullYear() === now.getFullYear() && currentDate.getMonth() === now.getMonth();
+}
+
 // Update navigation button states
 function updateNavButtons() {
     const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+
+    // Handle previous button (can't go before January 2026)
     if (isAtMinMonth()) {
         prevBtn.classList.add('disabled');
         prevBtn.disabled = true;
     } else {
         prevBtn.classList.remove('disabled');
         prevBtn.disabled = false;
+    }
+
+    // Handle next button (can't go into the future)
+    if (isAtCurrentMonth()) {
+        nextBtn.classList.add('disabled');
+        nextBtn.disabled = true;
+    } else {
+        nextBtn.classList.remove('disabled');
+        nextBtn.disabled = false;
     }
 }
 
@@ -230,9 +248,11 @@ document.getElementById('prevMonth').addEventListener('click', () => {
 });
 
 document.getElementById('nextMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-    restartDanceAnimation();
+    if (!isAtCurrentMonth()) {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+        restartDanceAnimation();
+    }
 });
 
 // Dance animation for filled dots and shame animation for unfilled past dots
