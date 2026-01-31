@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Reviews | Emmet</title>
+    <meta name="description" content="Emmet's movie reviews, ratings, and watchlist">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="../index.html">Home</a>
+        <a href="../Visual-Stitch/snapshots.html">Daily Snapshots</a>
+        <a href="../Projects/projects.html">Projects</a>
+        <a href="../Puzzle/puzzle.html">Puzzles</a>
+        <a href="../Game_review/games.html">Game Reviews</a>
+        <a href="./movies.html" class="active">Movie Reviews</a>
+        <a href="../Blog/blog.html">Blog</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Has Emmet seen this?</h1>
+        <p class="intro-text">
+            A long, long time ago, in my junior year of highschool, my favorite teacher opened
+            up a class on "film lit" that permanently changed the way I watch movies. I have loved 
+            the medium ever since! I would be delighted to engage in a heated discussion with you 
+            about one :) On this page, you will find reviews and ratings of movies I've watched since
+            some point in 2025 when I started a <a href="https://letterboxd.com/THEORANGEBLUR/" target="_blank">Letterboxd</a>
+            account (which was Julia's idea. Thanks, babe!!).
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- Favorites Section -->
+        <section class="favorites-section glass-card">
+            <h2>Favorite Films</h2>
+            <div class="favorites-grid">
+                <div class="favorite-card">
+                    <img src="https://image.tmdb.org/t/p/w300/f1tIYarTbkBdIT1aW0gzelDwknv.jpg" alt="The Lighthouse poster" class="favorite-poster" loading="lazy">
+                    <div class="favorite-info">
+                        <h3>The Lighthouse</h3>
+                        <span class="year">2019</span>
+                    </div>
+                </div>
+                <div class="favorite-card">
+                    <img src="https://image.tmdb.org/t/p/w300/eg8XHjA7jkM3ulBLnfGTczR9ytI.jpg" alt="Spider-Man 2 poster" class="favorite-poster" loading="lazy">
+                    <div class="favorite-info">
+                        <h3>Spider-Man 2</h3>
+                        <span class="year">2004</span>
+                    </div>
+                </div>
+                <div class="favorite-card">
+                    <img src="https://image.tmdb.org/t/p/w300/vfrQk5IPloGg1v9Rzbh2Eg3VGyM.jpg" alt="Alien poster" class="favorite-poster" loading="lazy">
+                    <div class="favorite-info">
+                        <h3>Alien</h3>
+                        <span class="year">1979</span>
+                    </div>
+                </div>
+                <div class="favorite-card">
+                    <img src="https://image.tmdb.org/t/p/w300/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg" alt="The Silence of the Lambs poster" class="favorite-poster" loading="lazy">
+                    <div class="favorite-info">
+                        <h3>The Silence of the Lambs</h3>
+                        <span class="year">1991</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-summary glass-card">
+            <h2>Stats</h2>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <span class="stat-value">26</span>
+                    <span class="stat-label">Movies Watched</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">4.0</span>
+                    <span class="stat-label">Average Rating</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">5-Star Films</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">25</span>
+                    <span class="stat-label">With Reviews</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Movie Grid -->
+        <section class="movies-section">
+            <h2>Movies I've Watched<span class="asterisk-tooltip"><span class="asterisk">*</span><span class="tooltip-text">since some random point in 2025 when I started tracking this stuff.</span></span></h2>
+
+            <div class="controls">
+                <select id="sort-by">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="rating-desc">Highest Rated</option>
+                    <option value="rating-asc">Lowest Rated</option>
+                    <option value="name">Alphabetical</option>
+                </select>
+                <select id="filter-rating">
+                    <option value="all">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                </select>
+                <select id="filter-director">
+                    <option value="all">All Directors</option>
+                    <option value="Alexander Payne">Alexander Payne</option>
+                    <option value="Brian De Palma">Brian De Palma</option>
+                    <option value="Danny Boyle">Danny Boyle</option>
+                    <option value="Edgar Wright">Edgar Wright</option>
+                    <option value="Ethan Coen">Ethan Coen</option>
+                    <option value="Francis Lawrence">Francis Lawrence</option>
+                    <option value="Guillermo del Toro">Guillermo del Toro</option>
+                    <option value="James Watkins">James Watkins</option>
+                    <option value="Jon M. Chu">Jon M. Chu</option>
+                    <option value="Jorma Taccone">Jorma Taccone</option>
+                    <option value="Josh Safdie">Josh Safdie</option>
+                    <option value="Justin Tipping">Justin Tipping</option>
+                    <option value="Michael Philippou">Michael Philippou</option>
+                    <option value="Parker Finn">Parker Finn</option>
+                    <option value="Patrick Willems">Patrick Willems</option>
+                    <option value="Paul Feig">Paul Feig</option>
+                    <option value="Paul Thomas Anderson">Paul Thomas Anderson</option>
+                    <option value="Rian Johnson">Rian Johnson</option>
+                    <option value="Ruben Fleischer">Ruben Fleischer</option>
+                    <option value="Tim Hautekiet">Tim Hautekiet</option>
+                    <option value="Zach Cregger">Zach Cregger</option>
+                </select>
+            </div>
+
+            <div class="movie-grid" id="movie-grid">
+                
+            <article class="movie-card expandable " id="popstar-never-stop-never-stopping"
+                     data-rating="3.5"
+                     data-date="2026-01-26"
+                     data-name="Popstar: Never Stop Never Stopping"
+                     data-director="Jorma Taccone">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Popstar: Never Stop Never Stopping <span class="year">(2016)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★½</span>
+                            <span class="director">Dir: Jorma Taccone</span>
+                            <span class="date">Jan 26, 2026</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/jBZeZZNjYBUU21zFvBnin5n62bv.jpg" alt="Popstar: Never Stop Never Stopping poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Watching this in 2026 makes it feel like a period piece</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/cVaXrT" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable five-star" id="marty-supreme"
+                     data-rating="5.0"
+                     data-date="2026-01-22"
+                     data-name="Marty Supreme"
+                     data-director="Josh Safdie">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Marty Supreme <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1">★</span><span class="star star-2">★</span><span class="star star-3">★</span><span class="star star-4">★</span><span class="star star-5">★</span></span>
+                            <span class="director">Dir: Josh Safdie</span>
+                            <span class="date">Jan 22, 2026</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/firAhZA0uQvRL2slp7v3AnOj0ZX.jpg" alt="Marty Supreme poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Move over 'Balls of Fury,' there's a new king of table tennis movies!</p>
+                        <p>But seriously, what a ride. Marty is such an absolute menace you can't decide if you want him to succeed or not. Superb acting and cinematography.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/cMU7BX" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="the-housemaid"
+                     data-rating="4.0"
+                     data-date="2026-01-05"
+                     data-name="The Housemaid"
+                     data-director="Paul Feig">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>The Housemaid <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Paul Feig</span>
+                            <span class="date">Jan 05, 2026</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/cWsBscZzwu5brg9YjNkGewRUvJX.jpg" alt="The Housemaid poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Well that was ...sexy.</p>
+                        <p>Was anyone acting reasonably? No. But they were hot as hell and it was quite a fun ride!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/cBlgkx" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable five-star" id="knives-out"
+                     data-rating="5.0"
+                     data-date="2025-12-22"
+                     data-name="Knives Out"
+                     data-director="Rian Johnson">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Knives Out <span class="year">(2019)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1">★</span><span class="star star-2">★</span><span class="star star-3">★</span><span class="star star-4">★</span><span class="star star-5">★</span></span>
+                            <span class="director">Dir: Rian Johnson</span>
+                            <span class="date">Dec 22, 2025</span>
+                            <span class="rewatch-badge">Rewatch</span>
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/pThyQovXQrw2m0s9x82twj48Jq4.jpg" alt="Knives Out poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Doing a rewatch after watching the third. I think we all owe Rian Johnson an apology for how we treated him after star wars.</p>
+                        <p>This is really just everything I want out of a whodunnit. But it's so much more than a whodunnit in its narrative complexity - the emotional tension comes from not wanting our detective to think our lead did the crime! It's just fantastic storytelling with enjoyable characters and splendid settings and cinematography.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/caqn6z" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="glass-onion"
+                     data-rating="4.0"
+                     data-date="2025-12-20"
+                     data-name="Glass Onion"
+                     data-director="Rian Johnson">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Glass Onion <span class="year">(2022)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Rian Johnson</span>
+                            <span class="date">Dec 20, 2025</span>
+                            <span class="rewatch-badge">Rewatch</span>
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/vDGr1YdrlfbU9wxTOdpf3zChmv9.jpg" alt="Glass Onion poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>When this came out, everyone begged me to watch it. I think they thought I would love the puzzles.</p>
+                        <p>But oh my God I could not stand how dumb all of the characters were, especially our detective!! Well I know it turns out he was faking it, but I was still mad at it for most of the movie.</p>
+                        <p>...which is why I very much enjoyed this rewatch.</p>
+                        <p>The least emotionally resonant of the trilogy, but just some good fun.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/caqv3t" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable five-star" id="wake-up-dead-man"
+                     data-rating="5.0"
+                     data-date="2025-12-16"
+                     data-name="Wake Up Dead Man"
+                     data-director="Rian Johnson">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Wake Up Dead Man <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1">★</span><span class="star star-2">★</span><span class="star star-3">★</span><span class="star star-4">★</span><span class="star star-5">★</span></span>
+                            <span class="director">Dir: Rian Johnson</span>
+                            <span class="date">Dec 16, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/qCOGGi8JBVEZMc3DVby8rUivyXz.jpg" alt="Wake Up Dead Man poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Hot damn do I love a whodunnit! I wanted to pause every 20 minutes to make a new guess. Packed with clues and gorgeous imagery, I wanted to watch it again immediately! It maturely and beautifully shows the potential harms and benefits of religion, even squeezing some tears out of me in sudden and unexpected, rich  moments.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/c5HSQx" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="the-dinner-plan"
+                     data-rating="0"
+                     data-date="2025-12-13"
+                     data-name="The Dinner Plan"
+                     data-director="Patrick Willems">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>The Dinner Plan <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            
+                            <span class="director">Dir: Patrick Willems</span>
+                            <span class="date">Dec 13, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/gu9VGeU2CN9nZOLcmAzxA6gaGPv.jpg" alt="The Dinner Plan poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Beautiful food shots!</p>
+                        <p>So goofy and anxious, but shot with such seriousness.</p>
+                        <p>I always have a hard time connecting with a main character who acts so ridiculously.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/c2hdcn" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="me-myself-the-void"
+                     data-rating="4.5"
+                     data-date="2025-12-13"
+                     data-name="Me, Myself & the Void"
+                     data-director="Tim Hautekiet">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Me, Myself & the Void <span class="year">(2023)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★½</span>
+                            <span class="director">Dir: Tim Hautekiet</span>
+                            <span class="date">Dec 13, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/2aGXS1UGJnXtqBfUTLQh0nylqQl.jpg" alt="Me, Myself & the Void poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Chris and Jack are truly hilarious. It was a joy to see one of their bits extended to a feature film!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/c2ueRd" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="now-you-see-me-now-you-dont"
+                     data-rating="1.5"
+                     data-date="2025-12-11"
+                     data-name="Now You See Me: Now You Don't"
+                     data-director="Ruben Fleischer">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Now You See Me: Now You Don't <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★½</span>
+                            <span class="director">Dir: Ruben Fleischer</span>
+                            <span class="date">Dec 11, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/oD3Eey4e4Z259XLm3eD3WGcoJAh.jpg" alt="Now You See Me: Now You Don't poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Mostly flat performances from a knockout cast. I can't blame them, with a story and dialogue like this. Doubly disappointing with such great potential for effects and story-telling.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/c12mu7" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="wicked-for-good"
+                     data-rating="3.5"
+                     data-date="2025-12-09"
+                     data-name="Wicked: For Good"
+                     data-director="Jon M. Chu">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Wicked: For Good <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★½</span>
+                            <span class="director">Dir: Jon M. Chu</span>
+                            <span class="date">Dec 09, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/lDL8vPUuJs2LsPHPjAGhkbYTpNX.jpg" alt="Wicked: For Good poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            
+                            <div class="movie-card__footer">
+                                <a href="https://letterboxd.com/theorangeblur/film/wicked-for-good/" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="boogie-nights"
+                     data-rating="4.5"
+                     data-date="2025-12-08"
+                     data-name="Boogie Nights"
+                     data-director="Paul Thomas Anderson">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Boogie Nights <span class="year">(1997)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★½</span>
+                            <span class="director">Dir: Paul Thomas Anderson</span>
+                            <span class="date">Dec 08, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/wnE24UPCPQsQnbBOu4zVE2qaDNm.jpg" alt="Boogie Nights poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>"But I don't want to make a film where they show up, they sit down, they jack off, and they get up and they get out before the story ends. It is my dream, it is my goal, it is my idea to make a film where the story just sucks them in. And when they spurt out that joy juice, they've got to just sit in it. They can't move before the story ends. You know, I want to make a film like that."</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bZlwcH" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable five-star" id="the-holdovers"
+                     data-rating="5.0"
+                     data-date="2025-12-01"
+                     data-name="The Holdovers"
+                     data-director="Alexander Payne">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>The Holdovers <span class="year">(2023)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1">★</span><span class="star star-2">★</span><span class="star star-3">★</span><span class="star star-4">★</span><span class="star star-5">★</span></span>
+                            <span class="director">Dir: Alexander Payne</span>
+                            <span class="date">Dec 01, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/VHSzNBTwxV8vh7wylo7O9CLdac.jpg" alt="The Holdovers poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>I think I have a new favorite Christmas movie...!!!</p>
+                        <p>Many Christmas movies fall into the trope of "trying to discover the true meaning of Christmas," where the characters in this film are trying to discover their purpose in life, which gets informed by the holiday festivities. All beautiful, flawed, rich characters with fantastic performances. A movie that gives me hope for the future... and isn't that the true meaning of Christmas? ;)</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bVPpqB" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="yesterday"
+                     data-rating="3.5"
+                     data-date="2025-11-29"
+                     data-name="Yesterday"
+                     data-director="Danny Boyle">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Yesterday <span class="year">(2019)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★½</span>
+                            <span class="director">Dir: Danny Boyle</span>
+                            <span class="date">Nov 29, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/9fYka5CQt9nrb6LOtKicysUf9NA.jpg" alt="Yesterday poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Very charming. Perhaps simple story writing with a very fun idea. I wanted much more from the music side.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bTo6Hh" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="crazy-rich-asians"
+                     data-rating="4.0"
+                     data-date="2025-11-28"
+                     data-name="Crazy Rich Asians"
+                     data-director="Jon M. Chu">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Crazy Rich Asians <span class="year">(2018)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Jon M. Chu</span>
+                            <span class="date">Nov 28, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/1XxL4LJ5WHdrcYcihEZUCgNCpAW.jpg" alt="Crazy Rich Asians poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Gorgeously shot Asian fairy-tale</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bToiHt" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="the-running-man"
+                     data-rating="3.0"
+                     data-date="2025-11-23"
+                     data-name="The Running Man"
+                     data-director="Edgar Wright">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>The Running Man <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★</span>
+                            <span class="director">Dir: Edgar Wright</span>
+                            <span class="date">Nov 23, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/dKL78O9zxczVgjtNcQ9UkbYLzqX.jpg" alt="The Running Man poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>The long walk but sci-fi and more edgy.</p>
+                        <p>And with horrible dialogue.</p>
+                        <p>I can't tell if the movie was trying to be camp, but oh boy was it cheesy.</p>
+                        <p>I enjoyed the world and found myself having a good time all the way through.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bP0Wal" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable five-star" id="smile-2"
+                     data-rating="5.0"
+                     data-date="2025-11-09"
+                     data-name="Smile 2"
+                     data-director="Parker Finn">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Smile 2 <span class="year">(2024)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1">★</span><span class="star star-2">★</span><span class="star star-3">★</span><span class="star star-4">★</span><span class="star star-5">★</span></span>
+                            <span class="director">Dir: Parker Finn</span>
+                            <span class="date">Nov 09, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/ht8Uv9QPv9y7K0RvUyJIaXOZTfd.jpg" alt="Smile 2 poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>I have to give this movie five stars because no other movies has scared me so badly. And it was a blast the whole time. A phenomenal sequel that had me yelling, shaking, and staying up at night.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bFgqFX" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="smile"
+                     data-rating="4.0"
+                     data-date="2025-11-08"
+                     data-name="Smile"
+                     data-director="Parker Finn">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Smile <span class="year">(2022)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Parker Finn</span>
+                            <span class="date">Nov 08, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/aPqcQwu4VGEewPhagWNncDbJ9Xp.jpg" alt="Smile poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>I watched Smile and it's sequel yesterday and I had to turn my light on and read for an hour at 4am to unfreak myself</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bFgnU1" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="talk-to-me"
+                     data-rating="4.0"
+                     data-date="2025-10-31"
+                     data-name="Talk to Me"
+                     data-director="Michael Philippou">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Talk to Me <span class="year">(2022)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Michael Philippou</span>
+                            <span class="date">Oct 31, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/kdPMUMJzyYAc4roD52qavX0nLIC.jpg" alt="Talk to Me poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Scariest movie I've seen in quite a long time. This movie made me feel intensely upset in a way that I'm not sure a movie has ever done for me before. I wanted to scream at every character. I wanted to cry for every character. I wanted to be a billion miles away from every character.</p>
+                        <p>Don't ever ask me to talk to spirits, I won't do it.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bAVGfX" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="frankenstein"
+                     data-rating="2.0"
+                     data-date="2025-10-27"
+                     data-name="Frankenstein"
+                     data-director="Guillermo del Toro">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Frankenstein <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★</span>
+                            <span class="director">Dir: Guillermo del Toro</span>
+                            <span class="date">Oct 27, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/g4JtvGlQO7DByTI6frUobqvSL3R.jpg" alt="Frankenstein poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>TLDR: But like why?</p>
+                        <p>Victor Frankenstein is the real monster. We get it. But in most tellings,you can still empathize with him... Not so in this film. And yet the Creature forgives him? Why??</p>
+                        <p>At many points during the movie I asked myself who this movie is for. It's quite gory and seems to take itself very seriously, but also fails to really lean into the deeper more horrifying ideas suggested by the plot.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bw9kAH" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="weapons"
+                     data-rating="4.0"
+                     data-date="2025-10-24"
+                     data-name="Weapons"
+                     data-director="Zach Cregger">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Weapons <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Zach Cregger</span>
+                            <span class="date">Oct 24, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/cpf7vsRZ0MYRQcnLWteD5jK9ymT.jpg" alt="Weapons poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Weird, wacky, and wonderful.</p>
+                        <p>I heard that Peele fired someone over not getting to direct this movie... And I wish I lived in the timeline where he was involved with it.</p>
+                        <p>The horrifying sub-text of this being like a school shooting gives the film a deeper feeling of real horror. Many of the characters act out their grief in real, human ways, struggling to get on with their lives after the loss of their kids.</p>
+                        <p>I was just beginning to believe the movie was going to be entirely fantastical, without explaining anything when we started getting some juicy answers...</p>
+                        <p>What a time we live in for whacky, well done elevated horror!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/btMAP5" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="speak-no-evil"
+                     data-rating="4.0"
+                     data-date="2025-10-19"
+                     data-name="Speak No Evil"
+                     data-director="James Watkins">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Speak No Evil <span class="year">(2024)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: James Watkins</span>
+                            <span class="date">Oct 19, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/dA4N6uWOnEMgbxXwFX7qX7adzs8.jpg" alt="Speak No Evil poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>A fantastically well done piece of candy. Superb dialogue and acting from our leads keep the movie interesting, with the suspension of knowing something is horribly wrong eating at you in perfect amount. A psychological thriller at heart, with just the right touch of horror elements.</p>
+                        <p>The only thing keeping this movie from five stars for me is the fairly predictable plot.</p>
+                        <p>Each of the adult characters felt fully realized and complete as people, especially the true hero of the film, the mother. What a badass!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bqV26B" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="over-the-garden-wall"
+                     data-rating="3.5"
+                     data-date="2025-10-04"
+                     data-name="Over the Garden Wall"
+                     data-director="">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Over the Garden Wall <span class="year">(2014)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★½</span>
+                            
+                            <span class="date">Oct 04, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <div class="movie-poster-placeholder"></div>
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>A charming tale of two brothers trying to find their way home through strange and enchanted woods. Each episode tells a brief serial with new characters and setting, keeping each feeling fresh. Accompanied by a truly fantastic old-timey big band Dixie style score, the whole show is dripping with charm and character.</p>
+                        <p>I know many people that make this a yearly October viewing, and I get it. Personally I found it quite charming, but I don't think I'll be itching to see it again. I was searching for some deeper meaning to this land, like Oz, but I failed to find one (maybe I'll read some more reviews and feel dumb for not seeing something). That's okay, it was still fun!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bhTmtv" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="the-long-walk"
+                     data-rating="4.0"
+                     data-date="2025-09-28"
+                     data-name="The Long Walk"
+                     data-director="Francis Lawrence">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>The Long Walk <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Francis Lawrence</span>
+                            <span class="date">Sep 28, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/wobVTa99eW0ht6c1rNNzLkazPtR.jpg" alt="The Long Walk poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Anyone story can build suspense by making the audience wonder "what's going to happen!?"</p>
+                        <p>That's not what you get with this movie. You know almost exactly what's going to happen, and it's horrifying. It is suspense in a way that Steven King has perfected. I felt like I was on the Long Walk with the characters, knowing that another death was always right around the corner... I just wish the "twist" of the characters dying would have been an actual twist, not a clear part of the advertising. I suppose advertising it otherwise would have been too difficult.</p>
+                        <p>There are quite a few metaphors about capitalism I had rolling about my head while watching. The world feltOrwellian, and I wanted quite a bit more world building than the very little given. The boys start walking a few minutes in... And they go until the end. You know what you're getting with this one.</p>
+                        <p>How did I just sit through a whole movie with just some guys walking?? I guess it was done quite well!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/biej03" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="him"
+                     data-rating="4.5"
+                     data-date="2025-09-14"
+                     data-name="HIM"
+                     data-director="Justin Tipping">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>HIM <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★½</span>
+                            <span class="director">Dir: Justin Tipping</span>
+                            <span class="date">Sep 14, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/qPJzcYR2f1O1uynYBCVPPJuOiAH.jpg" alt="HIM poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>It's hard not to read all of the negative reviews before writing mine... Because I really enjoyed this movie. It's dripping with style and has Peele's visual influence all over it. It addresses legitimate concerns about how we as a culture idolize football - we love to watch men hit each other! It may be the first time many viewers have though of football players essentially being gladiators, and I imagine it is a hard pill to swallow for many Americans. The way the movie blends ideas of satanism, capitalism, paganism, and this gladiator idea could feel confusing - but that's very much intended. Our lead character is also realizing how messed up the whole system is, and is heavily drugged for many scenes.</p>
+                        <p>I would not recommend this movie to everyone, especially not people who need everything in their movies to make complete sense to them by the time the credits roll. But to those who are willing to go along for the ride, this movie is a blast.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bhVM59" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="mission-impossible"
+                     data-rating="4.5"
+                     data-date="2025-09-06"
+                     data-name="Mission: Impossible"
+                     data-director="Brian De Palma">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Mission: Impossible <span class="year">(1996)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★½</span>
+                            <span class="director">Dir: Brian De Palma</span>
+                            <span class="date">Sep 06, 2025</span>
+                            <span class="rewatch-badge">Rewatch</span>
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/l5uxY5m5OInWpcExIpKG6AR3rgL.jpg" alt="Mission: Impossible poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>I'd say "the movie that started it all," but apparently this franchise is based on an old show. This movie is the most "spy" movie of the series, forcing you to always wonder who you can trust. All characters are compelling, and the action is gripping. No other entries in the series has made me feel as nervous, excited, or curious. Fantastic.</p>
+                        <p>Also, young Tom Cruise is so fun!</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bhSTVb" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="movie-card expandable " id="honey-dont"
+                     data-rating="4.0"
+                     data-date="2025-08-23"
+                     data-name="Honey Don't!"
+                     data-director="Ethan Coen">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Honey Don't! <span class="year">(2025)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating">★★★★</span>
+                            <span class="director">Dir: Ethan Coen</span>
+                            <span class="date">Aug 23, 2025</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/fJm3kmd9NLZWypMas7g34oNFgbk.jpg" alt="Honey Don't! poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>Okay, maybe I wasn't completely sober.</p>
+                        <p>But I had SUCH a fun time watching this movie. I didn't know I needed a lesbian noir.</p>
+                        <p>The acting is superb (not to mention incredibly sexy), and the setting is eclectic and wonderful.</p>
+                        <p>I could see a slightly different version of this movie that just hates on men, but I genuinely found this take hilarious.</p>
+                        <p>Truly a ~vibes~ movie as well, which I am always into (but I'm still arguing that point to most, so the negative reviews are a shame, but not a surprise).</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://boxd.it/bieuLp" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            </div>
+        </section>
+
+        <!-- TODO Section -->
+        <section class="todo-section glass-card">
+            <h5>Things Emmet is going to work on for this page:</h5>
+            <ul>
+                <li>Add Emmet's awards tags like "favorite soundtrack"</li>
+                <li>Rewatch my four favorite movies at the top of the list so I can write reviews for them and have the panes link to those reviews</li>
+                <li>Maybe add my favorite reviews from my friends</li>
+                <li>Add my must-watch list
+                    <ul>
+                        <li>Find a way for <em>you</em> to add to my must-watch list here</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Footer -->
+        <footer class="page-footer">
+            <p>Last updated: 2026-01-31</p>
+            <p>Data synced from <a href="https://letterboxd.com/THEORANGEBLUR/" target="_blank">Letterboxd</a></p>
+        </footer>
+    </div>
+
+    <script src="./movies.js"></script>
+</body>
+</html>

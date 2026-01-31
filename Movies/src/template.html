@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Reviews | Emmet</title>
+    <meta name="description" content="Emmet's movie reviews, ratings, and watchlist">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="../index.html">Home</a>
+        <a href="../Visual-Stitch/snapshots.html">Daily Snapshots</a>
+        <a href="../Projects/projects.html">Projects</a>
+        <a href="../Puzzle/puzzle.html">Puzzles</a>
+        <a href="../Game_review/games.html">Game Reviews</a>
+        <a href="./movies.html" class="active">Movie Reviews</a>
+        <a href="../Blog/blog.html">Blog</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Has Emmet seen this?</h1>
+        <p class="intro-text">
+            A long, long time ago, in my junior year of highschool, my favorite teacher opened
+            up a class on "film lit" that permanently changed the way I watch movies. I have loved 
+            the medium ever since! I would be delighted to engage in a heated discussion with you 
+            about one :) On this page, you will find reviews and ratings of movies I've watched since
+            some point in 2025 when I started a <a href="https://letterboxd.com/THEORANGEBLUR/" target="_blank">Letterboxd</a>
+            account (which was Julia's idea. Thanks, babe!!).
+        </p>
+    </header>
+
+    <div class="container">
+        <!-- Favorites Section -->
+        <section class="favorites-section glass-card">
+            <h2>Favorite Films</h2>
+            <div class="favorites-grid">
+                {{FAVORITES}}
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-summary glass-card">
+            <h2>Stats</h2>
+            {{STATS}}
+        </section>
+
+        <!-- Movie Grid -->
+        <section class="movies-section">
+            <h2>Movies I've Watched<span class="asterisk-tooltip"><span class="asterisk">*</span><span class="tooltip-text">since some random point in 2025 when I started tracking this stuff.</span></span></h2>
+
+            <div class="controls">
+                <select id="sort-by">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="rating-desc">Highest Rated</option>
+                    <option value="rating-asc">Lowest Rated</option>
+                    <option value="name">Alphabetical</option>
+                </select>
+                <select id="filter-rating">
+                    <option value="all">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                </select>
+                <select id="filter-director">
+                    {{DIRECTOR_OPTIONS}}
+                </select>
+            </div>
+
+            <div class="movie-grid" id="movie-grid">
+                {{MOVIES}}
+            </div>
+        </section>
+
+        <!-- TODO Section -->
+        <section class="todo-section glass-card">
+            <h5>Things Emmet is going to work on for this page:</h5>
+            <ul>
+                <li>Add Emmet's awards tags like "favorite soundtrack"</li>
+                <li>Rewatch my four favorite movies at the top of the list so I can write reviews for them and have the panes link to those reviews</li>
+                <li>Maybe add my favorite reviews from my friends</li>
+                <li>Add my must-watch list
+                    <ul>
+                        <li>Find a way for <em>you</em> to add to my must-watch list here</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Footer -->
+        <footer class="page-footer">
+            <p>Last updated: {{BUILD_DATE}}</p>
+            <p>Data synced from <a href="https://letterboxd.com/THEORANGEBLUR/" target="_blank">Letterboxd</a></p>
+        </footer>
+    </div>
+
+    <script src="./movies.js"></script>
+</body>
+</html>
