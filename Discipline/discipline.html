@@ -10,12 +10,6 @@
 <body>
     <nav class="top-nav">
         <a href="../index.html">🏠 Home</a>
-        <a href="../Visual-Stitch/snapshots.html">📹 Daily Snapshots</a>
-        <a href="../Projects/projects.html">🛠️ Projects</a>
-        <a href="../Puzzle/puzzle.html">🧩 Puzzles</a>
-        <a href="../Game_review/games.html">🎮 Game Reviews</a>
-        <a href="../Blog/blog.html">📢 Blog</a>
-        <a href="./discipline.html" class="active">🎯 Disciplines</a>
     </nav>
 
     <header class="page-header">
@@ -41,49 +35,109 @@
                     <span class="dot spirit filled"></span>
                     <span>Spirit</span>
                 </div>
+                <div class="legend-item">
+                    <span class="dot spanish filled"></span>
+                    <span>Spanish</span>
+                </div>
             </div>
         </section>
 
-        <!-- Calendar Section -->
-        <section class="calendar-section glass-card">
-            <div class="calendar-header">
-                <span class="nav-btn-wrapper" id="prevMonthWrapper">
-                    <button class="nav-btn" id="prevMonth">◀</button>
-                    <span class="nav-tooltip">Emmet wasn't tracking his Disciplines before now!</span>
-                </span>
-                <h2 id="monthYear">January 2026</h2>
-                <span class="nav-btn-wrapper" id="nextMonthWrapper">
-                    <button class="nav-btn" id="nextMonth">▶</button>
-                    <span class="nav-tooltip">Emmet hasn't logged any Disciplines in the future! That would be cheating!</span>
-                </span>
-            </div>
-            <div class="calendar-grid">
-                <div class="day-header">Sun</div>
-                <div class="day-header">Mon</div>
-                <div class="day-header">Tue</div>
-                <div class="day-header">Wed</div>
-                <div class="day-header">Thu</div>
-                <div class="day-header">Fri</div>
-                <div class="day-header">Sat</div>
-            </div>
-            <div class="calendar-days" id="calendarDays">
-                <!-- Days will be populated by JavaScript -->
-            </div>
-        </section>
+        <!-- Calendar + Streaks Wrapper -->
+        <div class="calendar-streak-wrapper">
+            <!-- Calendar Section -->
+            <section class="calendar-section glass-card">
+                <div class="calendar-header">
+                    <span class="nav-btn-wrapper" id="prevMonthWrapper">
+                        <button class="nav-btn" id="prevMonth">◀</button>
+                        <span class="nav-tooltip">Emmet wasn't tracking his Disciplines before now!</span>
+                    </span>
+                    <h2 id="monthYear">January 2026</h2>
+                    <span class="nav-btn-wrapper" id="nextMonthWrapper">
+                        <button class="nav-btn" id="nextMonth">▶</button>
+                        <span class="nav-tooltip">Emmet hasn't logged any Disciplines in the future! That would be cheating!</span>
+                    </span>
+                </div>
+                <div class="calendar-grid">
+                    <div class="day-header">Sun</div>
+                    <div class="day-header">Mon</div>
+                    <div class="day-header">Tue</div>
+                    <div class="day-header">Wed</div>
+                    <div class="day-header">Thu</div>
+                    <div class="day-header">Fri</div>
+                    <div class="day-header">Sat</div>
+                </div>
+                <div class="calendar-days" id="calendarDays">
+                    <!-- Days will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Streak Statistics Pane -->
+            <section class="streak-section glass-card">
+                <h2>Current Streaks</h2>
+
+                <!-- Perfect Day Streak -->
+                <div class="streak-card streak-perfect">
+                    <div class="streak-header">
+                        <span class="streak-icon">&#11088;</span>
+                        <span class="streak-label">Perfect Days</span>
+                    </div>
+                    <div class="streak-value" id="perfectStreak">0</div>
+                </div>
+
+                <!-- Mind Streak -->
+                <div class="streak-card streak-mind">
+                    <div class="streak-header">
+                        <span class="dot mind filled"></span>
+                        <span class="streak-label text-mind">Mind</span>
+                    </div>
+                    <div class="streak-value" id="mindStreak">0</div>
+                </div>
+
+                <!-- Body Streak -->
+                <div class="streak-card streak-body">
+                    <div class="streak-header">
+                        <span class="dot body filled"></span>
+                        <span class="streak-label text-body">Body</span>
+                    </div>
+                    <div class="streak-value" id="bodyStreak">0</div>
+                </div>
+
+                <!-- Spirit Streak -->
+                <div class="streak-card streak-spirit">
+                    <div class="streak-header">
+                        <span class="dot spirit filled"></span>
+                        <span class="streak-label text-spirit">Spirit</span>
+                    </div>
+                    <div class="streak-value" id="spiritStreak">0</div>
+                </div>
+
+                <!-- Spanish Streak -->
+                <div class="streak-card streak-spanish">
+                    <div class="streak-header">
+                        <span class="dot spanish filled"></span>
+                        <span class="streak-label text-spanish">Spanish</span>
+                    </div>
+                    <div class="streak-value" id="spanishStreak">0</div>
+                </div>
+            </section>
+        </div>
 
         <!-- Explanation Section -->
         <section class="explanation glass-card">
             <h2>I've always sucked at disciplining myself.</h2>
             <p>
-                This year, starting just before my birthday, I'm going to try to force some good habits upon myself.
+                This year, starting on my birthday, I'm going to try to force some good habits upon myself.
                 I've broken these disciplines into three categories: 
                 the <strong class="text-mind">Mind</strong> (technical learning, creation, problem-solving),
                 the <strong class="text-body">Body</strong> (exercise, fitness, health),
                 and the <strong class="text-spirit">Spirit</strong> (reflection, connection, purpose).
             </p>
             <p>
+                Update! I've added a <strong class="text-spanish">Spanish</strong> section on Julia's birthday, as a gift to her! Te amo, Julia!
+            </p>
+            <p>
                 My goal is that this public calendar will keep me accountable to performing at least 
-                one activity in all three categories each day. You can even hover
+                one activity in all <s>three</s> <strong><span class="text-mind">f</span><span class="text-body">o</span><span class="text-spirit">u</span><span class="text-spanish">r</span></strong> categories each day. You can even hover
                 over any filled circle to see what activity I completed! Feel free to give me a call and 
                 chastise me over any day I missed an activity.
             </p>

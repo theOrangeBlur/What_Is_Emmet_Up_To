@@ -10,6 +10,9 @@ const MIN_MONTH = 0; // January (0-indexed)
 // First day of tracking (for dimming past days)
 const TRACKING_START_DATE = '2026-01-20';
 
+// Spanish tracking start date
+const SPANISH_START_DATE = '2026-02-02';
+
 // Dance animation state
 let danceInterval = null;
 
@@ -20,10 +23,12 @@ async function loadDisciplineData() {
         const csvText = await response.text();
         parseCsvData(csvText);
         renderCalendar();
+        updateStreakDisplay();
         startDanceAnimation();
     } catch (error) {
         console.error('Error loading discipline data:', error);
         renderCalendar();
+        updateStreakDisplay();
         startDanceAnimation();
     }
 }
@@ -48,6 +53,7 @@ function parseCsvData(csvText) {
                 mind: [],
                 body: [],
                 spirit: [],
+                spanish: [],
                 exceptional: []
             };
         }
@@ -175,9 +181,134 @@ function isPastDate(dateStr) {
     return checkDate < today;
 }
 
+// Check if a date is in the future (after today)
+function isFutureDate(dateStr) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const checkDate = new Date(year, month - 1, day);
+    return checkDate > today;
+}
+
 // Check if a date is before the tracking start date
 function isBeforeTrackingStart(dateStr) {
     return dateStr < TRACKING_START_DATE;
+}
+
+// ============================================
+// STREAK CALCULATION FUNCTIONS
+// ============================================
+
+// Get today's date as YYYY-MM-DD string
+function getTodayStr() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Get the previous day's date string
+function getPreviousDay(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() - 1);
+    const newYear = date.getFullYear();
+    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const newDay = String(date.getDate()).padStart(2, '0');
+    return `${newYear}-${newMonth}-${newDay}`;
+}
+
+// Check if a category was completed on a given date
+function isCategoryCompleted(dateStr, category) {
+    const dayData = disciplineData[dateStr];
+    if (!dayData) return false;
+    return dayData[category] && dayData[category].length > 0;
+}
+
+// Check if all active categories were completed on a given date (Perfect Day)
+function isPerfectDay(dateStr) {
+    const dayData = disciplineData[dateStr];
+    if (!dayData) return false;
+
+    // Mind, Body, Spirit are always required
+    const hasCore = (dayData.mind && dayData.mind.length > 0) &&
+                    (dayData.body && dayData.body.length > 0) &&
+                    (dayData.spirit && dayData.spirit.length > 0);
+
+    if (!hasCore) return false;
+
+    // Spanish is only required from its start date onwards
+    if (dateStr >= SPANISH_START_DATE) {
+        return dayData.spanish && dayData.spanish.length > 0;
+    }
+
+    return true;
+}
+
+// Calculate current streak for a category (counting backwards from today/yesterday)
+function calculateCurrentStreak(category, startDate) {
+    let streak = 0;
+    let checkDate = getTodayStr();
+    const today = checkDate;
+
+    // Count consecutive completed days going backwards
+    while (checkDate >= startDate) {
+        if (isCategoryCompleted(checkDate, category)) {
+            // Day is complete, add to streak
+            streak++;
+            checkDate = getPreviousDay(checkDate);
+        } else if (checkDate === today) {
+            // Today isn't complete yet - skip without breaking streak
+            checkDate = getPreviousDay(checkDate);
+        } else {
+            // A past day is incomplete - streak is broken
+            break;
+        }
+    }
+
+    return streak;
+}
+
+// Calculate current streak for Perfect Days
+function calculatePerfectDayStreak() {
+    let streak = 0;
+    let checkDate = getTodayStr();
+    const today = checkDate;
+
+    // Count consecutive perfect days going backwards
+    while (checkDate >= TRACKING_START_DATE) {
+        if (isPerfectDay(checkDate)) {
+            // Day is perfect, add to streak
+            streak++;
+            checkDate = getPreviousDay(checkDate);
+        } else if (checkDate === today) {
+            // Today isn't perfect yet - skip without breaking streak
+            checkDate = getPreviousDay(checkDate);
+        } else {
+            // A past day is imperfect - streak is broken
+            break;
+        }
+    }
+
+    return streak;
+}
+
+// Update all streak displays in the DOM
+function updateStreakDisplay() {
+    // Calculate all streaks
+    const mindStreak = calculateCurrentStreak('mind', TRACKING_START_DATE);
+    const bodyStreak = calculateCurrentStreak('body', TRACKING_START_DATE);
+    const spiritStreak = calculateCurrentStreak('spirit', TRACKING_START_DATE);
+    const spanishStreak = calculateCurrentStreak('spanish', SPANISH_START_DATE);
+    const perfectStreak = calculatePerfectDayStreak();
+
+    // Update DOM elements
+    document.getElementById('mindStreak').textContent = mindStreak;
+    document.getElementById('bodyStreak').textContent = bodyStreak;
+    document.getElementById('spiritStreak').textContent = spiritStreak;
+    document.getElementById('spanishStreak').textContent = spanishStreak;
+    document.getElementById('perfectStreak').textContent = perfectStreak;
 }
 
 // Create a single day cell
@@ -189,6 +320,7 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     if (isOtherMonth) cell.classList.add('other-month');
     if (isToday) cell.classList.add('today');
     if (isBeforeTrackingStart(dateStr)) cell.classList.add('before-tracking');
+    if (isFutureDate(dateStr)) cell.classList.add('future-day');
     if (isPastDate(dateStr) && !isToday && !isBeforeTrackingStart(dateStr)) cell.classList.add('past-day');
 
     const dayNumber = document.createElement('div');
@@ -199,7 +331,7 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     const dots = document.createElement('div');
     dots.className = 'day-dots';
 
-    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [], exceptional: [] };
+    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [], spanish: [], exceptional: [] };
 
     // Mind dot
     dots.appendChild(createDot('mind', dayData.mind, dateStr));
@@ -207,6 +339,10 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     dots.appendChild(createDot('body', dayData.body, dateStr));
     // Spirit dot
     dots.appendChild(createDot('spirit', dayData.spirit, dateStr));
+    // Spanish dot (only for dates on or after Spanish tracking start)
+    if (dateStr >= SPANISH_START_DATE) {
+        dots.appendChild(createDot('spanish', dayData.spanish, dateStr));
+    }
     // Exceptional dot (only if there's data)
     if (dayData.exceptional && dayData.exceptional.length > 0) {
         dots.appendChild(createDot('exceptional', dayData.exceptional, dateStr));

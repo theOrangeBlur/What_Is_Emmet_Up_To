@@ -150,6 +150,15 @@ section h2 {
     box-shadow: 0 0 8px #5eead4;
 }
 
+.dot.spanish {
+    border-color: #f472b6;
+}
+
+.dot.spanish.filled {
+    background: #f472b6;
+    box-shadow: 0 0 8px #f472b6;
+}
+
 .dot.exceptional {
     border-color: #ffd700;
 }
@@ -159,9 +168,108 @@ section h2 {
     box-shadow: 0 0 8px #ffd700;
 }
 
+/* Calendar + Streak Wrapper */
+.calendar-streak-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: stretch;
+}
+
+.calendar-streak-wrapper .calendar-section {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.calendar-streak-wrapper .streak-section {
+    flex: 0 0 220px;
+    margin-bottom: 0;
+}
+
 /* Calendar Section */
 .calendar-section {
     overflow: visible;
+}
+
+/* Streak Section */
+.streak-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.streak-section h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+}
+
+.streak-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px 15px;
+    border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.streak-card + .streak-card {
+    margin-top: 10px;
+}
+
+.streak-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.streak-card.streak-perfect {
+    border-left-color: #ffd700;
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.streak-card.streak-mind {
+    border-left-color: #c4b5fd;
+}
+
+.streak-card.streak-body {
+    border-left-color: #7dd3fc;
+}
+
+.streak-card.streak-spirit {
+    border-left-color: #5eead4;
+}
+
+.streak-card.streak-spanish {
+    border-left-color: #f472b6;
+}
+
+.streak-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.streak-header .dot {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+.streak-icon {
+    font-size: 1em;
+}
+
+.streak-label {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.streak-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ffd700;
+    line-height: 1;
 }
 
 .calendar-header {
@@ -294,7 +402,8 @@ section h2 {
     opacity: 0.7;
 }
 
-.day-cell.before-tracking {
+.day-cell.before-tracking,
+.day-cell.future-day {
     opacity: 0.3;
 }
 
@@ -376,6 +485,11 @@ section h2 {
     box-shadow: 0 0 12px rgba(94, 234, 212, 0.5);
 }
 
+.dot.unfilled-past.dancing-shame.spanish {
+    animation: dotShame 0.4s ease-out;
+    box-shadow: 0 0 12px rgba(244, 114, 182, 0.5);
+}
+
 /* Exceptional animation - double bounce with bright glow */
 @keyframes dotExceptional {
     0% {
@@ -452,6 +566,10 @@ section h2 {
 
 .text-spirit {
     color: #5eead4;
+}
+
+.text-spanish {
+    color: #f472b6;
 }
 
 /* Explanation Section */
@@ -541,6 +659,41 @@ hr {
     .dot {
         width: 16px;
         height: 16px;
+    }
+
+    /* Streak section responsive */
+    .calendar-streak-wrapper {
+        flex-direction: column;
+    }
+
+    .calendar-streak-wrapper .streak-section {
+        flex: none;
+        width: 100%;
+    }
+
+    .streak-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .streak-section h2 {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .streak-card {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 140px;
+        margin-bottom: 0;
+    }
+
+    .streak-card.streak-perfect {
+        flex-basis: 100%;
+    }
+
+    .streak-value {
+        font-size: 1.3em;
     }
 }
 

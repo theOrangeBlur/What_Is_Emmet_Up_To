@@ -37,7 +37,9 @@ const splashTexts = [
     "No recursion required.",
     "YEEEEEWWWWWW!! He's on the slopes!!",
     "Dude I think this song really is about me!",
-    "Voted most likely person to break a bone on this trip"
+    "Voted most likely person to break a bone on this trip",
+    "You can go ahead and turn Dark Reader off :)",
+    "Whatever could be baking in that 3D printer of his?"
 ];
 
 // Simple seeded random number generator
