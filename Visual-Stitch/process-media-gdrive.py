@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Media Processing Script for Visual Stitch with Google Photos API
-Fetches media from Google Photos albums, processes images and videos,
+Media Processing Script for Visual Stitch with Google Drive API
+Fetches media from a Google Drive folder, processes images and videos,
 and stitches them into one compilation video.
+
+Migration from Google Photos API (deprecated March 2025) to Google Drive API.
 """
 
 import os
@@ -15,14 +17,15 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime
 import tempfile
+import io
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaIoBaseDownload
 from google.cloud import storage
-import requests
 
 # Configuration
 SCRIPT_DIR = Path(__file__).parent
@@ -32,17 +35,17 @@ TEMP_DOWNLOAD_DIR = SCRIPT_DIR / "temp_downloads"
 OUTPUT_VIDEO = OUTPUT_DIR / "compilation.mp4"
 DEFAULT_IMAGE_DURATION = 3  # seconds
 
-# Google Photos API scopes
-# Note: photoslibrary (full access) is needed because readonly doesn't grant album listing
-SCOPES = ['https://www.googleapis.com/auth/photoslibrary']
+# Google Drive API scopes (full access needed for delete after processing)
+SCOPES = ['https://www.googleapis.com/auth/drive']
 
 # Supported formats
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.m4v', '.3gp'}
+ALL_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
 
 def get_credentials() -> Credentials:
     """
-    Get Google Photos API credentials using OAuth 2.0.
+    Get Google Drive API credentials using OAuth 2.0.
     Looks for token.json for existing auth, or client_secret.json for new auth.
     """
     creds = None
@@ -50,7 +53,7 @@ def get_credentials() -> Credentials:
     client_secret_path = SCRIPT_DIR / 'client_secret.json'
 
     # Check for token in environment variable (for GitHub Actions)
-    token_json = os.environ.get('GOOGLE_PHOTOS_TOKEN')
+    token_json = os.environ.get('GOOGLE_DRIVE_TOKEN')
     if token_json:
         try:
             token_data = json.loads(token_json)
@@ -74,7 +77,7 @@ def get_credentials() -> Credentials:
     if not creds or not creds.valid:
         if not client_secret_path.exists():
             # Check environment variable
-            client_secret_json = os.environ.get('GOOGLE_PHOTOS_CLIENT_SECRET')
+            client_secret_json = os.environ.get('GOOGLE_DRIVE_CLIENT_SECRET')
             if client_secret_json:
                 with open(client_secret_path, 'w') as f:
                     f.write(client_secret_json)
@@ -93,38 +96,44 @@ def get_credentials() -> Credentials:
             token.write(creds.to_json())
 
         print(f"\n[OK] Authentication successful! Token saved to {token_path}")
-        print(f"Add this token to GitHub Secrets as GOOGLE_PHOTOS_TOKEN:\n")
+        print(f"Add this token to GitHub Secrets as GOOGLE_DRIVE_TOKEN:\n")
         print(creds.to_json())
 
     return creds
 
-def list_albums(service) -> List[dict]:
-    """List all albums in the user's Google Photos."""
-    try:
-        results = service.albums().list(pageSize=50).execute()
-        albums = results.get('albums', [])
 
-        if not albums:
-            print("No albums found.")
+def list_folders(service) -> List[dict]:
+    """List all folders in the user's Google Drive."""
+    try:
+        results = service.files().list(
+            q="mimeType='application/vnd.google-apps.folder' and trashed=false",
+            pageSize=50,
+            fields="files(id, name, modifiedTime)"
+        ).execute()
+        folders = results.get('files', [])
+
+        if not folders:
+            print("No folders found.")
             return []
 
         print("\n" + "=" * 60)
-        print("Your Google Photos Albums:")
+        print("Your Google Drive Folders:")
         print("=" * 60)
-        for album in albums:
-            title = album.get('title', 'Untitled')
-            album_id = album['id']
-            item_count = album.get('mediaItemsCount', 'Unknown')
-            print(f"\nAlbum: {title}")
-            print(f"  ID: {album_id}")
-            print(f"  Items: {item_count}")
+        for folder in folders:
+            name = folder.get('name', 'Untitled')
+            folder_id = folder['id']
+            modified = folder.get('modifiedTime', 'Unknown')
+            print(f"\nFolder: {name}")
+            print(f"  ID: {folder_id}")
+            print(f"  Modified: {modified}")
         print("=" * 60)
 
-        return albums
+        return folders
 
     except HttpError as error:
         print(f"An error occurred: {error}")
         return []
+
 
 def parse_duration_from_filename(filename: str) -> Optional[int]:
     """
@@ -136,78 +145,97 @@ def parse_duration_from_filename(filename: str) -> Optional[int]:
         return int(match.group(1))
     return None
 
+
 def should_skip_file(filename: str) -> bool:
     """Check if filename indicates it should be skipped (starts with _SKIP_)."""
     return filename.startswith('_SKIP_')
 
-def get_media_from_album(service, album_id: str) -> List[dict]:
+
+def get_media_from_folder(service, folder_id: str) -> List[dict]:
     """
-    Fetch all media items from a specific Google Photos album.
-    Returns list of media item dictionaries.
+    Fetch all media files from a specific Google Drive folder.
+    Returns list of file dictionaries.
     """
-    print(f"\nFetching media from album: {album_id}")
+    print(f"\nFetching media from folder: {folder_id}")
+
+    # Build query for supported media types
+    mime_queries = [
+        "mimeType contains 'image/'",
+        "mimeType contains 'video/'"
+    ]
+    mime_query = " or ".join(mime_queries)
+    query = f"'{folder_id}' in parents and ({mime_query}) and trashed=false"
 
     try:
         media_items = []
         page_token = None
 
         while True:
-            body = {
-                'albumId': album_id,
-                'pageSize': 100
-            }
-            if page_token:
-                body['pageToken'] = page_token
+            results = service.files().list(
+                q=query,
+                pageSize=100,
+                fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime)",
+                pageToken=page_token
+            ).execute()
 
-            results = service.mediaItems().search(body=body).execute()
-            items = results.get('mediaItems', [])
+            items = results.get('files', [])
             media_items.extend(items)
 
             page_token = results.get('nextPageToken')
             if not page_token:
                 break
 
-        print(f"Found {len(media_items)} media items in album")
+        print(f"Found {len(media_items)} media items in folder")
         return media_items
 
     except HttpError as error:
         print(f"An error occurred: {error}")
         return []
 
-def download_media_item(item: dict, output_path: Path) -> bool:
+
+def download_drive_file(service, file_id: str, filename: str, output_path: Path) -> bool:
     """
-    Download a media item from Google Photos.
+    Download a file from Google Drive.
     Returns True if successful, False otherwise.
     """
     try:
-        # Get base URL
-        base_url = item['baseUrl']
-
-        # Determine if it's a video or image
-        mime_type = item['mimeType']
-        if mime_type.startswith('video/'):
-            # For videos, append =dv to download
-            download_url = f"{base_url}=dv"
-        else:
-            # For images, append =d to download original
-            download_url = f"{base_url}=d"
-
-        # Download the file
-        response = requests.get(download_url, stream=True)
-        response.raise_for_status()
+        request = service.files().get_media(fileId=file_id)
 
         with open(output_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+            downloader = MediaIoBaseDownload(f, request)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
 
         return True
 
     except Exception as e:
-        print(f"  Error downloading {item.get('filename', 'unknown')}: {e}")
+        print(f"  Error downloading {filename}: {e}")
         return False
 
-def get_file_extension(mime_type: str) -> str:
-    """Convert MIME type to file extension."""
+
+def delete_drive_file(service, file_id: str, filename: str) -> bool:
+    """
+    Delete a file from Google Drive (move to trash).
+    Returns True if successful, False otherwise.
+    """
+    try:
+        service.files().delete(fileId=file_id).execute()
+        print(f"  Deleted from Drive: {filename}")
+        return True
+    except Exception as e:
+        print(f"  Error deleting {filename}: {e}")
+        return False
+
+
+def get_file_extension(mime_type: str, filename: str) -> str:
+    """Get file extension from mime type or filename."""
+    # First try to get from filename
+    ext = Path(filename).suffix.lower()
+    if ext:
+        return ext
+
+    # Fall back to mime type mapping
     mime_to_ext = {
         'image/jpeg': '.jpg',
         'image/jpg': '.jpg',
@@ -223,6 +251,7 @@ def get_file_extension(mime_type: str) -> str:
         'video/3gpp': '.3gp',
     }
     return mime_to_ext.get(mime_type, '.dat')
+
 
 def get_video_duration(video_path: Path) -> float:
     """Use ffprobe to get video duration in seconds."""
@@ -240,16 +269,17 @@ def get_video_duration(video_path: Path) -> float:
         print(f"Warning: Could not get duration for {video_path}: {e}")
         return 5.0  # Default fallback
 
-def process_album_media(service, album_id: str) -> List[Tuple[Path, float, datetime]]:
+
+def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, datetime, str, str]]:
     """
-    Download and catalog media from Google Photos album.
-    Returns list of (path, duration, date) tuples sorted chronologically.
+    Download and catalog media from Google Drive folder.
+    Returns list of (path, duration, date, file_id, filename) tuples sorted chronologically.
     """
-    # Get media items from album
-    media_items = get_media_from_album(service, album_id)
+    # Get media items from folder
+    media_items = get_media_from_folder(service, folder_id)
 
     if not media_items:
-        print("No media items found in album!")
+        print("No media items found in folder!")
         return []
 
     # Ensure temp download directory exists
@@ -258,8 +288,9 @@ def process_album_media(service, album_id: str) -> List[Tuple[Path, float, datet
     processed_media = []
 
     for idx, item in enumerate(media_items):
-        filename = item.get('filename', f'item_{idx}')
+        filename = item.get('name', f'item_{idx}')
         mime_type = item.get('mimeType', '')
+        file_id = item['id']
 
         # Check if file should be skipped
         if should_skip_file(filename):
@@ -267,7 +298,7 @@ def process_album_media(service, album_id: str) -> List[Tuple[Path, float, datet
             continue
 
         # Get file extension
-        ext = get_file_extension(mime_type)
+        ext = get_file_extension(mime_type, filename)
 
         # Check if it's a supported format
         if ext not in IMAGE_EXTENSIONS and ext not in VIDEO_EXTENSIONS:
@@ -279,11 +310,11 @@ def process_album_media(service, album_id: str) -> List[Tuple[Path, float, datet
 
         # Download the file
         print(f"Downloading: {filename}")
-        if not download_media_item(item, local_path):
+        if not download_drive_file(service, file_id, filename, local_path):
             continue
 
         # Get creation time
-        creation_time_str = item.get('mediaMetadata', {}).get('creationTime')
+        creation_time_str = item.get('createdTime') or item.get('modifiedTime')
         if creation_time_str:
             creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00'))
         else:
@@ -295,16 +326,17 @@ def process_album_media(service, album_id: str) -> List[Tuple[Path, float, datet
             duration = parse_duration_from_filename(filename)
             if duration is None:
                 duration = DEFAULT_IMAGE_DURATION
-            processed_media.append((local_path, float(duration), creation_time))
+            processed_media.append((local_path, float(duration), creation_time, file_id, filename))
 
         elif ext in VIDEO_EXTENSIONS:
             duration = get_video_duration(local_path)
-            processed_media.append((local_path, duration, creation_time))
+            processed_media.append((local_path, duration, creation_time, file_id, filename))
 
     # Sort by creation time (chronological)
     processed_media.sort(key=lambda x: x[2])
 
     return processed_media
+
 
 def process_image_to_video(image_path: Path, duration: float, output_path: Path):
     """Convert image to video clip using FFmpeg."""
@@ -320,6 +352,7 @@ def process_image_to_video(image_path: Path, duration: float, output_path: Path)
         str(output_path)
     ], check=True, capture_output=True)
 
+
 def standardize_video(video_path: Path, output_path: Path):
     """Re-encode video to ensure compatibility and consistent format."""
     print(f"  Processing video: {video_path.name}")
@@ -334,6 +367,7 @@ def standardize_video(video_path: Path, output_path: Path):
         '-b:a', '128k',
         str(output_path)
     ], check=True, capture_output=True)
+
 
 def concatenate_videos(video_paths: List[Path], output_path: Path):
     """Concatenate all video clips into final compilation."""
@@ -357,6 +391,7 @@ def concatenate_videos(video_paths: List[Path], output_path: Path):
         str(output_path)
     ], check=True, capture_output=True)
 
+
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
     """Upload a file to Google Cloud Storage."""
     print(f"\nUploading to Google Cloud Storage...")
@@ -372,8 +407,6 @@ def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str
         # Upload file
         blob.upload_from_filename(str(local_file))
 
-        # Note: make_public() doesn't work with uniform bucket-level access
-        # Public access should be configured at the bucket level instead
         public_url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
         print(f"Upload successful!")
         print(f"  Public URL: {public_url}")
@@ -384,20 +417,22 @@ def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str
         print(f"Upload failed: {e}")
         raise
 
+
 def main():
     """Main processing logic."""
-    parser = argparse.ArgumentParser(description='Process Google Photos album into compilation video')
+    parser = argparse.ArgumentParser(description='Process Google Drive folder into compilation video')
     parser.add_argument('--auth-only', action='store_true', help='Only perform authentication')
-    parser.add_argument('--list-albums', action='store_true', help='List all albums and their IDs')
-    parser.add_argument('--album-id', type=str, help='Google Photos album ID to process')
+    parser.add_argument('--list-folders', action='store_true', help='List all folders and their IDs')
+    parser.add_argument('--folder-id', type=str, help='Google Drive folder ID to process')
     parser.add_argument('--upload-to-gcs', action='store_true', help='Upload result to Google Cloud Storage')
     parser.add_argument('--gcs-bucket', type=str, help='GCS bucket name')
     parser.add_argument('--gcs-path', type=str, default='compilation.mp4', help='Destination path in GCS bucket')
+    parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after successful processing')
 
     args = parser.parse_args()
 
     print("=" * 60)
-    print("Visual Stitch Media Processor (Google Photos Edition)")
+    print("Visual Stitch Media Processor (Google Drive Edition)")
     print("=" * 60)
 
     # Get credentials
@@ -405,28 +440,28 @@ def main():
         creds = get_credentials()
     except Exception as e:
         print(f"\n[ERROR] Authentication failed: {e}")
-        print("\nPlease follow the setup guide in SETUP_GUIDE.md")
+        print("\nPlease ensure client_secret.json is in the Visual-Stitch directory")
         return 1
 
-    # Build service
-    service = build('photoslibrary', 'v1', credentials=creds, static_discovery=False)
+    # Build Drive service
+    service = build('drive', 'v3', credentials=creds)
 
     # Handle auth-only mode
     if args.auth_only:
         print("\n[OK] Authentication successful!")
         return 0
 
-    # Handle list-albums mode
-    if args.list_albums:
-        list_albums(service)
+    # Handle list-folders mode
+    if args.list_folders:
+        list_folders(service)
         return 0
 
-    # Get album ID from args or environment
-    album_id = args.album_id or os.environ.get('GOOGLE_PHOTOS_ALBUM_ID')
-    if not album_id:
-        print("\n[ERROR] No album ID provided!")
-        print("Use --album-id or set GOOGLE_PHOTOS_ALBUM_ID environment variable")
-        print("Run with --list-albums to see available albums")
+    # Get folder ID from args or environment
+    folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
+    if not folder_id:
+        print("\n[ERROR] No folder ID provided!")
+        print("Use --folder-id or set GOOGLE_DRIVE_FOLDER_ID environment variable")
+        print("Run with --list-folders to see available folders")
         return 1
 
     # Ensure directories exist
@@ -434,8 +469,8 @@ def main():
     TEMP_DIR.mkdir(exist_ok=True)
     TEMP_DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-    # Process media from album
-    media_files = process_album_media(service, album_id)
+    # Process media from folder
+    media_files = process_folder_media(service, folder_id)
 
     if not media_files:
         print("\n[ERROR] No media files to process!")
@@ -445,8 +480,9 @@ def main():
 
     # Process each media file
     processed_clips = []
+    successfully_processed_files = []  # Track (file_id, filename) for deletion
 
-    for idx, (media_path, duration, creation_time) in enumerate(media_files):
+    for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
         ext = media_path.suffix.lower()
         output_clip = TEMP_DIR / f"clip_{idx:04d}.mp4"
 
@@ -457,6 +493,7 @@ def main():
                 standardize_video(media_path, output_clip)
 
             processed_clips.append(output_clip)
+            successfully_processed_files.append((file_id, filename))
 
         except subprocess.CalledProcessError as e:
             print(f"  ERROR processing {media_path.name}: {e}")
@@ -490,6 +527,15 @@ def main():
         except Exception as e:
             print(f"\n[ERROR] Upload failed: {e}")
             return 1
+
+    # Delete source files from Drive if requested (only after successful processing)
+    if args.delete_after_process and successfully_processed_files:
+        print(f"\nDeleting {len(successfully_processed_files)} processed files from Google Drive...")
+        deleted_count = 0
+        for file_id, filename in successfully_processed_files:
+            if delete_drive_file(service, file_id, filename):
+                deleted_count += 1
+        print(f"[OK] Deleted {deleted_count}/{len(successfully_processed_files)} files from Drive")
 
     return 0
 
