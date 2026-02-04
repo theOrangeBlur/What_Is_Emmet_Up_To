@@ -349,6 +349,7 @@ def process_image_to_video(image_path: Path, duration: float, output_path: Path)
         '-i', str(image_path),
         '-c:v', 'libx264',
         '-t', str(duration),
+        '-r', '30',  # Force 30fps for consistent timebase with xfade
         '-pix_fmt', 'yuv420p',
         '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
         str(output_path)
@@ -363,6 +364,7 @@ def standardize_video(video_path: Path, output_path: Path):
         '-i', str(video_path),
         '-c:v', 'libx264',
         '-crf', '23',
+        '-r', '30',  # Force 30fps for consistent timebase with xfade
         '-pix_fmt', 'yuv420p',
         '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
         '-c:a', 'aac',
