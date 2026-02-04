@@ -18,6 +18,7 @@ from typing import List, Tuple, Optional
 from datetime import datetime
 import tempfile
 import io
+import shutil
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -34,6 +35,7 @@ TEMP_DIR = SCRIPT_DIR / "temp_processed"
 TEMP_DOWNLOAD_DIR = SCRIPT_DIR / "temp_downloads"
 OUTPUT_VIDEO = OUTPUT_DIR / "compilation.mp4"
 DEFAULT_IMAGE_DURATION = 3  # seconds
+CROSSFADE_DURATION = 0.5  # seconds for crossfade transitions between clips
 
 # Google Drive API scopes (full access needed for delete after processing)
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -369,27 +371,72 @@ def standardize_video(video_path: Path, output_path: Path):
     ], check=True, capture_output=True)
 
 
-def concatenate_videos(video_paths: List[Path], output_path: Path):
-    """Concatenate all video clips into final compilation."""
-    print(f"\nConcatenating {len(video_paths)} clips...")
+def concatenate_videos(video_paths: List[Path], durations: List[float], output_path: Path, crossfade_duration: float = CROSSFADE_DURATION):
+    """Concatenate all video clips with crossfade transitions between them."""
+    print(f"\nConcatenating {len(video_paths)} clips with {crossfade_duration}s crossfade transitions...")
 
-    # Create concat file
-    concat_file = TEMP_DIR / "concat_list.txt"
-    with open(concat_file, 'w') as f:
-        for video_path in video_paths:
-            # FFmpeg concat requires forward slashes even on Windows
-            path_str = str(video_path).replace('\\', '/')
-            f.write(f"file '{path_str}'\n")
+    if len(video_paths) == 0:
+        raise ValueError("No video clips to concatenate")
 
-    # Concatenate
-    subprocess.run([
+    if len(video_paths) == 1:
+        # Just copy single clip
+        shutil.copy(video_paths[0], output_path)
+        return
+
+    # Build FFmpeg command with xfade filter chain
+    # For N clips, we need N-1 xfade filters
+    inputs = []
+    for video_path in video_paths:
+        inputs.extend(['-i', str(video_path)])
+
+    # Build the filter_complex for video crossfades
+    # Pattern: [0:v][1:v]xfade=...[v1]; [v1][2:v]xfade=...[v2]; ...
+    filter_parts = []
+    cumulative_duration = durations[0]
+
+    for i in range(len(video_paths) - 1):
+        # Calculate offset: when to start the crossfade
+        offset = cumulative_duration - crossfade_duration
+
+        # Ensure offset isn't negative (clip too short for crossfade)
+        if offset < 0:
+            offset = 0
+
+        # Input labels
+        if i == 0:
+            input1 = "[0:v]"
+        else:
+            input1 = f"[v{i}]"
+        input2 = f"[{i+1}:v]"
+
+        # Output label (final one should be [outv])
+        if i == len(video_paths) - 2:
+            output_label = "[outv]"
+        else:
+            output_label = f"[v{i+1}]"
+
+        filter_parts.append(
+            f"{input1}{input2}xfade=transition=fade:duration={crossfade_duration}:offset={offset:.3f}{output_label}"
+        )
+
+        # Update cumulative duration for next iteration
+        # Add next clip's duration minus the overlap
+        cumulative_duration += durations[i+1] - crossfade_duration
+
+    filter_complex = ";".join(filter_parts)
+
+    cmd = [
         'ffmpeg', '-y',
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', str(concat_file),
-        '-c', 'copy',
+        *inputs,
+        '-filter_complex', filter_complex,
+        '-map', '[outv]',
+        '-c:v', 'libx264',
+        '-crf', '23',
+        '-pix_fmt', 'yuv420p',
         str(output_path)
-    ], check=True, capture_output=True)
+    ]
+
+    subprocess.run(cmd, check=True, capture_output=True)
 
 
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
@@ -480,6 +527,7 @@ def main():
 
     # Process each media file
     processed_clips = []
+    clip_durations = []  # Track durations for crossfade calculation
     successfully_processed_files = []  # Track (file_id, filename) for deletion
 
     for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
@@ -489,8 +537,10 @@ def main():
         try:
             if ext in IMAGE_EXTENSIONS:
                 process_image_to_video(media_path, duration, output_clip)
+                clip_durations.append(duration)
             elif ext in VIDEO_EXTENSIONS:
                 standardize_video(media_path, output_clip)
+                clip_durations.append(duration)
 
             processed_clips.append(output_clip)
             successfully_processed_files.append((file_id, filename))
@@ -503,8 +553,8 @@ def main():
         print("\n[ERROR] No clips were successfully processed!")
         return 1
 
-    # Concatenate all clips
-    concatenate_videos(processed_clips, OUTPUT_VIDEO)
+    # Concatenate all clips with crossfade transitions
+    concatenate_videos(processed_clips, clip_durations, OUTPUT_VIDEO)
 
     print(f"\n{'=' * 60}")
     print(f"SUCCESS! Compilation video created:")
