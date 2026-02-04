@@ -371,7 +371,7 @@ def standardize_video(video_path: Path, output_path: Path):
     ], check=True, capture_output=True)
 
 
-def concatenate_videos(video_paths: List[Path], durations: List[float], output_path: Path, crossfade_duration: float = CROSSFADE_DURATION):
+def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_duration: float = CROSSFADE_DURATION):
     """Concatenate all video clips with crossfade transitions between them."""
     print(f"\nConcatenating {len(video_paths)} clips with {crossfade_duration}s crossfade transitions...")
 
@@ -383,6 +383,11 @@ def concatenate_videos(video_paths: List[Path], durations: List[float], output_p
         shutil.copy(video_paths[0], output_path)
         return
 
+    # Get actual durations from processed clips (more accurate than source durations)
+    actual_durations = []
+    for video_path in video_paths:
+        actual_durations.append(get_video_duration(video_path))
+
     # Build FFmpeg command with xfade filter chain
     # For N clips, we need N-1 xfade filters
     inputs = []
@@ -392,15 +397,16 @@ def concatenate_videos(video_paths: List[Path], durations: List[float], output_p
     # Build the filter_complex for video crossfades
     # Pattern: [0:v][1:v]xfade=...[v1]; [v1][2:v]xfade=...[v2]; ...
     filter_parts = []
-    cumulative_duration = durations[0]
+    cumulative_duration = actual_durations[0]
 
     for i in range(len(video_paths) - 1):
         # Calculate offset: when to start the crossfade
+        # Offset must be less than the cumulative duration minus crossfade
         offset = cumulative_duration - crossfade_duration
 
         # Ensure offset isn't negative (clip too short for crossfade)
-        if offset < 0:
-            offset = 0
+        if offset < 0.1:
+            offset = 0.1
 
         # Input labels
         if i == 0:
@@ -420,8 +426,9 @@ def concatenate_videos(video_paths: List[Path], durations: List[float], output_p
         )
 
         # Update cumulative duration for next iteration
-        # Add next clip's duration minus the overlap
-        cumulative_duration += durations[i+1] - crossfade_duration
+        # The result of xfade is: offset + crossfade_duration + (duration2 - crossfade_duration)
+        # Which simplifies to: offset + duration2
+        cumulative_duration = offset + actual_durations[i+1]
 
     filter_complex = ";".join(filter_parts)
 
@@ -436,7 +443,11 @@ def concatenate_videos(video_paths: List[Path], durations: List[float], output_p
         str(output_path)
     ]
 
-    subprocess.run(cmd, check=True, capture_output=True)
+    # Run with error output visible for debugging
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"FFmpeg error output:\n{result.stderr}")
+        raise subprocess.CalledProcessError(result.returncode, cmd)
 
 
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
@@ -527,7 +538,6 @@ def main():
 
     # Process each media file
     processed_clips = []
-    clip_durations = []  # Track durations for crossfade calculation
     successfully_processed_files = []  # Track (file_id, filename) for deletion
 
     for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
@@ -537,10 +547,8 @@ def main():
         try:
             if ext in IMAGE_EXTENSIONS:
                 process_image_to_video(media_path, duration, output_clip)
-                clip_durations.append(duration)
             elif ext in VIDEO_EXTENSIONS:
                 standardize_video(media_path, output_clip)
-                clip_durations.append(duration)
 
             processed_clips.append(output_clip)
             successfully_processed_files.append((file_id, filename))
@@ -554,7 +562,7 @@ def main():
         return 1
 
     # Concatenate all clips with crossfade transitions
-    concatenate_videos(processed_clips, clip_durations, OUTPUT_VIDEO)
+    concatenate_videos(processed_clips, OUTPUT_VIDEO)
 
     print(f"\n{'=' * 60}")
     print(f"SUCCESS! Compilation video created:")
