@@ -37,6 +37,22 @@ OUTPUT_VIDEO = OUTPUT_DIR / "compilation.mp4"
 DEFAULT_IMAGE_DURATION = 3  # seconds
 CROSSFADE_DURATION = 0.5  # seconds for crossfade transitions between clips
 
+# FFmpeg path - check common Windows install location, fall back to PATH
+FFMPEG_WINDOWS_PATH = Path(r"C:\Users\eckma\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffmpeg.exe")
+FFPROBE_WINDOWS_PATH = Path(r"C:\Users\eckma\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin\ffprobe.exe")
+
+def get_ffmpeg():
+    """Return ffmpeg path - use Windows install if available, otherwise rely on PATH."""
+    if FFMPEG_WINDOWS_PATH.exists():
+        return str(FFMPEG_WINDOWS_PATH)
+    return 'ffmpeg'
+
+def get_ffprobe():
+    """Return ffprobe path - use Windows install if available, otherwise rely on PATH."""
+    if FFPROBE_WINDOWS_PATH.exists():
+        return str(FFPROBE_WINDOWS_PATH)
+    return 'ffprobe'
+
 # Google Drive API scopes (full access needed for delete after processing)
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -259,7 +275,7 @@ def get_video_duration(video_path: Path) -> float:
     """Use ffprobe to get video duration in seconds."""
     try:
         result = subprocess.run(
-            ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+            [get_ffprobe(), '-v', 'error', '-show_entries', 'format=duration',
              '-of', 'json', str(video_path)],
             capture_output=True,
             text=True,
@@ -344,7 +360,7 @@ def process_image_to_video(image_path: Path, duration: float, output_path: Path)
     """Convert image to video clip using FFmpeg."""
     print(f"  Processing image: {image_path.name} ({duration}s)")
     subprocess.run([
-        'ffmpeg', '-y',
+        get_ffmpeg(), '-y',
         '-loop', '1',
         '-i', str(image_path),
         '-c:v', 'libx264',
@@ -360,7 +376,7 @@ def standardize_video(video_path: Path, output_path: Path):
     """Re-encode video to ensure compatibility and consistent format."""
     print(f"  Processing video: {video_path.name}")
     subprocess.run([
-        'ffmpeg', '-y',
+        get_ffmpeg(), '-y',
         '-i', str(video_path),
         '-c:v', 'libx264',
         '-crf', '23',
@@ -373,9 +389,18 @@ def standardize_video(video_path: Path, output_path: Path):
     ], check=True, capture_output=True)
 
 
-def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_duration: float = CROSSFADE_DURATION):
-    """Concatenate all video clips with crossfade transitions between them."""
-    print(f"\nConcatenating {len(video_paths)} clips with {crossfade_duration}s crossfade transitions...")
+def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_video: List[bool] = None, crossfade_duration: float = CROSSFADE_DURATION):
+    """
+    Concatenate all video clips with crossfade transitions.
+    Crossfade only applied when transitioning from video to picture.
+
+    Args:
+        video_paths: List of processed clip paths
+        output_path: Output file path
+        source_is_video: List of booleans indicating if original source was video (True) or image (False)
+        crossfade_duration: Duration of crossfade transitions
+    """
+    print(f"\nConcatenating {len(video_paths)} clips...")
 
     if len(video_paths) == 0:
         raise ValueError("No video clips to concatenate")
@@ -384,6 +409,10 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_dur
         # Just copy single clip
         shutil.copy(video_paths[0], output_path)
         return
+
+    # Default: assume all are images if not specified (no crossfade)
+    if source_is_video is None:
+        source_is_video = [False] * len(video_paths)
 
     # Get actual durations from processed clips (more accurate than source durations)
     actual_durations = []
@@ -400,11 +429,20 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_dur
     # Pattern: [0:v][1:v]xfade=...[v1]; [v1][2:v]xfade=...[v2]; ...
     filter_parts = []
     cumulative_duration = actual_durations[0]
+    crossfade_count = 0
 
     for i in range(len(video_paths) - 1):
-        # Calculate offset: when to start the crossfade
-        # Offset must be less than the cumulative duration minus crossfade
-        offset = cumulative_duration - crossfade_duration
+        # Only apply crossfade when going from video to picture
+        apply_crossfade = source_is_video[i] and not source_is_video[i + 1]
+        # Use 0.1s (3 frames at 30fps) for hard cuts - small enough to not be noticeable
+        # but large enough for FFmpeg to handle properly in xfade chains
+        transition_duration = crossfade_duration if apply_crossfade else 0.1
+
+        if apply_crossfade:
+            crossfade_count += 1
+
+        # Calculate offset: when to start the transition
+        offset = cumulative_duration - transition_duration
 
         # Ensure offset isn't negative (clip too short for crossfade)
         if offset < 0.1:
@@ -424,18 +462,17 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_dur
             output_label = f"[v{i+1}]"
 
         filter_parts.append(
-            f"{input1}{input2}xfade=transition=fade:duration={crossfade_duration}:offset={offset:.3f}{output_label}"
+            f"{input1}{input2}xfade=transition=fade:duration={transition_duration}:offset={offset:.3f}{output_label}"
         )
 
         # Update cumulative duration for next iteration
-        # The result of xfade is: offset + crossfade_duration + (duration2 - crossfade_duration)
-        # Which simplifies to: offset + duration2
         cumulative_duration = offset + actual_durations[i+1]
 
+    print(f"  Applying {crossfade_count} crossfade transitions (video->picture only)")
     filter_complex = ";".join(filter_parts)
 
     cmd = [
-        'ffmpeg', '-y',
+        get_ffmpeg(), '-y',
         *inputs,
         '-filter_complex', filter_complex,
         '-map', '[outv]',
@@ -447,9 +484,77 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, crossfade_dur
 
     # Run with error output visible for debugging
     result = subprocess.run(cmd, capture_output=True, text=True)
+    # Look for errors in stderr (not just progress output)
+    if result.stderr:
+        stderr_lines = result.stderr.strip().split('\n')
+        # Filter to show only lines with errors/warnings
+        important_lines = [l for l in stderr_lines if 'error' in l.lower() or 'warning' in l.lower() or 'invalid' in l.lower() or 'failed' in l.lower()]
+        if important_lines:
+            print(f"  DEBUG: FFmpeg issues:")
+            for line in important_lines[:20]:
+                print(f"    {line}")
     if result.returncode != 0:
-        print(f"FFmpeg error output:\n{result.stderr}")
         raise subprocess.CalledProcessError(result.returncode, cmd)
+
+
+def load_local_media() -> List[Tuple[Path, float, datetime, str, str]]:
+    """
+    Load media files from local temp_downloads directory.
+    Used with --skip-download to avoid re-downloading from Drive.
+    Returns list of (path, duration, date, file_id, filename) tuples sorted by filename.
+    """
+    print(f"\nLoading cached media from {TEMP_DOWNLOAD_DIR}")
+
+    if not TEMP_DOWNLOAD_DIR.exists():
+        print(f"[ERROR] Directory not found: {TEMP_DOWNLOAD_DIR}")
+        return []
+
+    local_media = []
+
+    for file_path in TEMP_DOWNLOAD_DIR.iterdir():
+        if not file_path.is_file():
+            continue
+
+        ext = file_path.suffix.lower()
+        filename = file_path.name
+
+        # Check if file should be skipped
+        if should_skip_file(filename):
+            print(f"Skipping (excluded): {filename}")
+            continue
+
+        # Check if it's a supported format
+        if ext not in IMAGE_EXTENSIONS and ext not in VIDEO_EXTENSIONS:
+            print(f"Skipping (unsupported format): {filename}")
+            continue
+
+        # Try to parse date from filename (PXL_YYYYMMDD_HHMMSS format)
+        creation_time = datetime.now()
+        try:
+            # Look for pattern like 20251006 in filename
+            import re
+            date_match = re.search(r'(\d{8})_(\d{6})', filename)
+            if date_match:
+                date_str = date_match.group(1) + date_match.group(2)
+                creation_time = datetime.strptime(date_str, '%Y%m%d%H%M%S')
+        except:
+            pass
+
+        # Determine duration
+        if ext in IMAGE_EXTENSIONS:
+            duration = parse_duration_from_filename(filename)
+            if duration is None:
+                duration = DEFAULT_IMAGE_DURATION
+            local_media.append((file_path, float(duration), creation_time, '', filename))
+        elif ext in VIDEO_EXTENSIONS:
+            duration = get_video_duration(file_path)
+            local_media.append((file_path, duration, creation_time, '', filename))
+
+    # Sort by creation time (parsed from filename)
+    local_media.sort(key=lambda x: x[2])
+
+    print(f"Found {len(local_media)} cached media files")
+    return local_media
 
 
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
@@ -488,6 +593,7 @@ def main():
     parser.add_argument('--gcs-bucket', type=str, help='GCS bucket name')
     parser.add_argument('--gcs-path', type=str, default='compilation.mp4', help='Destination path in GCS bucket')
     parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after successful processing')
+    parser.add_argument('--skip-download', action='store_true', help='Use locally cached files from temp_downloads instead of downloading from Drive')
 
     args = parser.parse_args()
 
@@ -516,21 +622,25 @@ def main():
         list_folders(service)
         return 0
 
-    # Get folder ID from args or environment
-    folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
-    if not folder_id:
-        print("\n[ERROR] No folder ID provided!")
-        print("Use --folder-id or set GOOGLE_DRIVE_FOLDER_ID environment variable")
-        print("Run with --list-folders to see available folders")
-        return 1
-
     # Ensure directories exist
     OUTPUT_DIR.mkdir(exist_ok=True)
     TEMP_DIR.mkdir(exist_ok=True)
     TEMP_DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-    # Process media from folder
-    media_files = process_folder_media(service, folder_id)
+    # Handle skip-download mode (use cached local files)
+    if args.skip_download:
+        media_files = load_local_media()
+    else:
+        # Get folder ID from args or environment
+        folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
+        if not folder_id:
+            print("\n[ERROR] No folder ID provided!")
+            print("Use --folder-id or set GOOGLE_DRIVE_FOLDER_ID environment variable")
+            print("Run with --list-folders to see available folders")
+            return 1
+
+        # Process media from folder
+        media_files = process_folder_media(service, folder_id)
 
     if not media_files:
         print("\n[ERROR] No media files to process!")
@@ -540,6 +650,7 @@ def main():
 
     # Process each media file
     processed_clips = []
+    source_is_video = []  # Track whether each clip came from a video (for crossfade logic)
     successfully_processed_files = []  # Track (file_id, filename) for deletion
 
     for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
@@ -549,8 +660,10 @@ def main():
         try:
             if ext in IMAGE_EXTENSIONS:
                 process_image_to_video(media_path, duration, output_clip)
+                source_is_video.append(False)
             elif ext in VIDEO_EXTENSIONS:
                 standardize_video(media_path, output_clip)
+                source_is_video.append(True)
 
             processed_clips.append(output_clip)
             successfully_processed_files.append((file_id, filename))
@@ -563,8 +676,8 @@ def main():
         print("\n[ERROR] No clips were successfully processed!")
         return 1
 
-    # Concatenate all clips with crossfade transitions
-    concatenate_videos(processed_clips, OUTPUT_VIDEO)
+    # Concatenate all clips with crossfade transitions (only on video->picture)
+    concatenate_videos(processed_clips, OUTPUT_VIDEO, source_is_video)
 
     print(f"\n{'=' * 60}")
     print(f"SUCCESS! Compilation video created:")
@@ -588,8 +701,8 @@ def main():
             print(f"\n[ERROR] Upload failed: {e}")
             return 1
 
-    # Delete source files from Drive if requested (only after successful processing)
-    if args.delete_after_process and successfully_processed_files:
+    # Delete source files from Drive if requested (only after successful processing, not with --skip-download)
+    if args.delete_after_process and successfully_processed_files and not args.skip_download:
         print(f"\nDeleting {len(successfully_processed_files)} processed files from Google Drive...")
         deleted_count = 0
         for file_id, filename in successfully_processed_files:

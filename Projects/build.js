@@ -32,15 +32,16 @@ function findProjectFiles() {
 
 // Parse YAML front matter from markdown
 function parseFrontMatter(content) {
-    const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    // Handle both Unix (\n) and Windows (\r\n) line endings
+    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
     if (!match) return { meta: {}, body: content };
 
     const yamlStr = match[1];
     const body = match[2];
     const meta = {};
 
-    // Simple YAML parser for our needs
-    for (const line of yamlStr.split('\n')) {
+    // Simple YAML parser for our needs (handle \r\n line endings too)
+    for (const line of yamlStr.split(/\r?\n/)) {
         const colonIdx = line.indexOf(':');
         if (colonIdx === -1) continue;
 
