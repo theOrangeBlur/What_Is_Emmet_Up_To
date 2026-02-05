@@ -34,7 +34,7 @@ OUTPUT_DIR = SCRIPT_DIR / "output"
 TEMP_DIR = SCRIPT_DIR / "temp_processed"
 TEMP_DOWNLOAD_DIR = SCRIPT_DIR / "temp_downloads"
 OUTPUT_VIDEO = OUTPUT_DIR / "compilation.mp4"
-DEFAULT_IMAGE_DURATION = 3  # seconds
+DEFAULT_IMAGE_DURATION = 2  # seconds
 CROSSFADE_DURATION = 0.5  # seconds for crossfade transitions between clips
 
 # FFmpeg path - check common Windows install location, fall back to PATH
@@ -153,6 +153,55 @@ def list_folders(service) -> List[dict]:
         return []
 
 
+def get_month_subfolders(service, parent_folder_id: str) -> List[dict]:
+    """
+    Get all YYYY-MM formatted subfolders within a parent folder.
+    Returns list of folder dicts sorted by name (chronological).
+    """
+    try:
+        query = f"'{parent_folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        results = service.files().list(
+            q=query,
+            pageSize=100,
+            fields="files(id, name)"
+        ).execute()
+        folders = results.get('files', [])
+
+        # Filter to only YYYY-MM formatted folders
+        month_pattern = re.compile(r'^\d{4}-\d{2}$')
+        month_folders = [f for f in folders if month_pattern.match(f.get('name', ''))]
+
+        # Sort by name (chronological due to ISO format)
+        month_folders.sort(key=lambda x: x.get('name', ''))
+
+        return month_folders
+
+    except HttpError as error:
+        print(f"An error occurred listing subfolders: {error}")
+        return []
+
+
+def filter_folders_by_range(folders: List[dict], start_month: str = None, end_month: str = None) -> List[dict]:
+    """
+    Filter folders to those within the specified month range.
+    start_month/end_month format: YYYY-MM (inclusive on both ends).
+    """
+    if not start_month and not end_month:
+        return folders
+
+    filtered = []
+    for folder in folders:
+        name = folder.get('name', '')
+        # String comparison works for YYYY-MM format
+        if start_month and name < start_month:
+            continue
+        if end_month and name > end_month:
+            continue
+        filtered.append(folder)
+
+    return filtered
+
+
 def parse_duration_from_filename(filename: str) -> Optional[int]:
     """
     Extract duration from filename with _Xs suffix (e.g., sunset_5s.jpg -> 5)
@@ -162,6 +211,27 @@ def parse_duration_from_filename(filename: str) -> Optional[int]:
     if match:
         return int(match.group(1))
     return None
+
+
+def parse_datetime_from_filename(filename: str) -> Optional[datetime]:
+    """
+    Extract datetime from filename patterns like PXL_20251006_202543692.mp4
+    Returns None if no date pattern found.
+    """
+    # Pattern: YYYYMMDD_HHMMSS (with optional milliseconds)
+    match = re.search(r'(\d{8})_(\d{6})', filename)
+    if match:
+        try:
+            date_str = match.group(1) + match.group(2)
+            return datetime.strptime(date_str, '%Y%m%d%H%M%S')
+        except ValueError:
+            pass
+    return None
+
+
+def get_month_from_datetime(dt: datetime) -> str:
+    """Extract YYYY-MM month string from datetime."""
+    return dt.strftime('%Y-%m')
 
 
 def should_skip_file(filename: str) -> bool:
@@ -326,17 +396,24 @@ def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, dat
         # Create local path preserving original filename
         local_path = TEMP_DOWNLOAD_DIR / filename
 
-        # Download the file
-        print(f"Downloading: {filename}")
-        if not download_drive_file(service, file_id, filename, local_path):
-            continue
-
-        # Get creation time
-        creation_time_str = item.get('createdTime') or item.get('modifiedTime')
-        if creation_time_str:
-            creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00'))
+        # Check if file already exists locally (incremental download)
+        if local_path.exists():
+            print(f"Using cached: {filename}")
         else:
-            creation_time = datetime.now()
+            # Download the file
+            print(f"Downloading: {filename}")
+            if not download_drive_file(service, file_id, filename, local_path):
+                continue
+
+        # Get creation time - prefer filename (actual capture time) over Drive metadata (upload time)
+        creation_time = parse_datetime_from_filename(filename)
+        if not creation_time:
+            # Fall back to Drive metadata
+            creation_time_str = item.get('createdTime') or item.get('modifiedTime')
+            if creation_time_str:
+                creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00'))
+            else:
+                creation_time = datetime.now()
 
         # Determine duration
         if ext in IMAGE_EXTENSIONS:
@@ -356,9 +433,30 @@ def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, dat
     return processed_media
 
 
-def process_image_to_video(image_path: Path, duration: float, output_path: Path):
-    """Convert image to video clip using FFmpeg."""
+def format_date_for_overlay(dt: datetime) -> str:
+    """Format datetime for video overlay (e.g., 'Oct 15, 2025')."""
+    return dt.strftime('%b %d, %Y')
+
+
+def process_image_to_video(image_path: Path, duration: float, output_path: Path, creation_time: datetime = None):
+    """Convert image to video clip using FFmpeg with optional date overlay."""
     print(f"  Processing image: {image_path.name} ({duration}s)")
+
+    # Build video filter chain
+    vf_parts = ['scale=1920:1080:force_original_aspect_ratio=decrease', 'pad=1920:1080:(ow-iw)/2:(oh-ih)/2']
+
+    # Add date overlay if creation_time provided
+    if creation_time:
+        date_text = format_date_for_overlay(creation_time)
+        # Escape special characters for FFmpeg drawtext
+        date_text = date_text.replace("'", "\\'").replace(":", "\\:")
+        vf_parts.append(
+            f"drawtext=text='{date_text}':fontsize=48:fontcolor=0x87CEEB:x=40:y=40:"
+            f"shadowcolor=black:shadowx=2:shadowy=2"
+        )
+
+    vf_filter = ','.join(vf_parts)
+
     subprocess.run([
         get_ffmpeg(), '-y',
         '-loop', '1',
@@ -367,14 +465,30 @@ def process_image_to_video(image_path: Path, duration: float, output_path: Path)
         '-t', str(duration),
         '-r', '30',  # Force 30fps for consistent timebase with xfade
         '-pix_fmt', 'yuv420p',
-        '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+        '-vf', vf_filter,
         str(output_path)
     ], check=True, capture_output=True)
 
 
-def standardize_video(video_path: Path, output_path: Path):
-    """Re-encode video to ensure compatibility and consistent format."""
+def standardize_video(video_path: Path, output_path: Path, creation_time: datetime = None):
+    """Re-encode video to ensure compatibility and consistent format with optional date overlay."""
     print(f"  Processing video: {video_path.name}")
+
+    # Build video filter chain
+    vf_parts = ['scale=1920:1080:force_original_aspect_ratio=decrease', 'pad=1920:1080:(ow-iw)/2:(oh-ih)/2']
+
+    # Add date overlay if creation_time provided
+    if creation_time:
+        date_text = format_date_for_overlay(creation_time)
+        # Escape special characters for FFmpeg drawtext
+        date_text = date_text.replace("'", "\\'").replace(":", "\\:")
+        vf_parts.append(
+            f"drawtext=text='{date_text}':fontsize=48:fontcolor=0x87CEEB:x=40:y=40:"
+            f"shadowcolor=black:shadowx=2:shadowy=2"
+        )
+
+    vf_filter = ','.join(vf_parts)
+
     subprocess.run([
         get_ffmpeg(), '-y',
         '-i', str(video_path),
@@ -382,7 +496,7 @@ def standardize_video(video_path: Path, output_path: Path):
         '-crf', '23',
         '-r', '30',  # Force 30fps for consistent timebase with xfade
         '-pix_fmt', 'yuv420p',
-        '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+        '-vf', vf_filter,
         '-c:a', 'aac',
         '-b:a', '128k',
         str(output_path)
@@ -478,7 +592,11 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_vid
         '-map', '[outv]',
         '-c:v', 'libx264',
         '-crf', '23',
+        '-g', '30',               # Keyframe every 30 frames (1 second at 30fps)
+        '-keyint_min', '30',      # Minimum keyframe interval
+        '-sc_threshold', '0',     # Disable scene change detection for regular keyframes
         '-pix_fmt', 'yuv420p',
+        '-movflags', '+faststart',  # Move moov atom to start for web seeking
         str(output_path)
     ]
 
@@ -528,17 +646,8 @@ def load_local_media() -> List[Tuple[Path, float, datetime, str, str]]:
             print(f"Skipping (unsupported format): {filename}")
             continue
 
-        # Try to parse date from filename (PXL_YYYYMMDD_HHMMSS format)
-        creation_time = datetime.now()
-        try:
-            # Look for pattern like 20251006 in filename
-            import re
-            date_match = re.search(r'(\d{8})_(\d{6})', filename)
-            if date_match:
-                date_str = date_match.group(1) + date_match.group(2)
-                creation_time = datetime.strptime(date_str, '%Y%m%d%H%M%S')
-        except:
-            pass
+        # Parse date from filename (PXL_YYYYMMDD_HHMMSS format)
+        creation_time = parse_datetime_from_filename(filename) or datetime.now()
 
         # Determine duration
         if ext in IMAGE_EXTENSIONS:
@@ -555,6 +664,66 @@ def load_local_media() -> List[Tuple[Path, float, datetime, str, str]]:
 
     print(f"Found {len(local_media)} cached media files")
     return local_media
+
+
+def generate_compilation_metadata(clip_metadata: List[dict], source_is_video: List[bool], crossfade_duration: float = CROSSFADE_DURATION) -> dict:
+    """
+    Generate metadata about the compilation including month timestamps.
+    Returns dict with months array containing start/end timestamps.
+    """
+    if not clip_metadata:
+        return {'months': [], 'total_duration': 0, 'clip_count': 0}
+
+    # Calculate timestamps for each clip, accounting for crossfade overlaps
+    clip_timestamps = []
+    cumulative_time = 0.0
+
+    for i, clip in enumerate(clip_metadata):
+        clip_start = cumulative_time
+        clip_duration = clip['duration']
+
+        # Calculate transition overlap with next clip (if any)
+        if i < len(clip_metadata) - 1:
+            # Crossfade only applies when going from video to picture
+            apply_crossfade = source_is_video[i] and not source_is_video[i + 1]
+            transition_duration = crossfade_duration if apply_crossfade else 0.1
+            # The overlap reduces effective duration
+            effective_duration = clip_duration - transition_duration
+        else:
+            effective_duration = clip_duration
+
+        clip_timestamps.append({
+            'month': clip['month'],
+            'start': clip_start,
+            'duration': clip_duration,
+            'filename': clip['filename']
+        })
+
+        cumulative_time += max(effective_duration, 0.1)  # Ensure positive progress
+
+    # Group clips by month and calculate month boundaries
+    months_data = {}
+    for clip in clip_timestamps:
+        month = clip['month']
+        if month not in months_data:
+            months_data[month] = {
+                'month': month,
+                'start': clip['start'],
+                'end': clip['start'] + clip['duration'],
+                'clip_count': 0
+            }
+        months_data[month]['end'] = clip['start'] + clip['duration']
+        months_data[month]['clip_count'] += 1
+
+    # Convert to sorted list
+    months_list = sorted(months_data.values(), key=lambda x: x['month'])
+
+    return {
+        'months': months_list,
+        'total_duration': cumulative_time,
+        'clip_count': len(clip_metadata),
+        'generated_at': datetime.now().isoformat()
+    }
 
 
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
@@ -594,6 +763,8 @@ def main():
     parser.add_argument('--gcs-path', type=str, default='compilation.mp4', help='Destination path in GCS bucket')
     parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after successful processing')
     parser.add_argument('--skip-download', action='store_true', help='Use locally cached files from temp_downloads instead of downloading from Drive')
+    parser.add_argument('--start-month', type=str, help='Start of month range (YYYY-MM, inclusive)')
+    parser.add_argument('--end-month', type=str, help='End of month range (YYYY-MM, inclusive)')
 
     args = parser.parse_args()
 
@@ -639,8 +810,35 @@ def main():
             print("Run with --list-folders to see available folders")
             return 1
 
-        # Process media from folder
-        media_files = process_folder_media(service, folder_id)
+        # Check for YYYY-MM month subfolders
+        month_subfolders = get_month_subfolders(service, folder_id)
+
+        if month_subfolders:
+            # Multi-folder mode: process each month subfolder
+            month_subfolders = filter_folders_by_range(month_subfolders, args.start_month, args.end_month)
+
+            if not month_subfolders:
+                print("\n[ERROR] No folders match the specified month range!")
+                return 1
+
+            print(f"\nFound {len(month_subfolders)} month folder(s) to process:")
+            for mf in month_subfolders:
+                print(f"  - {mf['name']}")
+
+            # Collect media from all month folders
+            media_files = []
+            for month_folder in month_subfolders:
+                print(f"\n--- Processing {month_folder['name']} ---")
+                folder_media = process_folder_media(service, month_folder['id'])
+                media_files.extend(folder_media)
+
+            # Sort all media chronologically across all months
+            media_files.sort(key=lambda x: x[2])
+            print(f"\nTotal media files across all months: {len(media_files)}")
+        else:
+            # Backward compatibility: treat as flat folder with media files
+            print("\nNo YYYY-MM subfolders found, treating as flat media folder...")
+            media_files = process_folder_media(service, folder_id)
 
     if not media_files:
         print("\n[ERROR] No media files to process!")
@@ -651,21 +849,24 @@ def main():
     # Process each media file
     processed_clips = []
     source_is_video = []  # Track whether each clip came from a video (for crossfade logic)
+    clip_metadata = []  # Track (month, duration) for each clip for timestamp calculation
     successfully_processed_files = []  # Track (file_id, filename) for deletion
 
     for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
         ext = media_path.suffix.lower()
         output_clip = TEMP_DIR / f"clip_{idx:04d}.mp4"
+        clip_month = get_month_from_datetime(creation_time)
 
         try:
             if ext in IMAGE_EXTENSIONS:
-                process_image_to_video(media_path, duration, output_clip)
+                process_image_to_video(media_path, duration, output_clip, creation_time)
                 source_is_video.append(False)
             elif ext in VIDEO_EXTENSIONS:
-                standardize_video(media_path, output_clip)
+                standardize_video(media_path, output_clip, creation_time)
                 source_is_video.append(True)
 
             processed_clips.append(output_clip)
+            clip_metadata.append({'month': clip_month, 'duration': duration, 'filename': filename})
             successfully_processed_files.append((file_id, filename))
 
         except subprocess.CalledProcessError as e:
@@ -678,6 +879,13 @@ def main():
 
     # Concatenate all clips with crossfade transitions (only on video->picture)
     concatenate_videos(processed_clips, OUTPUT_VIDEO, source_is_video)
+
+    # Generate compilation metadata with month timestamps
+    metadata = generate_compilation_metadata(clip_metadata, source_is_video)
+    metadata_path = OUTPUT_DIR / "compilation-metadata.json"
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    print(f"\nMetadata generated: {len(metadata['months'])} months, {metadata['clip_count']} clips")
 
     print(f"\n{'=' * 60}")
     print(f"SUCCESS! Compilation video created:")
@@ -697,6 +905,11 @@ def main():
             public_url = upload_to_gcs(OUTPUT_VIDEO, bucket_name, args.gcs_path)
             print(f"\n[OK] Video is now publicly accessible at:")
             print(f"  {public_url}")
+
+            # Also upload metadata JSON
+            metadata_gcs_path = args.gcs_path.replace('.mp4', '-metadata.json')
+            upload_to_gcs(metadata_path, bucket_name, metadata_gcs_path)
+            print(f"[OK] Metadata uploaded to: {metadata_gcs_path}")
         except Exception as e:
             print(f"\n[ERROR] Upload failed: {e}")
             return 1

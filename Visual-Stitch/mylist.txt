@@ -1,3 +1,0 @@
-file 'media/PXL_20251006_202543692.mp4'
-file 'media/PXL_20251007_041701642.mp4'
-file 'media/PXL_20251007_205140714.mp4'

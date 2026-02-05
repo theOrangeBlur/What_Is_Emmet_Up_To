@@ -1,10 +1,10 @@
 ---
 title: "Wifi QR Code"
 status: "completed"
-tags: ["3d-printing", "3d-modeling"]
+tags: ["3d-printing", "3d-modeling", "home"]
 start_date: "2026-02-01"
 end_date: "2026-02-02"
-thumbnail: "images/Final.jpg"
+thumbnail: "images/final.jpg"
 ---
 
 ## Problem

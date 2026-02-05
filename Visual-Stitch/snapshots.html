@@ -6,6 +6,69 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Life in short clips - a visual compilation of daily moments" />
   <link rel="stylesheet" href="./style.css">
+  <style>
+    .month-selector {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .month-selector h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 1rem;
+      color: #333;
+    }
+    .month-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .month-select {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .month-select label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .month-select select {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      background: white;
+    }
+    .jump-btn {
+      padding: 0.4rem 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .jump-btn:hover {
+      background: #0056b3;
+    }
+    .jump-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .compilation-stats {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 0.75rem;
+    }
+    .month-selector.loading {
+      opacity: 0.6;
+    }
+    .month-selector .error {
+      color: #c00;
+      font-size: 0.85rem;
+    }
+  </style>
 </head>
 <body>
   <nav class="top-nav">
@@ -18,9 +81,31 @@
   </header>
 
   <div class="container">
+    <div class="month-selector loading" id="month-selector">
+      <h3>Jump to Month</h3>
+      <div class="month-controls">
+        <div class="month-select">
+          <label for="month-start">From:</label>
+          <select id="month-start" disabled>
+            <option>Loading...</option>
+          </select>
+        </div>
+        <div class="month-select">
+          <label for="month-end">To:</label>
+          <select id="month-end" disabled>
+            <option>Loading...</option>
+          </select>
+        </div>
+        <button class="jump-btn" id="jump-btn" disabled>Jump to Selection</button>
+      </div>
+      <div class="compilation-stats" id="compilation-stats">Loading compilation info...</div>
+    </div>
+
     <div class="video-container">
-      <video id="compilation-video" controls preload="metadata">
-        <source src="https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4" type="video/mp4">
+      <video id="compilation-video" controls preload="auto">
+        <!-- For local testing, use local video. Change back for production -->
+        <!-- Using locally generated compilation with date overlays -->
+        <source id="video-source" src="./output/compilation.mp4" type="video/mp4">
         Your browser doesn't support the video tag. Please try a different browser.
       </video>
     </div>
@@ -37,28 +122,192 @@
         <li>Look into Google Photos Picker API as alternative to current Drive-based approach</li>
         <li>Rotate videos and pictures to the ideal viewing orientation</li>
         <li>Add date overlays to show when each clip was taken</li>
-        <li>Create monthly compilation views</li>
-        <ul>
-          <li>Maybe even let the user select exactly what time window they want to see!</li>
-        </ul>
         <li>Display total duration and clip count</li>
       </ul>
     </div>
   </div>
 
   <script>
-    // Add video error handling
     const video = document.getElementById('compilation-video');
+    const monthSelector = document.getElementById('month-selector');
+    const monthStartSelect = document.getElementById('month-start');
+    const monthEndSelect = document.getElementById('month-end');
+    const jumpBtn = document.getElementById('jump-btn');
+    const statsDiv = document.getElementById('compilation-stats');
+
+    let compilationMetadata = null;
+
+    // Format month string (2025-01 -> January 2025)
+    function formatMonth(monthStr) {
+      const [year, month] = monthStr.split('-');
+      const date = new Date(year, parseInt(month) - 1);
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    // Format duration in seconds to MM:SS
+    function formatDuration(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Populate month dropdowns
+    function populateMonthSelects(months) {
+      monthStartSelect.innerHTML = '';
+      monthEndSelect.innerHTML = '';
+
+      months.forEach((m, idx) => {
+        const optStart = document.createElement('option');
+        optStart.value = idx;
+        optStart.textContent = formatMonth(m.month);
+        monthStartSelect.appendChild(optStart);
+
+        const optEnd = document.createElement('option');
+        optEnd.value = idx;
+        optEnd.textContent = formatMonth(m.month);
+        monthEndSelect.appendChild(optEnd);
+      });
+
+      // Default: select first and last month
+      monthStartSelect.value = 0;
+      monthEndSelect.value = months.length - 1;
+
+      monthStartSelect.disabled = false;
+      monthEndSelect.disabled = false;
+      jumpBtn.disabled = false;
+    }
+
+    // Jump video to selected month range
+    function jumpToSelection() {
+      if (!compilationMetadata) {
+        console.log('No metadata loaded');
+        return;
+      }
+
+      const startIdx = parseInt(monthStartSelect.value);
+      const startMonth = compilationMetadata.months[startIdx];
+      const targetTime = startMonth?.start || 0;
+
+      console.log('Jump requested:', {
+        startIdx,
+        startMonth,
+        targetTime,
+        videoDuration: video.duration,
+        videoReadyState: video.readyState,
+        seekable: video.seekable.length > 0 ?
+          `${video.seekable.start(0)} - ${video.seekable.end(0)}` : 'none'
+      });
+
+      if (startMonth && typeof startMonth.start === 'number') {
+        // Check if video is ready for seeking
+        if (video.readyState >= 1) {
+          console.log('Seeking to:', targetTime);
+          video.currentTime = targetTime;
+
+          // Verify the seek worked
+          setTimeout(() => {
+            console.log('After seek, currentTime:', video.currentTime);
+          }, 100);
+
+          video.play().catch(e => console.log('Play failed:', e));
+        } else {
+          // Video not ready, wait for loadedmetadata
+          console.log('Video not ready, waiting...');
+          video.addEventListener('loadedmetadata', function seekWhenReady() {
+            console.log('Video ready, now seeking to:', targetTime);
+            video.currentTime = targetTime;
+            video.play().catch(e => console.log('Play failed:', e));
+            video.removeEventListener('loadedmetadata', seekWhenReady);
+          });
+          video.load();
+        }
+      }
+    }
+
+    // Fetch metadata and initialize controls
+    async function loadMetadata() {
+      try {
+        let response;
+        // Try GCS first, fall back to local file for testing
+        try {
+          response = await fetch('https://storage.googleapis.com/emmet-daily-snapshots/compilation-metadata.json');
+        } catch (e) {
+          console.log('GCS fetch failed (CORS or network), trying local...');
+          response = null;
+        }
+
+        if (!response || !response.ok) {
+          // Try local file (for development/testing)
+          console.log('Trying local metadata file...');
+          response = await fetch('./output/compilation-metadata.json');
+        }
+        if (!response.ok) throw new Error('Metadata not found');
+
+        compilationMetadata = await response.json();
+
+        if (compilationMetadata.months && compilationMetadata.months.length > 0) {
+          populateMonthSelects(compilationMetadata.months);
+
+          // Update stats
+          const totalDuration = formatDuration(compilationMetadata.total_duration || 0);
+          const clipCount = compilationMetadata.clip_count || 0;
+          const monthCount = compilationMetadata.months.length;
+          statsDiv.textContent = `${clipCount} clips across ${monthCount} month${monthCount !== 1 ? 's' : ''} • Total: ${totalDuration}`;
+        } else {
+          statsDiv.textContent = 'No month data available';
+        }
+
+        monthSelector.classList.remove('loading');
+      } catch (err) {
+        console.error('Failed to load metadata:', err);
+        statsDiv.innerHTML = '<span class="error">Could not load month data</span>';
+        monthSelector.classList.remove('loading');
+      }
+    }
+
+    // Event listeners
+    jumpBtn.addEventListener('click', jumpToSelection);
+
+    // Validate month range (start <= end)
+    monthStartSelect.addEventListener('change', () => {
+      const startIdx = parseInt(monthStartSelect.value);
+      const endIdx = parseInt(monthEndSelect.value);
+      if (startIdx > endIdx) {
+        monthEndSelect.value = startIdx;
+      }
+    });
+
+    monthEndSelect.addEventListener('change', () => {
+      const startIdx = parseInt(monthStartSelect.value);
+      const endIdx = parseInt(monthEndSelect.value);
+      if (endIdx < startIdx) {
+        monthStartSelect.value = endIdx;
+      }
+    });
+
+    // Video error handling - try local fallback
+    let triedLocalVideo = false;
     video.addEventListener('error', function(e) {
       console.error('Video error:', e);
-      const container = document.querySelector('.video-container');
-      container.innerHTML = '<div class="error-message">The compilation video is being generated. Please check back soon!</div>';
+      if (!triedLocalVideo) {
+        console.log('GCS video failed, trying local...');
+        triedLocalVideo = true;
+        const source = document.getElementById('video-source');
+        source.src = './output/compilation.mp4';
+        video.load();
+      } else {
+        const container = document.querySelector('.video-container');
+        container.innerHTML = '<div class="error-message">The compilation video is being generated. Please check back soon!</div>';
+      }
     });
 
     // Log video metadata when loaded
     video.addEventListener('loadedmetadata', function() {
       console.log('Video duration:', Math.floor(video.duration), 'seconds');
     });
+
+    // Initialize
+    loadMetadata();
   </script>
 </body>
 </html>
