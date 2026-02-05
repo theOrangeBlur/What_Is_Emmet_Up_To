@@ -103,9 +103,8 @@
 
     <div class="video-container">
       <video id="compilation-video" controls preload="auto">
-        <!-- For local testing, use local video. Change back for production -->
-        <!-- Using locally generated compilation with date overlays -->
-        <source id="video-source" src="./output/compilation.mp4" type="video/mp4">
+        <!-- Primary: GCS hosted video, fallback: local for testing -->
+        <source id="video-source" src="https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4" type="video/mp4">
         Your browser doesn't support the video tag. Please try a different browser.
       </video>
     </div>
