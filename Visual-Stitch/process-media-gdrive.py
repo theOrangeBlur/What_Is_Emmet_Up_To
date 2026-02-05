@@ -411,7 +411,8 @@ def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, dat
             # Fall back to Drive metadata
             creation_time_str = item.get('createdTime') or item.get('modifiedTime')
             if creation_time_str:
-                creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00'))
+                # Convert to naive datetime (strip timezone) for consistent sorting
+                creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
             else:
                 creation_time = datetime.now()
 
