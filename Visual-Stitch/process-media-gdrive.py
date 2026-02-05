@@ -358,6 +358,20 @@ def get_video_duration(video_path: Path) -> float:
         return 5.0  # Default fallback
 
 
+def has_audio_track(video_path: Path) -> bool:
+    """Check if video file has an audio track using ffprobe."""
+    try:
+        result = subprocess.run(
+            [get_ffprobe(), '-v', 'error', '-select_streams', 'a',
+             '-show_entries', 'stream=codec_type', '-of', 'json', str(video_path)],
+            capture_output=True, text=True, check=True
+        )
+        data = json.loads(result.stdout)
+        return len(data.get('streams', [])) > 0
+    except Exception:
+        return False
+
+
 def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, datetime, str, str]]:
     """
     Download and catalog media from Google Drive folder.
@@ -440,7 +454,7 @@ def format_date_for_overlay(dt: datetime) -> str:
 
 
 def process_image_to_video(image_path: Path, duration: float, output_path: Path, creation_time: datetime = None):
-    """Convert image to video clip using FFmpeg with optional date overlay."""
+    """Convert image to video clip with silent audio track using FFmpeg."""
     print(f"  Processing image: {image_path.name} ({duration}s)")
 
     # Build video filter chain
@@ -458,15 +472,20 @@ def process_image_to_video(image_path: Path, duration: float, output_path: Path,
 
     vf_filter = ','.join(vf_parts)
 
+    # Generate video from image with silent audio track for consistent concatenation
     subprocess.run([
         get_ffmpeg(), '-y',
         '-loop', '1',
         '-i', str(image_path),
+        '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
         '-c:v', 'libx264',
         '-t', str(duration),
         '-r', '30',  # Force 30fps for consistent timebase with xfade
         '-pix_fmt', 'yuv420p',
         '-vf', vf_filter,
+        '-c:a', 'aac',
+        '-b:a', '128k',
+        '-shortest',  # Stop when video ends
         str(output_path)
     ], check=True, capture_output=True)
 
@@ -490,6 +509,7 @@ def standardize_video(video_path: Path, output_path: Path, creation_time: dateti
 
     vf_filter = ','.join(vf_parts)
 
+    # Always preserve original audio from video files
     subprocess.run([
         get_ffmpeg(), '-y',
         '-i', str(video_path),
@@ -506,22 +526,23 @@ def standardize_video(video_path: Path, output_path: Path, creation_time: dateti
 
 def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_video: List[bool] = None, crossfade_duration: float = CROSSFADE_DURATION):
     """
-    Concatenate all video clips with crossfade transitions.
+    Concatenate all video clips with crossfade transitions and audio.
     Crossfade only applied when transitioning from video to picture.
+    Audio is trimmed to match video timeline and concatenated.
 
     Args:
-        video_paths: List of processed clip paths
+        video_paths: List of processed clip paths (all must have audio tracks)
         output_path: Output file path
         source_is_video: List of booleans indicating if original source was video (True) or image (False)
         crossfade_duration: Duration of crossfade transitions
     """
-    print(f"\nConcatenating {len(video_paths)} clips...")
+    print(f"\nConcatenating {len(video_paths)} clips with audio...")
 
     if len(video_paths) == 0:
         raise ValueError("No video clips to concatenate")
 
     if len(video_paths) == 1:
-        # Just copy single clip
+        # Just copy single clip (preserves audio)
         shutil.copy(video_paths[0], output_path)
         return
 
@@ -534,23 +555,23 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_vid
     for video_path in video_paths:
         actual_durations.append(get_video_duration(video_path))
 
-    # Build FFmpeg command with xfade filter chain
-    # For N clips, we need N-1 xfade filters
+    # Build FFmpeg inputs
     inputs = []
     for video_path in video_paths:
         inputs.extend(['-i', str(video_path)])
 
-    # Build the filter_complex for video crossfades
-    # Pattern: [0:v][1:v]xfade=...[v1]; [v1][2:v]xfade=...[v2]; ...
+    # ========== BUILD FILTER COMPLEX ==========
     filter_parts = []
+
+    # ----- VIDEO XFADE FILTER CHAIN -----
     cumulative_duration = actual_durations[0]
     crossfade_count = 0
+    # Track audio durations (how much audio to take from each clip)
+    audio_durations = []
 
     for i in range(len(video_paths) - 1):
         # Only apply crossfade when going from video to picture
         apply_crossfade = source_is_video[i] and not source_is_video[i + 1]
-        # Use 0.1s (3 frames at 30fps) for hard cuts - small enough to not be noticeable
-        # but large enough for FFmpeg to handle properly in xfade chains
         transition_duration = crossfade_duration if apply_crossfade else 0.1
 
         if apply_crossfade:
@@ -558,10 +579,11 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_vid
 
         # Calculate offset: when to start the transition
         offset = cumulative_duration - transition_duration
-
-        # Ensure offset isn't negative (clip too short for crossfade)
         if offset < 0.1:
             offset = 0.1
+
+        # Track audio duration for this clip (plays until crossfade overlap begins)
+        audio_durations.append(actual_durations[i] - transition_duration)
 
         # Input labels
         if i == 0:
@@ -580,33 +602,50 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_vid
             f"{input1}{input2}xfade=transition=fade:duration={transition_duration}:offset={offset:.3f}{output_label}"
         )
 
-        # Update cumulative duration for next iteration
         cumulative_duration = offset + actual_durations[i+1]
 
+    # Last clip uses full duration for audio
+    audio_durations.append(actual_durations[-1])
+
     print(f"  Applying {crossfade_count} crossfade transitions (video->picture only)")
+
+    # ----- AUDIO TRIM AND CONCAT FILTER CHAIN -----
+    audio_inputs = []
+    for i in range(len(video_paths)):
+        audio_duration = max(audio_durations[i], 0.1)  # Ensure positive duration
+        # Trim audio stream to calculated duration and reset timestamps
+        filter_parts.append(f"[{i}:a]atrim=0:{audio_duration:.3f},asetpts=PTS-STARTPTS[a{i}]")
+        audio_inputs.append(f"[a{i}]")
+
+    # Concatenate all trimmed audio streams
+    audio_concat = "".join(audio_inputs) + f"concat=n={len(video_paths)}:v=0:a=1[outa]"
+    filter_parts.append(audio_concat)
+
     filter_complex = ";".join(filter_parts)
 
+    # ========== BUILD FFMPEG COMMAND ==========
     cmd = [
         get_ffmpeg(), '-y',
         *inputs,
         '-filter_complex', filter_complex,
         '-map', '[outv]',
+        '-map', '[outa]',
         '-c:v', 'libx264',
         '-crf', '23',
         '-g', '30',               # Keyframe every 30 frames (1 second at 30fps)
         '-keyint_min', '30',      # Minimum keyframe interval
         '-sc_threshold', '0',     # Disable scene change detection for regular keyframes
         '-pix_fmt', 'yuv420p',
+        '-c:a', 'aac',
+        '-b:a', '128k',
         '-movflags', '+faststart',  # Move moov atom to start for web seeking
         str(output_path)
     ]
 
     # Run with error output visible for debugging
     result = subprocess.run(cmd, capture_output=True, text=True)
-    # Look for errors in stderr (not just progress output)
     if result.stderr:
         stderr_lines = result.stderr.strip().split('\n')
-        # Filter to show only lines with errors/warnings
         important_lines = [l for l in stderr_lines if 'error' in l.lower() or 'warning' in l.lower() or 'invalid' in l.lower() or 'failed' in l.lower()]
         if important_lines:
             print(f"  DEBUG: FFmpeg issues:")

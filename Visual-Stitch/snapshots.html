@@ -103,25 +103,29 @@
 
     <div class="video-container">
       <video id="compilation-video" controls preload="auto">
-        <!-- Primary: GCS hosted video, fallback: local for testing -->
-        <source id="video-source" src="https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4" type="video/mp4">
+        <!-- Local testing: use web-optimized file with faststart for seeking -->
+        <source id="video-source" src="./output/compilation-web.mp4?v=3" type="video/mp4">
         Your browser doesn't support the video tag. Please try a different browser.
       </video>
     </div>
 
     <div class="info-section">
       <h2>^^ About This ^^</h2>
-      <p>This video is compiled from photos and videos I've taken, inspired by the "One Second Every Day" concept. Each time I add new media, the compilation updates automatically.</p>
-      <p>Having lost all of my digital pictures before 2025, I have started to capture more of my life digitally and treasure those glimpses a little bit more. After leaving my job  in October, I also started taking short videos explicitly for this purpose.</p>
+      <p>This video is compiled from photos and videos I've taken, inspired by the 
+        "One Second Every Day" concept. I periodically move some of my Google photos 
+        into a Google Drive folder that gets scraped by a github action.</p>
+      <p>Having lost all of my digital pictures before 2025, I have started to capture 
+        more of my life in photos and treasure those glimpses a little bit more. After 
+        leaving my job  in October, I also started taking short videos explicitly for 
+        this purpose.</p>
     </div>
 
     <div class="todo-section">
       <h5>Future Improvements:</h5>
       <ul>
+        <li>Crop some of the longer videos</li>
+        <li>Some of the videos are out of order, I'll check that out</li>
         <li>Look into Google Photos Picker API as alternative to current Drive-based approach</li>
-        <li>Rotate videos and pictures to the ideal viewing orientation</li>
-        <li>Add date overlays to show when each clip was taken</li>
-        <li>Display total duration and clip count</li>
       </ul>
     </div>
   </div>
