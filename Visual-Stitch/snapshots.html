@@ -103,8 +103,8 @@
 
     <div class="video-container">
       <video id="compilation-video" controls preload="auto">
-        <!-- Production: GCS hosted video -->
-        <source id="video-source" src="https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4" type="video/mp4">
+        <!-- Source set dynamically based on environment -->
+        <source id="video-source" src="" type="video/mp4">
         Your browser doesn't support the video tag. Please try a different browser.
       </video>
     </div>
@@ -132,6 +132,7 @@
 
   <script>
     const video = document.getElementById('compilation-video');
+    const videoSource = document.getElementById('video-source');
     const monthSelector = document.getElementById('month-selector');
     const monthStartSelect = document.getElementById('month-start');
     const monthEndSelect = document.getElementById('month-end');
@@ -139,6 +140,29 @@
     const statsDiv = document.getElementById('compilation-stats');
 
     let compilationMetadata = null;
+
+    // Environment detection - use local files on localhost, GCS in production
+    const isLocal = window.location.hostname === 'localhost'
+                 || window.location.hostname === '127.0.0.1'
+                 || window.location.protocol === 'file:';
+
+    const config = {
+      videoUrl: isLocal
+        ? './output/compilation.mp4'
+        : 'https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4',
+      metadataUrl: isLocal
+        ? './output/compilation-metadata.json'
+        : 'https://storage.googleapis.com/emmet-daily-snapshots/compilation-metadata.json',
+      fallbackVideoUrl: './output/compilation.mp4',
+      fallbackMetadataUrl: './output/compilation-metadata.json'
+    };
+
+    console.log('Environment:', isLocal ? 'LOCAL' : 'PRODUCTION');
+    console.log('Video URL:', config.videoUrl);
+
+    // Set initial video source
+    videoSource.src = config.videoUrl;
+    video.load();
 
     // Format month string (2025-01 -> January 2025)
     function formatMonth(monthStr) {
@@ -231,18 +255,18 @@
     async function loadMetadata() {
       try {
         let response;
-        // Try GCS first, fall back to local file for testing
+        // Try primary URL based on environment
         try {
-          response = await fetch('https://storage.googleapis.com/emmet-daily-snapshots/compilation-metadata.json');
+          response = await fetch(config.metadataUrl);
         } catch (e) {
-          console.log('GCS fetch failed (CORS or network), trying local...');
+          console.log('Primary metadata fetch failed, trying fallback...');
           response = null;
         }
 
         if (!response || !response.ok) {
-          // Try local file (for development/testing)
-          console.log('Trying local metadata file...');
-          response = await fetch('./output/compilation-metadata.json');
+          // Try fallback
+          console.log('Trying fallback metadata:', config.fallbackMetadataUrl);
+          response = await fetch(config.fallbackMetadataUrl);
         }
         if (!response.ok) throw new Error('Metadata not found');
 
@@ -288,15 +312,14 @@
       }
     });
 
-    // Video error handling - try local fallback
-    let triedLocalVideo = false;
+    // Video error handling - try fallback URL
+    let triedFallback = false;
     video.addEventListener('error', function(e) {
       console.error('Video error:', e);
-      if (!triedLocalVideo) {
-        console.log('GCS video failed, trying local...');
-        triedLocalVideo = true;
-        const source = document.getElementById('video-source');
-        source.src = './output/compilation.mp4';
+      if (!triedFallback && config.videoUrl !== config.fallbackVideoUrl) {
+        console.log('Primary video failed, trying fallback:', config.fallbackVideoUrl);
+        triedFallback = true;
+        videoSource.src = config.fallbackVideoUrl;
         video.load();
       } else {
         const container = document.querySelector('.video-container');
