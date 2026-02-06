@@ -8,6 +8,7 @@ Visual-Stitch/output/*.mp4
 # Google Cloud credentials (NEVER commit these!)
 Visual-Stitch/client_secret.json
 Visual-Stitch/token.json
+Visual-Stitch/local-config.json
 **/gcs-key.json
 
 # Python cache

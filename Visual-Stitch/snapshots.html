@@ -68,6 +68,27 @@
       color: #c00;
       font-size: 0.85rem;
     }
+    .video-container {
+      position: relative;
+    }
+    .timeline-bar {
+      position: absolute;
+      bottom: 28px;
+      left: 20px;
+      right: 20px;
+      height: 8px;
+      pointer-events: none;
+      z-index: 10;
+      display: none;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .timeline-segment {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      transition: opacity 0.2s ease;
+    }
   </style>
 </head>
 <body>
@@ -107,6 +128,7 @@
         <source id="video-source" src="" type="video/mp4">
         Your browser doesn't support the video tag. Please try a different browser.
       </video>
+      <div class="timeline-bar" id="timeline-bar"></div>
     </div>
 
     <div class="info-section">
@@ -124,7 +146,6 @@
       <h5>Future Improvements:</h5>
       <ul>
         <li>Crop some of the longer videos</li>
-        <li>Some of the videos are out of order, I'll check that out</li>
         <li>Look into Google Photos Picker API as alternative to current Drive-based approach</li>
       </ul>
     </div>
@@ -138,6 +159,7 @@
     const monthEndSelect = document.getElementById('month-end');
     const jumpBtn = document.getElementById('jump-btn');
     const statsDiv = document.getElementById('compilation-stats');
+    const timelineBar = document.getElementById('timeline-bar');
 
     let compilationMetadata = null;
 
@@ -202,10 +224,67 @@
       monthStartSelect.disabled = false;
       monthEndSelect.disabled = false;
       jumpBtn.disabled = false;
+      buildTimeline();
+    }
+
+    // Season color map by month number (1-12)
+    const MONTH_COLORS = {
+      1:  '#5B9BD5',  // Jan - winter blue
+      2:  '#7EC8E3',  // Feb - frost
+      3:  '#77DD77',  // Mar - spring green
+      4:  '#FFB7CE',  // Apr - cherry blossom
+      5:  '#4CAF50',  // May - leaf green
+      6:  '#FFD700',  // Jun - golden sun
+      7:  '#FFA500',  // Jul - warm orange
+      8:  '#FF8C00',  // Aug - deep orange
+      9:  '#DAA520',  // Sep - goldenrod
+      10: '#CC5500',  // Oct - burnt orange
+      11: '#8B4513',  // Nov - saddle brown
+      12: '#4169E1',  // Dec - royal blue
+    };
+
+    function getMonthColor(monthStr) {
+      const num = parseInt(monthStr.split('-')[1]);
+      return MONTH_COLORS[num] || '#888';
+    }
+
+    // Build timeline segments from metadata (called once both metadata + duration are ready)
+    function buildTimeline() {
+      if (!compilationMetadata || !video.duration) return;
+      timelineBar.innerHTML = '';
+
+      compilationMetadata.months.forEach((m, idx) => {
+        const seg = document.createElement('div');
+        seg.className = 'timeline-segment';
+        seg.dataset.idx = idx;
+        seg.style.background = getMonthColor(m.month);
+        seg.style.left = `${(m.start / video.duration) * 100}%`;
+        seg.style.width = `${((m.end - m.start) / video.duration) * 100}%`;
+        timelineBar.appendChild(seg);
+      });
+
+      timelineBar.style.display = 'block';
+      updateTimelineSelection();
+    }
+
+    // Flag to prevent re-pausing if user manually seeks past the end
+    let hasPausedAtEnd = false;
+
+    // Update opacity of segments based on From/To selection
+    function updateTimelineSelection() {
+      hasPausedAtEnd = false;
+      const startIdx = parseInt(monthStartSelect.value);
+      const endIdx = parseInt(monthEndSelect.value);
+      const segments = timelineBar.querySelectorAll('.timeline-segment');
+      segments.forEach(seg => {
+        const idx = parseInt(seg.dataset.idx);
+        seg.style.opacity = (idx >= startIdx && idx <= endIdx) ? '1' : '0.15';
+      });
     }
 
     // Jump video to selected month range
     function jumpToSelection() {
+      hasPausedAtEnd = false;
       if (!compilationMetadata) {
         console.log('No metadata loaded');
         return;
@@ -292,6 +371,18 @@
       }
     }
 
+    // Auto-pause at end of selected range
+    video.addEventListener('timeupdate', () => {
+      if (hasPausedAtEnd || !compilationMetadata) return;
+      const endIdx = parseInt(monthEndSelect.value);
+      const endMonth = compilationMetadata.months[endIdx];
+      if (endMonth && video.currentTime >= endMonth.end) {
+        video.pause();
+        video.currentTime = endMonth.end;
+        hasPausedAtEnd = true;
+      }
+    });
+
     // Event listeners
     jumpBtn.addEventListener('click', jumpToSelection);
 
@@ -302,6 +393,7 @@
       if (startIdx > endIdx) {
         monthEndSelect.value = startIdx;
       }
+      updateTimelineSelection();
     });
 
     monthEndSelect.addEventListener('change', () => {
@@ -310,6 +402,7 @@
       if (endIdx < startIdx) {
         monthStartSelect.value = endIdx;
       }
+      updateTimelineSelection();
     });
 
     // Video error handling - try fallback URL
@@ -327,10 +420,14 @@
       }
     });
 
-    // Log video metadata when loaded
+    // Build timeline when video duration becomes available
     video.addEventListener('loadedmetadata', function() {
       console.log('Video duration:', Math.floor(video.duration), 'seconds');
+      buildTimeline();
     });
+
+    // Rebuild on resize (segments use percentages, but just in case)
+    window.addEventListener('resize', buildTimeline);
 
     // Initialize
     loadMetadata();

@@ -239,10 +239,10 @@ def should_skip_file(filename: str) -> bool:
     return filename.startswith('_SKIP_')
 
 
-def get_media_from_folder(service, folder_id: str) -> List[dict]:
+def get_media_from_folder(service, folder_id: str, limit: int = None) -> List[dict]:
     """
     Fetch all media files from a specific Google Drive folder.
-    Returns list of file dictionaries.
+    Returns list of file dictionaries, optionally limited to first N items.
     """
     print(f"\nFetching media from folder: {folder_id}")
 
@@ -262,7 +262,7 @@ def get_media_from_folder(service, folder_id: str) -> List[dict]:
             results = service.files().list(
                 q=query,
                 pageSize=100,
-                fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime)",
+                fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, imageMediaMetadata/time, videoMediaMetadata)",
                 pageToken=page_token
             ).execute()
 
@@ -272,6 +272,13 @@ def get_media_from_folder(service, folder_id: str) -> List[dict]:
             page_token = results.get('nextPageToken')
             if not page_token:
                 break
+
+        # Sort by filename for chronological order (PXL_YYYYMMDD_HHMMSS pattern)
+        media_items.sort(key=lambda x: x.get('name', ''))
+
+        if limit and len(media_items) > limit:
+            print(f"[TEST MODE] Limiting to {limit} of {len(media_items)} files")
+            media_items = media_items[:limit]
 
         print(f"Found {len(media_items)} media items in folder")
         return media_items
@@ -372,13 +379,13 @@ def has_audio_track(video_path: Path) -> bool:
         return False
 
 
-def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, datetime, str, str]]:
+def process_folder_media(service, folder_id: str, limit: int = None) -> List[Tuple[Path, float, datetime, str, str]]:
     """
     Download and catalog media from Google Drive folder.
     Returns list of (path, duration, date, file_id, filename) tuples sorted chronologically.
     """
     # Get media items from folder
-    media_items = get_media_from_folder(service, folder_id)
+    media_items = get_media_from_folder(service, folder_id, limit=limit)
 
     if not media_items:
         print("No media items found in folder!")
@@ -419,13 +426,20 @@ def process_folder_media(service, folder_id: str) -> List[Tuple[Path, float, dat
             if not download_drive_file(service, file_id, filename, local_path):
                 continue
 
-        # Get creation time - prefer filename (actual capture time) over Drive metadata (upload time)
+        # Get creation time - prefer filename, then EXIF via Drive API, then Drive upload time
         creation_time = parse_datetime_from_filename(filename)
         if not creation_time:
-            # Fall back to Drive metadata
+            # Try EXIF capture time from Drive's imageMediaMetadata
+            exif_time = (item.get('imageMediaMetadata') or {}).get('time')
+            if exif_time:
+                try:
+                    creation_time = datetime.strptime(exif_time, '%Y:%m:%d %H:%M:%S')
+                except ValueError:
+                    pass
+        if not creation_time:
+            # Fall back to Drive metadata (upload time, not capture time)
             creation_time_str = item.get('createdTime') or item.get('modifiedTime')
             if creation_time_str:
-                # Convert to naive datetime (strip timezone) for consistent sorting
                 creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
             else:
                 creation_time = datetime.now()
@@ -803,6 +817,7 @@ def main():
     parser.add_argument('--gcs-path', type=str, default='compilation.mp4', help='Destination path in GCS bucket')
     parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after successful processing')
     parser.add_argument('--skip-download', action='store_true', help='Use locally cached files from temp_downloads instead of downloading from Drive')
+    parser.add_argument('--limit', type=int, default=None, help='Limit number of files per folder (useful for testing, e.g. --limit 5)')
     parser.add_argument('--start-month', type=str, help='Start of month range (YYYY-MM, inclusive)')
     parser.add_argument('--end-month', type=str, help='End of month range (YYYY-MM, inclusive)')
 
@@ -810,6 +825,8 @@ def main():
 
     print("=" * 60)
     print("Visual Stitch Media Processor (Google Drive Edition)")
+    if args.limit:
+        print(f"  ** TEST MODE: limiting to {args.limit} files per folder **")
     print("=" * 60)
 
     # Get credentials
@@ -842,11 +859,18 @@ def main():
     if args.skip_download:
         media_files = load_local_media()
     else:
-        # Get folder ID from args or environment
+        # Get folder ID from args, local config, or environment
         folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
         if not folder_id:
+            local_config_path = SCRIPT_DIR / 'local-config.json'
+            if local_config_path.exists():
+                with open(local_config_path) as f:
+                    folder_id = json.load(f).get('folder_id')
+                if folder_id:
+                    print(f"Using folder ID from local-config.json")
+        if not folder_id:
             print("\n[ERROR] No folder ID provided!")
-            print("Use --folder-id or set GOOGLE_DRIVE_FOLDER_ID environment variable")
+            print("Use --folder-id, local-config.json, or set GOOGLE_DRIVE_FOLDER_ID environment variable")
             print("Run with --list-folders to see available folders")
             return 1
 
@@ -869,7 +893,7 @@ def main():
             media_files = []
             for month_folder in month_subfolders:
                 print(f"\n--- Processing {month_folder['name']} ---")
-                folder_media = process_folder_media(service, month_folder['id'])
+                folder_media = process_folder_media(service, month_folder['id'], limit=args.limit)
                 media_files.extend(folder_media)
 
             # Sort all media chronologically across all months
@@ -878,7 +902,7 @@ def main():
         else:
             # Backward compatibility: treat as flat folder with media files
             print("\nNo YYYY-MM subfolders found, treating as flat media folder...")
-            media_files = process_folder_media(service, folder_id)
+            media_files = process_folder_media(service, folder_id, limit=args.limit)
 
     if not media_files:
         print("\n[ERROR] No media files to process!")
