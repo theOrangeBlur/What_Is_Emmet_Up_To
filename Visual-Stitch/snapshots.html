@@ -180,11 +180,6 @@
     };
 
     console.log('Environment:', isLocal ? 'LOCAL' : 'PRODUCTION');
-    console.log('Video URL:', config.videoUrl);
-
-    // Set initial video source
-    videoSource.src = config.videoUrl;
-    video.load();
 
     // Format month string (2025-01 -> January 2025)
     function formatMonth(monthStr) {
@@ -351,6 +346,14 @@
 
         compilationMetadata = await response.json();
 
+        // Cache-bust video URL using metadata generation timestamp
+        const version = compilationMetadata.generated_at
+          ? '?v=' + encodeURIComponent(compilationMetadata.generated_at)
+          : '';
+        videoSource.src = config.videoUrl + version;
+        console.log('Video URL:', videoSource.src);
+        video.load();
+
         if (compilationMetadata.months && compilationMetadata.months.length > 0) {
           populateMonthSelects(compilationMetadata.months);
 
@@ -368,6 +371,9 @@
         console.error('Failed to load metadata:', err);
         statsDiv.innerHTML = '<span class="error">Could not load month data</span>';
         monthSelector.classList.remove('loading');
+        // Load video without cache-busting as fallback
+        videoSource.src = config.videoUrl;
+        video.load();
       }
     }
 
@@ -411,6 +417,12 @@
       console.error('Video error:', e);
       if (!triedFallback && config.videoUrl !== config.fallbackVideoUrl) {
         console.log('Primary video failed, trying fallback:', config.fallbackVideoUrl);
+        triedFallback = true;
+        videoSource.src = config.fallbackVideoUrl;
+        video.load();
+      } else if (!triedFallback) {
+        // Same URL for primary and fallback (local dev) - try without cache-bust param
+        console.log('Retrying without cache-bust param:', config.fallbackVideoUrl);
         triedFallback = true;
         videoSource.src = config.fallbackVideoUrl;
         video.load();
