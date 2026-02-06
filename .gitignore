@@ -15,6 +15,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Claude Code temp files
+tmpclaude*
+
 # OS files
 .DS_Store
 Thumbs.db
