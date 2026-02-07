@@ -1003,11 +1003,15 @@ def main():
     parser.add_argument('--start-month', type=str, help='Start of month range (YYYY-MM, inclusive)')
     parser.add_argument('--end-month', type=str, help='End of month range (YYYY-MM, inclusive)')
     parser.add_argument('--force-rebuild', action='store_true', help='Rebuild all months regardless of GCS manifests')
+    parser.add_argument('--latest-only', action='store_true', help='Only build latest.mp4 from the most recent N clips (fast)')
+    parser.add_argument('--latest-count', type=int, default=10, help='Number of recent clips for latest.mp4 (default: 10)')
 
     args = parser.parse_args()
 
     print("=" * 60)
     print("Visual Stitch Media Processor (Google Drive Edition)")
+    if args.latest_only:
+        print(f"  ** LATEST ONLY: building latest.mp4 from last {args.latest_count} clips **")
     if args.limit:
         print(f"  ** TEST MODE: limiting to {args.limit} files per folder **")
     if args.force_rebuild:
@@ -1042,6 +1046,132 @@ def main():
     OUTPUT_DIR.mkdir(exist_ok=True)
     TEMP_DIR.mkdir(exist_ok=True)
     TEMP_DOWNLOAD_DIR.mkdir(exist_ok=True)
+
+    # ===== LATEST-ONLY MODE =====
+    if args.latest_only:
+        folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
+        if not folder_id:
+            local_config_path = SCRIPT_DIR / 'local-config.json'
+            if local_config_path.exists():
+                with open(local_config_path) as f:
+                    folder_id = json.load(f).get('folder_id')
+        if not folder_id:
+            print("\n[ERROR] No folder ID provided!")
+            return 1
+
+        bucket_name = args.gcs_bucket or os.environ.get('GCS_BUCKET_NAME')
+
+        # Discover month subfolders (sorted chronologically)
+        month_subfolders = get_month_subfolders(service, folder_id)
+        if not month_subfolders:
+            print("\nNo YYYY-MM subfolders found!")
+            return 1
+
+        # Collect the last N files across all months (most recent first)
+        target_count = args.latest_count
+        collected_items = []  # (month_folder_id, item_dict)
+
+        for month_folder in reversed(month_subfolders):
+            if len(collected_items) >= target_count:
+                break
+            service = build_service()  # fresh connection
+            items = get_media_from_folder(service, month_folder['id'])
+            # Filter to supported formats
+            valid_items = [
+                item for item in items
+                if not should_skip_file(item.get('name', ''))
+                and get_file_extension(item.get('mimeType', ''), item.get('name', '')) in ALL_EXTENSIONS
+            ]
+            # Take from the end (most recent files) of this month
+            needed = target_count - len(collected_items)
+            for item in reversed(valid_items[-needed:]):
+                collected_items.append((month_folder['id'], item))
+            # If we got items from this month but still need more, they came from the end
+
+        if not collected_items:
+            print("\n[ERROR] No clips found!")
+            return 1
+
+        # Reverse so clips are in chronological order
+        collected_items.reverse()
+
+        print(f"\nBuilding latest.mp4 from {len(collected_items)} most recent clips...")
+
+        # Download and process each clip
+        service = build_service()
+        processed_clips = []
+        source_is_video = []
+
+        for idx, (folder_id_item, item) in enumerate(collected_items):
+            filename = item.get('name', f'item_{idx}')
+            mime_type = item.get('mimeType', '')
+            file_id = item['id']
+            ext = get_file_extension(mime_type, filename)
+
+            local_path = TEMP_DOWNLOAD_DIR / filename
+            if not local_path.exists():
+                print(f"  Downloading: {filename}")
+                if not download_drive_file(service, file_id, filename, local_path):
+                    continue
+            else:
+                print(f"  Using cached: {filename}")
+
+            # Get creation time
+            creation_time = parse_datetime_from_filename(filename)
+            if not creation_time:
+                exif_time = (item.get('imageMediaMetadata') or {}).get('time')
+                if exif_time:
+                    try:
+                        creation_time = datetime.strptime(exif_time, '%Y:%m:%d %H:%M:%S')
+                    except ValueError:
+                        pass
+            if not creation_time:
+                creation_time_str = item.get('createdTime') or item.get('modifiedTime')
+                if creation_time_str:
+                    creation_time = datetime.fromisoformat(creation_time_str.replace('Z', '+00:00')).replace(tzinfo=None)
+                else:
+                    creation_time = datetime.now()
+
+            output_clip = TEMP_DIR / f"latest_clip_{idx:04d}.mp4"
+            try:
+                if ext in IMAGE_EXTENSIONS:
+                    duration = parse_duration_from_filename(filename) or DEFAULT_IMAGE_DURATION
+                    process_image_to_video(local_path, float(duration), output_clip, creation_time)
+                    source_is_video.append(False)
+                elif ext in VIDEO_EXTENSIONS:
+                    standardize_video(local_path, output_clip, creation_time)
+                    source_is_video.append(True)
+                processed_clips.append(output_clip)
+            except subprocess.CalledProcessError as e:
+                print(f"  ERROR processing {filename}: {e}")
+                continue
+
+        if not processed_clips:
+            print("\n[ERROR] No clips processed!")
+            return 1
+
+        # Concatenate into latest.mp4
+        latest_video_path = OUTPUT_DIR / "latest.mp4"
+        concatenate_videos(processed_clips, latest_video_path, source_is_video)
+
+        # Clean up clips
+        for clip in processed_clips:
+            try:
+                clip.unlink()
+            except Exception:
+                pass
+
+        print(f"\nSUCCESS! latest.mp4 created ({len(processed_clips)} clips)")
+
+        # Upload to GCS
+        if args.upload_to_gcs:
+            if not bucket_name:
+                print("\n[ERROR] No GCS bucket specified!")
+                return 1
+            upload_to_gcs(latest_video_path, bucket_name, 'latest.mp4')
+            print(f"[OK] latest.mp4 uploaded to GCS")
+
+        return 0
 
     # ===== LEGACY MODE: --skip-download =====
     if args.skip_download:
@@ -1211,12 +1341,6 @@ def main():
         json.dump(metadata, f, indent=2)
     print(f"\nMetadata: {metadata['clip_count']} clips across {len(metadata['months'])} months")
 
-    # Generate "latest" video (most recent month's video)
-    latest_month = month_results[-1]
-    latest_video_path = OUTPUT_DIR / "latest.mp4"
-    shutil.copy(latest_month[1], latest_video_path)
-    print(f"Latest video: {latest_month[0]} ({latest_month[2]['clip_count']} clips)")
-
     print(f"\n{'=' * 60}")
     print(f"SUCCESS! Compilation: {OUTPUT_VIDEO}")
     print(f"  Months: {len(month_results)}")
@@ -1234,8 +1358,7 @@ def main():
             upload_to_gcs(OUTPUT_VIDEO, bucket_name, args.gcs_path)
             metadata_gcs_path = args.gcs_path.replace('.mp4', '-metadata.json')
             upload_to_gcs(metadata_path, bucket_name, metadata_gcs_path)
-            upload_to_gcs(latest_video_path, bucket_name, 'latest.mp4')
-            print(f"\n[OK] All files uploaded to GCS")
+            print(f"\n[OK] Compilation + metadata uploaded to GCS")
         except Exception as e:
             print(f"\n[ERROR] Upload failed: {e}")
             return 1

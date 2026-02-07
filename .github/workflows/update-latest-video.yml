@@ -1,0 +1,71 @@
+name: Update Latest Video
+
+on:
+  # Run daily at 06:00 UTC (midnight MST)
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      latest_count:
+        description: 'Number of recent clips to include'
+        required: false
+        default: '10'
+        type: string
+
+jobs:
+  update-latest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r Visual-Stitch/requirements.txt
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}' > /tmp/gcs-key.json
+
+      - name: Set up Google Drive credentials
+        run: |
+          cd Visual-Stitch
+          echo '${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}' > client_secret.json
+          echo '${{ secrets.GOOGLE_DRIVE_TOKEN }}' > token.json
+
+      - name: Build and upload latest video
+        env:
+          GOOGLE_DRIVE_TOKEN: ${{ secrets.GOOGLE_DRIVE_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcs-key.json
+        run: |
+          cd Visual-Stitch
+          LATEST_COUNT="${{ github.event.inputs.latest_count }}"
+          LATEST_COUNT="${LATEST_COUNT:-10}"
+          python process-media-gdrive.py \
+            --latest-only \
+            --latest-count "$LATEST_COUNT" \
+            --upload-to-gcs
+
+      - name: Clean up credentials
+        if: always()
+        run: |
+          rm -f /tmp/gcs-key.json
+          rm -f Visual-Stitch/client_secret.json
+          rm -f Visual-Stitch/token.json
