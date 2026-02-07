@@ -126,3 +126,268 @@ function createParticle() {
 
 setInterval(createParticle, 500);
 for (let i = 0; i < 15; i++) createParticle();
+
+// ── Cosmic Newspaper: Dynamic Preview Loading ──
+
+async function loadPreviews() {
+    await Promise.allSettled([
+        loadProjectPreview(),
+        loadMoviePreview(),
+        loadGamePreview(),
+        loadDisciplinePreview()
+    ]);
+}
+
+// ── Projects Preview ──
+async function loadProjectPreview() {
+    try {
+        const resp = await fetch('Projects/latest-project.json');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const img = document.getElementById('latest-project-img');
+        const title = document.getElementById('latest-project-title');
+        if (img && data.thumbnail) {
+            img.src = 'Projects/' + data.thumbnail;
+            img.style.display = 'block';
+        }
+        if (title && data.title) {
+            title.textContent = 'Latest: ' + data.title;
+        }
+    } catch (e) { /* silently fail */ }
+}
+
+// ── Movie Preview ──
+async function loadMoviePreview() {
+    try {
+        const [csvResp, cacheResp] = await Promise.all([
+            fetch('Movies/src/reviews.csv'),
+            fetch('Movies/src/poster_cache.json')
+        ]);
+        if (!csvResp.ok || !cacheResp.ok) return;
+
+        const csvText = await csvResp.text();
+        const posterCache = await cacheResp.json();
+
+        // Parse first data row (most recent movie)
+        const lines = csvText.trim().split('\n');
+        if (lines.length < 2) return;
+        const row = parseCSVRow(lines[1]);
+        // CSV columns: Date,Name,Year,Letterboxd URI,Rating,Rewatch,Review,Tags,Watched Date
+        const name = row[1];
+        const year = row[2];
+        const rating = parseFloat(row[4]);
+
+        // Look up poster
+        const cacheKey = name + '|' + year;
+        const posterData = posterCache[cacheKey];
+
+        const posterImg = document.getElementById('latest-movie-poster');
+        const titleEl = document.getElementById('latest-movie-title');
+        const ratingEl = document.getElementById('latest-movie-rating');
+
+        if (posterImg && posterData && posterData.poster) {
+            posterImg.src = posterData.poster;
+            posterImg.style.display = 'block';
+        }
+        if (titleEl) {
+            titleEl.textContent = name + ' (' + year + ')';
+        }
+        if (ratingEl && !isNaN(rating)) {
+            ratingEl.textContent = renderStars(rating);
+        }
+    } catch (e) { /* silently fail */ }
+}
+
+function renderStars(rating) {
+    let stars = '';
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5;
+    for (let i = 0; i < full; i++) stars += '\u2605';
+    if (half) stars += '\u00BD';
+    const empty = 5 - full - (half ? 1 : 0);
+    for (let i = 0; i < empty; i++) stars += '\u2606';
+    return stars;
+}
+
+// Simple CSV row parser (handles quoted fields with commas)
+function parseCSVRow(line) {
+    const fields = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) {
+            fields.push(current.trim());
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    fields.push(current.trim());
+    return fields;
+}
+
+// ── Game Preview ──
+async function loadGamePreview() {
+    try {
+        const resp = await fetch('Game_review/src/games.csv');
+        if (!resp.ok) return;
+        const csvText = await resp.text();
+        const lines = csvText.trim().split('\n');
+        if (lines.length < 2) return;
+
+        // Find game with highest Play order (column index 10)
+        let bestGame = null;
+        let highestOrder = -1;
+
+        for (let i = 1; i < lines.length; i++) {
+            const row = parseCSVRow(lines[i]);
+            const title = row[0];
+            if (!title) continue;
+            const playOrder = parseInt(row[10]);
+            if (!isNaN(playOrder) && playOrder > highestOrder) {
+                highestOrder = playOrder;
+                bestGame = {
+                    title: title,
+                    genre: row[1],
+                    timePlayed: row[4],
+                    actualBeat: row[3],
+                    playOrder: playOrder
+                };
+            }
+        }
+
+        if (!bestGame) return;
+
+        const titleEl = document.getElementById('latest-game-title');
+        const statusEl = document.getElementById('latest-game-status');
+        const hoursEl = document.getElementById('latest-game-hours');
+        const genreEl = document.getElementById('latest-game-genre');
+
+        if (titleEl) titleEl.textContent = bestGame.title;
+
+        // Determine status
+        const isCompleted = bestGame.actualBeat && bestGame.actualBeat.trim() !== '';
+        const status = isCompleted ? 'completed' : 'in-progress';
+        if (statusEl) {
+            statusEl.textContent = isCompleted ? 'COMPLETED' : 'IN PROGRESS';
+            statusEl.classList.add('status-' + status);
+        }
+
+        if (hoursEl && bestGame.timePlayed) {
+            hoursEl.textContent = bestGame.timePlayed + 'h played';
+        }
+
+        if (genreEl && bestGame.genre) {
+            genreEl.textContent = bestGame.genre;
+        }
+    } catch (e) { /* silently fail */ }
+}
+
+// ── Discipline Preview ──
+const DISCIPLINE_COLORS = {
+    mind: '#c4b5fd',
+    body: '#7dd3fc',
+    spirit: '#5eead4',
+    spanish: '#f472b6',
+    exceptional: '#ffd700'
+};
+
+async function loadDisciplinePreview() {
+    try {
+        const resp = await fetch('Discipline/log.csv');
+        if (!resp.ok) return;
+        const csvText = await resp.text();
+        const lines = csvText.trim().split('\n');
+        if (lines.length < 2) return;
+
+        // Build map of date -> entries
+        const dateMap = {};
+        for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(',').map(s => s.trim());
+            const dateStr = parts[0];
+            const category = (parts[1] || '').toLowerCase();
+            const action = parts[2] || '';
+            if (!dateStr || !category) continue;
+
+            // Normalize date from M/D/YYYY to YYYY-MM-DD
+            const normalized = normalizeLogDate(dateStr);
+            if (!normalized) continue;
+
+            if (!dateMap[normalized]) dateMap[normalized] = [];
+            dateMap[normalized].push({ category, action });
+        }
+
+        // Find yesterday (or today as fallback)
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = formatDateISO(yesterday);
+        const todayStr = formatDateISO(today);
+
+        let targetDate = yesterdayStr;
+        let entries = dateMap[yesterdayStr];
+        if (!entries || entries.length === 0) {
+            entries = dateMap[todayStr];
+            targetDate = todayStr;
+        }
+        // If still nothing, find the most recent date with entries
+        if (!entries || entries.length === 0) {
+            const sortedDates = Object.keys(dateMap).sort().reverse();
+            if (sortedDates.length > 0) {
+                targetDate = sortedDates[0];
+                entries = dateMap[targetDate];
+            }
+        }
+
+        if (!entries || entries.length === 0) return;
+
+        const container = document.getElementById('discipline-preview');
+        const dateEl = document.getElementById('discipline-date');
+
+        if (container) {
+            container.innerHTML = '';
+            entries.forEach(entry => {
+                const dot = document.createElement('span');
+                dot.className = 'discipline-dot';
+                const color = DISCIPLINE_COLORS[entry.category] || '#888';
+                if (entry.action) {
+                    dot.style.backgroundColor = color;
+                    dot.title = entry.category + ': ' + entry.action;
+                } else {
+                    dot.classList.add('empty');
+                    dot.style.borderColor = color;
+                    dot.title = entry.category + ': (none)';
+                }
+                container.appendChild(dot);
+            });
+        }
+
+        if (dateEl) {
+            const d = new Date(targetDate + 'T00:00:00');
+            dateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+    } catch (e) { /* silently fail */ }
+}
+
+function normalizeLogDate(dateStr) {
+    // Convert M/D/YYYY to YYYY-MM-DD
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+    const month = parts[0].padStart(2, '0');
+    const day = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return year + '-' + month + '-' + day;
+}
+
+function formatDateISO(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+}
+
+// Load all previews on page load
+loadPreviews();

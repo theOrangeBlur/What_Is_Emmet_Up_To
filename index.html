@@ -10,10 +10,8 @@
     <nav class="top-nav">
         <a href="Visual-Stitch/snapshots.html">📹 Daily Snapshots</a>
         <a href="Projects/projects.html">🛠️ Tech Projects</a>
-        <a href="Puzzle/puzzle.html">🧩 Puzzles</a>
         <a href="Game_review/games.html">🎮 Game Reviews</a>
         <a href="Movies/movies.html">🎬 Movie Reviews</a>
-        <a href="Blog/blog.html">📢 Blog</a>
         <a href="Discipline/discipline.html">🎯 Discipline</a>
     </nav>
 
@@ -40,37 +38,53 @@
             </div>
         </section>
 
-        <nav class="nav-grid">
-            <a href="Visual-Stitch/snapshots.html" class="nav-card">
+        <nav class="nav-grid newspaper">
+            <a href="Visual-Stitch/snapshots.html" class="nav-card card-headline">
+                <span class="section-label">HEADLINE</span>
                 <h3>📹 Daily Snapshots</h3>
                 <p>Life in short clips - I'm trying to take at least one short video a day to stitch them all together a la the old "One Second Every Day" fad.</p>
                 <video autoplay muted loop playsinline class="nav-card-preview"
                        src="https://storage.googleapis.com/emmet-daily-snapshots/latest.mp4">
                 </video>
             </a>
-            <a href="Projects/projects.html" class="nav-card">
+            <a href="Projects/projects.html" class="nav-card card-projects">
+                <span class="section-label">PROJECTS</span>
                 <h3>🛠️ Projects</h3>
-                <p>Things I'm building and things I've built. I hope to upload many projects here.</p>
+                <p>Things I'm building and things I've built.</p>
+                <img id="latest-project-img" class="nav-card-preview" alt="Latest project" style="display:none;">
+                <span id="latest-project-title" class="preview-subtitle"></span>
             </a>
-            <a href="Puzzle/puzzle.html" class="nav-card">
-                <h3>🧩 Puzzles</h3>
-                <p>Some puzzles and riddles I've found and love, and more that I've made myself!</p>
-            </a>
-            <a href="Game_review/games.html" class="nav-card">
-                <h3>🎮 Game Reviews</h3>
-                <p>I think video games ((can be)) art. I started a backlog of games I need to play, which quickly became a record of games I have already played. Come here to see my thoughts, as well as what's next on my plate.</p>
-            </a>
-            <a href="Movies/movies.html" class="nav-card">
+            <a href="Movies/movies.html" class="nav-card card-movies">
+                <span class="section-label">ENTERTAINMENT</span>
                 <h3>🎬 Movie Reviews</h3>
-                <p>I've always loved movies, but recently started tracking what I watch. Here's my running log of films with ratings and reviews, synced from my Letterboxd.</p>
+                <p>My running log of films with ratings and reviews.</p>
+                <div class="movie-preview">
+                    <img id="latest-movie-poster" class="movie-poster-preview" alt="Latest movie" style="display:none;">
+                    <div class="movie-preview-info">
+                        <span id="latest-movie-title" class="preview-subtitle"></span>
+                        <span id="latest-movie-rating" class="star-rating"></span>
+                    </div>
+                </div>
             </a>
-            <a href="Blog/blog.html" class="nav-card">
-                <h3>📢 Blog</h3>
-                <p>Look, I don't have a twitter. Or any social medias at all. How am I supposed to share all of my thoughts with the world?? Check out my blog for some meandering contemplations.</p>
+            <a href="Game_review/games.html" class="nav-card card-games">
+                <span class="section-label">GAMING</span>
+                <h3>🎮 Game Reviews</h3>
+                <p>Video games are art. Here's what I'm playing.</p>
+                <div class="game-preview">
+                    <span id="latest-game-title" class="preview-subtitle"></span>
+                    <div class="game-preview-meta">
+                        <span id="latest-game-status" class="game-status-badge"></span>
+                        <span id="latest-game-hours" class="game-hours"></span>
+                    </div>
+                    <span id="latest-game-genre" class="game-genre"></span>
+                </div>
             </a>
-            <a href="Discipline/discipline.html" class="nav-card">
+            <a href="Discipline/discipline.html" class="nav-card card-discipline">
+                <span class="section-label">DAILY LIFE</span>
                 <h3>🎯 Discipline</h3>
-                <p>Tracking daily growth across Mind, Body, and Spirit. A calendar view showing my consistency in nurturing all aspects of who I am.</p>
+                <p>Tracking daily growth across Mind, Body, Spirit, and Spanish.</p>
+                <div id="discipline-preview" class="discipline-dots"></div>
+                <span id="discipline-date" class="preview-subtitle"></span>
             </a>
         </nav>
         <br>

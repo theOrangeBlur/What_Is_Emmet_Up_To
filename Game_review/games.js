@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
                 case 'date':
                 default:
-                    // Original order is by date (most recent first)
-                    return parseInt(a.dataset.originalIndex) - parseInt(b.dataset.originalIndex);
+                    // Sort by play order (most recently played first)
+                    return parseInt(b.dataset.playOrder || 0) - parseInt(a.dataset.playOrder || 0);
             }
         });
 

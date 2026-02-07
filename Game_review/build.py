@@ -72,16 +72,14 @@ def load_games(csv_path: Path) -> tuple:
                                 summary_stats['complete_percentage'] = float(match.group(1))
                 continue
 
-            # Determine status based on Time Played
             time_played = parse_hours(row.get('Time Played', ''))
             actual_beat = parse_hours(row.get('Actual time to beat', ''))
 
-            if time_played > 0:
-                # They've played it
-                if actual_beat > 0:
-                    status = 'completed'
-                else:
-                    status = 'in-progress'
+            # Use Status column directly; fall back to must-play if empty
+            raw_status = row.get('Status', '').strip()
+            if raw_status:
+                # Normalize: "In Progress" -> "in-progress", "Completed" -> "completed"
+                status = raw_status.lower().replace(' ', '-')
             else:
                 status = 'must-play'
 
@@ -94,6 +92,13 @@ def load_games(csv_path: Path) -> tuple:
             # Get platform
             platform = row.get('Console', '').strip()
 
+            # Get play order
+            play_order_str = row.get('Play order', '').strip()
+            play_order = int(play_order_str) if play_order_str.isdigit() else 0
+
+            # Get date last played
+            date_last_played = row.get('Date Last Played', '').strip()
+
             games.append({
                 'id': slugify(name),
                 'name': name,
@@ -104,6 +109,8 @@ def load_games(csv_path: Path) -> tuple:
                 'actual_beat': actual_beat,
                 'status': status,
                 'platform': platform,
+                'play_order': play_order,
+                'date_last_played': date_last_played,
             })
 
     return games, summary_stats
@@ -290,7 +297,9 @@ def generate_game_card(game: dict, review_html: str = None) -> str:
         <article class="game-card" id="{game['id']}"
                  data-hours="{game['hours_played']}"
                  data-status="{game['status']}"
-                 data-name="{game['name']}">
+                 data-name="{game['name']}"
+                 data-play-order="{game['play_order']}"
+                 data-date-last-played="{game['date_last_played']}">
             <div class="game-card__header">
                 <div class="game-card__info">
                     <h3>{game['name']}</h3>
@@ -308,8 +317,8 @@ def build_page(games: list, reviews: dict, template: str, stats: dict) -> str:
     must_play = [g for g in games if g['status'] == 'must-play']
     tracked = [g for g in games if g['status'] != 'must-play']
 
-    # Sort tracked games by hours played (most first)
-    tracked.sort(key=lambda g: g['hours_played'], reverse=True)
+    # Sort tracked games by play order (most recently played first)
+    tracked.sort(key=lambda g: g['play_order'], reverse=True)
 
     # Generate HTML sections
     stats_html = generate_stats_html(stats)

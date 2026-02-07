@@ -244,6 +244,28 @@ ${projectCards}
 `;
 }
 
+// Generate latest-project.json for home page preview
+function generateLatestProjectJson(projects) {
+    const sorted = [...projects].sort((a, b) => {
+        const dateA = a.meta.end_date || a.meta.start_date || '';
+        const dateB = b.meta.end_date || b.meta.start_date || '';
+        return dateB.localeCompare(dateA);
+    });
+
+    if (sorted.length === 0) return;
+
+    const latest = sorted[0];
+    const data = {
+        title: latest.meta.title || latest.folder,
+        thumbnail: latest.meta.thumbnail ? `${latest.folder}/${latest.meta.thumbnail}` : null,
+        folder: latest.folder
+    };
+
+    const jsonPath = path.join(PROJECTS_DIR, 'latest-project.json');
+    fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
+    console.log(`Generated: ${jsonPath}`);
+}
+
 // Main build function
 function build() {
     console.log('Building projects page...');
@@ -269,6 +291,8 @@ function build() {
     const html = generatePage(projects);
     fs.writeFileSync(OUTPUT_FILE, html, 'utf-8');
     console.log(`\nGenerated: ${OUTPUT_FILE}`);
+
+    generateLatestProjectJson(projects);
 }
 
 build();
