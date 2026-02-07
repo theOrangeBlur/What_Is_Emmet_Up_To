@@ -1,6 +1,6 @@
 # Visual Stitch temporary files
-Visual-Stitch/temp_processed/*.mp4
-Visual-Stitch/temp_processed/*.txt
+Visual-Stitch/temp_processed/
+
 Visual-Stitch/temp_downloads/
 Visual-Stitch/mylist.txt
 Visual-Stitch/output/

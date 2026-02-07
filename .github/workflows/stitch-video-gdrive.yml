@@ -8,14 +8,14 @@ on:
   # Allow manual triggering
   workflow_dispatch:
     inputs:
-      delete_after_process:
-        description: 'Delete source files from Drive after processing'
+      force_rebuild:
+        description: 'Force rebuild all months (ignore GCS manifests)'
         required: false
-        default: 'true'
+        default: 'false'
         type: choice
         options:
-          - 'true'
           - 'false'
+          - 'true'
       start_month:
         description: 'Start month (YYYY-MM, inclusive). Leave empty for all months.'
         required: false
@@ -72,22 +72,20 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcs-key.json
         run: |
           cd Visual-Stitch
-          DELETE_FLAG=""
-          if [ "${{ github.event.inputs.delete_after_process }}" = "true" ] || [ "${{ github.event_name }}" = "schedule" ]; then
-            DELETE_FLAG="--delete-after-process"
+          FLAGS=""
+          if [ "${{ github.event.inputs.force_rebuild }}" = "true" ]; then
+            FLAGS="$FLAGS --force-rebuild"
           fi
-          MONTH_FLAGS=""
           if [ -n "${{ github.event.inputs.start_month }}" ]; then
-            MONTH_FLAGS="$MONTH_FLAGS --start-month ${{ github.event.inputs.start_month }}"
+            FLAGS="$FLAGS --start-month ${{ github.event.inputs.start_month }}"
           fi
           if [ -n "${{ github.event.inputs.end_month }}" ]; then
-            MONTH_FLAGS="$MONTH_FLAGS --end-month ${{ github.event.inputs.end_month }}"
+            FLAGS="$FLAGS --end-month ${{ github.event.inputs.end_month }}"
           fi
           python process-media-gdrive.py \
             --upload-to-gcs \
             --gcs-path "compilation.mp4" \
-            $DELETE_FLAG \
-            $MONTH_FLAGS
+            $FLAGS
 
       - name: Verify output was created and uploaded
         run: |

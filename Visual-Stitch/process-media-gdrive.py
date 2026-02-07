@@ -806,6 +806,165 @@ def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str
         raise
 
 
+def download_from_gcs(bucket_name: str, gcs_path: str, local_path: Path) -> bool:
+    """Download a file from GCS. Returns True if successful, False if not found."""
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(gcs_path)
+        if not blob.exists():
+            return False
+        blob.download_to_filename(str(local_path))
+        return True
+    except Exception as e:
+        print(f"  Failed to download gs://{bucket_name}/{gcs_path}: {e}")
+        return False
+
+
+def get_month_manifest(bucket_name: str, month_str: str) -> Optional[dict]:
+    """Download and parse manifest for a month from GCS. Returns None if not found."""
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(f"months/{month_str}-manifest.json")
+        if not blob.exists():
+            return None
+        return json.loads(blob.download_as_text())
+    except Exception as e:
+        print(f"  Could not fetch manifest for {month_str}: {e}")
+        return None
+
+
+def month_needs_rebuild(drive_filenames: List[str], manifest: Optional[dict]) -> bool:
+    """Check if month needs rebuilding by comparing sorted file lists."""
+    if manifest is None:
+        return True
+    return sorted(drive_filenames) != sorted(manifest.get('files', []))
+
+
+def build_month_video(service, month_name: str, month_folder_id: str,
+                      output_path: Path, limit: int = None) -> Optional[dict]:
+    """
+    Download, process, and concatenate all clips for one month into a single video.
+    Returns manifest dict on success, None on failure.
+    """
+    media_files = process_folder_media(service, month_folder_id, limit=limit)
+    if not media_files:
+        print(f"  No media files found for {month_name}")
+        return None
+
+    processed_clips = []
+    source_is_video = []
+    filenames = []
+
+    for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
+        ext = media_path.suffix.lower()
+        output_clip = TEMP_DIR / f"month_{month_name}_clip_{idx:04d}.mp4"
+
+        try:
+            if ext in IMAGE_EXTENSIONS:
+                process_image_to_video(media_path, duration, output_clip, creation_time)
+                source_is_video.append(False)
+            elif ext in VIDEO_EXTENSIONS:
+                standardize_video(media_path, output_clip, creation_time)
+                source_is_video.append(True)
+
+            processed_clips.append(output_clip)
+            filenames.append(filename)
+        except subprocess.CalledProcessError as e:
+            print(f"  ERROR processing {media_path.name}: {e}")
+            continue
+
+    if not processed_clips:
+        return None
+
+    # Concatenate clips for this month (with crossfades)
+    concatenate_videos(processed_clips, output_path, source_is_video)
+
+    # Get actual duration of the month video
+    month_duration = get_video_duration(output_path)
+
+    # Clean up individual clips
+    for clip in processed_clips:
+        try:
+            clip.unlink()
+        except Exception:
+            pass
+
+    return {
+        'month': month_name,
+        'files': sorted(filenames),
+        'duration': month_duration,
+        'clip_count': len(processed_clips),
+        'built_at': datetime.now().isoformat()
+    }
+
+
+def concat_month_videos(month_video_paths: List[Path], output_path: Path):
+    """
+    Concatenate per-month videos using FFmpeg concat demuxer.
+    Fast stream copy — no re-encoding, minimal memory.
+    """
+    print(f"\nConcatenating {len(month_video_paths)} month videos into final compilation...")
+
+    if len(month_video_paths) == 0:
+        raise ValueError("No month videos to concatenate")
+
+    if len(month_video_paths) == 1:
+        shutil.copy(month_video_paths[0], output_path)
+        return
+
+    # Create concat list file
+    concat_list = TEMP_DIR / "month_concat_list.txt"
+    with open(concat_list, 'w') as f:
+        for video_path in month_video_paths:
+            safe_path = str(video_path).replace('\\', '/')
+            f.write(f"file '{safe_path}'\n")
+
+    cmd = [
+        get_ffmpeg(), '-y',
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', str(concat_list),
+        '-c', 'copy',
+        '-movflags', '+faststart',
+        str(output_path)
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"  FFmpeg concat error: {result.stderr[-500:] if result.stderr else 'unknown'}")
+        raise subprocess.CalledProcessError(result.returncode, cmd)
+
+
+def generate_metadata_from_months(month_manifests: List[dict]) -> dict:
+    """Generate compilation metadata from per-month manifest data."""
+    months_data = []
+    cumulative_time = 0.0
+    total_clips = 0
+
+    for manifest in month_manifests:
+        month_start = cumulative_time
+        month_duration = manifest['duration']
+
+        months_data.append({
+            'month': manifest['month'],
+            'start': month_start,
+            'end': month_start + month_duration,
+            'clip_count': manifest['clip_count']
+        })
+
+        cumulative_time += month_duration
+        total_clips += manifest['clip_count']
+
+    return {
+        'months': months_data,
+        'total_duration': cumulative_time,
+        'clip_count': total_clips,
+        'generated_at': datetime.now().isoformat()
+    }
+
+
 def main():
     """Main processing logic."""
     parser = argparse.ArgumentParser(description='Process Google Drive folder into compilation video')
@@ -815,11 +974,12 @@ def main():
     parser.add_argument('--upload-to-gcs', action='store_true', help='Upload result to Google Cloud Storage')
     parser.add_argument('--gcs-bucket', type=str, help='GCS bucket name')
     parser.add_argument('--gcs-path', type=str, default='compilation.mp4', help='Destination path in GCS bucket')
-    parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after successful processing')
-    parser.add_argument('--skip-download', action='store_true', help='Use locally cached files from temp_downloads instead of downloading from Drive')
-    parser.add_argument('--limit', type=int, default=None, help='Limit number of files per folder (useful for testing, e.g. --limit 5)')
+    parser.add_argument('--delete-after-process', action='store_true', help='Delete source files from Drive after processing (not recommended with incremental builds)')
+    parser.add_argument('--skip-download', action='store_true', help='Use locally cached files (legacy monolithic mode)')
+    parser.add_argument('--limit', type=int, default=None, help='Limit number of files per folder (useful for testing)')
     parser.add_argument('--start-month', type=str, help='Start of month range (YYYY-MM, inclusive)')
     parser.add_argument('--end-month', type=str, help='End of month range (YYYY-MM, inclusive)')
+    parser.add_argument('--force-rebuild', action='store_true', help='Rebuild all months regardless of GCS manifests')
 
     args = parser.parse_args()
 
@@ -827,6 +987,8 @@ def main():
     print("Visual Stitch Media Processor (Google Drive Edition)")
     if args.limit:
         print(f"  ** TEST MODE: limiting to {args.limit} files per folder **")
+    if args.force_rebuild:
+        print(f"  ** FORCE REBUILD: all months will be rebuilt **")
     print("=" * 60)
 
     # Get credentials
@@ -855,137 +1017,203 @@ def main():
     TEMP_DIR.mkdir(exist_ok=True)
     TEMP_DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-    # Handle skip-download mode (use cached local files)
+    # ===== LEGACY MODE: --skip-download =====
     if args.skip_download:
         media_files = load_local_media()
-    else:
-        # Get folder ID from args, local config, or environment
-        folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
-        if not folder_id:
-            local_config_path = SCRIPT_DIR / 'local-config.json'
-            if local_config_path.exists():
-                with open(local_config_path) as f:
-                    folder_id = json.load(f).get('folder_id')
-                if folder_id:
-                    print(f"Using folder ID from local-config.json")
-        if not folder_id:
-            print("\n[ERROR] No folder ID provided!")
-            print("Use --folder-id, local-config.json, or set GOOGLE_DRIVE_FOLDER_ID environment variable")
-            print("Run with --list-folders to see available folders")
+        if not media_files:
+            print("\n[ERROR] No media files to process!")
             return 1
 
-        # Check for YYYY-MM month subfolders
-        month_subfolders = get_month_subfolders(service, folder_id)
+        print(f"\nProcessing {len(media_files)} media files (legacy mode)...")
+        processed_clips = []
+        source_is_video = []
+        clip_metadata = []
 
-        if month_subfolders:
-            # Multi-folder mode: process each month subfolder
-            month_subfolders = filter_folders_by_range(month_subfolders, args.start_month, args.end_month)
+        for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
+            ext = media_path.suffix.lower()
+            output_clip = TEMP_DIR / f"clip_{idx:04d}.mp4"
+            clip_month = get_month_from_datetime(creation_time)
 
-            if not month_subfolders:
-                print("\n[ERROR] No folders match the specified month range!")
-                return 1
+            try:
+                if ext in IMAGE_EXTENSIONS:
+                    process_image_to_video(media_path, duration, output_clip, creation_time)
+                    source_is_video.append(False)
+                elif ext in VIDEO_EXTENSIONS:
+                    standardize_video(media_path, output_clip, creation_time)
+                    source_is_video.append(True)
 
-            print(f"\nFound {len(month_subfolders)} month folder(s) to process:")
-            for mf in month_subfolders:
-                print(f"  - {mf['name']}")
+                processed_clips.append(output_clip)
+                clip_metadata.append({'month': clip_month, 'duration': duration, 'filename': filename})
+            except subprocess.CalledProcessError as e:
+                print(f"  ERROR processing {media_path.name}: {e}")
+                continue
 
-            # Collect media from all month folders
-            media_files = []
-            for month_folder in month_subfolders:
-                print(f"\n--- Processing {month_folder['name']} ---")
-                folder_media = process_folder_media(service, month_folder['id'], limit=args.limit)
-                media_files.extend(folder_media)
+        if not processed_clips:
+            print("\n[ERROR] No clips were successfully processed!")
+            return 1
 
-            # Sort all media chronologically across all months
-            media_files.sort(key=lambda x: x[2])
-            print(f"\nTotal media files across all months: {len(media_files)}")
+        concatenate_videos(processed_clips, OUTPUT_VIDEO, source_is_video)
+        metadata = generate_compilation_metadata(clip_metadata, source_is_video)
+        metadata_path = OUTPUT_DIR / "compilation-metadata.json"
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+        print(f"\n{'=' * 60}")
+        print(f"SUCCESS! Compilation video created: {OUTPUT_VIDEO}")
+        print(f"{'=' * 60}")
+        return 0
+
+    # ===== INCREMENTAL PER-MONTH MODE =====
+
+    # Get folder ID
+    folder_id = args.folder_id or os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
+    if not folder_id:
+        local_config_path = SCRIPT_DIR / 'local-config.json'
+        if local_config_path.exists():
+            with open(local_config_path) as f:
+                folder_id = json.load(f).get('folder_id')
+            if folder_id:
+                print(f"Using folder ID from local-config.json")
+    if not folder_id:
+        print("\n[ERROR] No folder ID provided!")
+        print("Use --folder-id, local-config.json, or set GOOGLE_DRIVE_FOLDER_ID environment variable")
+        return 1
+
+    # Get GCS bucket name (needed for incremental manifest checks)
+    bucket_name = args.gcs_bucket or os.environ.get('GCS_BUCKET_NAME')
+
+    # Discover month subfolders
+    month_subfolders = get_month_subfolders(service, folder_id)
+
+    if not month_subfolders:
+        print("\nNo YYYY-MM subfolders found. Please organize media into month folders (e.g., 2025-10/)")
+        return 1
+
+    # Apply month range filter
+    month_subfolders = filter_folders_by_range(month_subfolders, args.start_month, args.end_month)
+    if not month_subfolders:
+        print("\n[ERROR] No folders match the specified month range!")
+        return 1
+
+    print(f"\nFound {len(month_subfolders)} month folder(s):")
+    for mf in month_subfolders:
+        print(f"  - {mf['name']}")
+
+    # Per-month video directory
+    MONTH_VIDEO_DIR = TEMP_DIR / "months"
+    MONTH_VIDEO_DIR.mkdir(exist_ok=True)
+
+    # Process each month incrementally
+    month_results = []  # (month_name, video_path, manifest)
+    rebuilt_count = 0
+    skipped_count = 0
+
+    for month_folder in month_subfolders:
+        month_name = month_folder['name']
+        month_video_path = MONTH_VIDEO_DIR / f"{month_name}.mp4"
+
+        # Check if rebuild is needed
+        needs_rebuild = args.force_rebuild
+        if not needs_rebuild and bucket_name:
+            # Get file list from Drive for comparison
+            drive_items = get_media_from_folder(service, month_folder['id'], limit=args.limit)
+            drive_filenames = sorted([
+                item.get('name', '') for item in drive_items
+                if not should_skip_file(item.get('name', ''))
+                and get_file_extension(item.get('mimeType', ''), item.get('name', '')) in ALL_EXTENSIONS
+            ])
+
+            # Compare against GCS manifest
+            manifest = get_month_manifest(bucket_name, month_name)
+            needs_rebuild = month_needs_rebuild(drive_filenames, manifest)
+
+            if not needs_rebuild:
+                print(f"\n--- {month_name}: unchanged ({manifest['clip_count']} clips) ---")
+                if download_from_gcs(bucket_name, f"months/{month_name}.mp4", month_video_path):
+                    month_results.append((month_name, month_video_path, manifest))
+                    skipped_count += 1
+                    continue
+                else:
+                    print(f"  GCS download failed, rebuilding...")
+                    needs_rebuild = True
         else:
-            # Backward compatibility: treat as flat folder with media files
-            print("\nNo YYYY-MM subfolders found, treating as flat media folder...")
-            media_files = process_folder_media(service, folder_id, limit=args.limit)
+            needs_rebuild = True
 
-    if not media_files:
-        print("\n[ERROR] No media files to process!")
+        # Rebuild this month
+        print(f"\n--- {month_name}: building ---")
+        manifest = build_month_video(service, month_name, month_folder['id'],
+                                      month_video_path, limit=args.limit)
+
+        if manifest:
+            month_results.append((month_name, month_video_path, manifest))
+            rebuilt_count += 1
+
+            # Upload month video + manifest to GCS
+            if args.upload_to_gcs and bucket_name:
+                upload_to_gcs(month_video_path, bucket_name, f"months/{month_name}.mp4")
+                manifest_tmp = TEMP_DIR / f"{month_name}-manifest.json"
+                with open(manifest_tmp, 'w') as f:
+                    json.dump(manifest, f, indent=2)
+                upload_to_gcs(manifest_tmp, bucket_name, f"months/{month_name}-manifest.json")
+        else:
+            print(f"  WARNING: Failed to build {month_name}, skipping")
+
+    if not month_results:
+        print("\n[ERROR] No month videos produced!")
         return 1
 
-    print(f"\nProcessing {len(media_files)} media files...")
+    # Sort chronologically
+    month_results.sort(key=lambda x: x[0])
 
-    # Process each media file
-    processed_clips = []
-    source_is_video = []  # Track whether each clip came from a video (for crossfade logic)
-    clip_metadata = []  # Track (month, duration) for each clip for timestamp calculation
-    successfully_processed_files = []  # Track (file_id, filename) for deletion
+    print(f"\n{'=' * 60}")
+    print(f"Month summary: {rebuilt_count} rebuilt, {skipped_count} unchanged")
+    print(f"{'=' * 60}")
 
-    for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
-        ext = media_path.suffix.lower()
-        output_clip = TEMP_DIR / f"clip_{idx:04d}.mp4"
-        clip_month = get_month_from_datetime(creation_time)
+    # Concatenate all month videos into final compilation
+    month_video_paths = [mr[1] for mr in month_results]
+    concat_month_videos(month_video_paths, OUTPUT_VIDEO)
 
-        try:
-            if ext in IMAGE_EXTENSIONS:
-                process_image_to_video(media_path, duration, output_clip, creation_time)
-                source_is_video.append(False)
-            elif ext in VIDEO_EXTENSIONS:
-                standardize_video(media_path, output_clip, creation_time)
-                source_is_video.append(True)
-
-            processed_clips.append(output_clip)
-            clip_metadata.append({'month': clip_month, 'duration': duration, 'filename': filename})
-            successfully_processed_files.append((file_id, filename))
-
-        except subprocess.CalledProcessError as e:
-            print(f"  ERROR processing {media_path.name}: {e}")
-            continue
-
-    if not processed_clips:
-        print("\n[ERROR] No clips were successfully processed!")
-        return 1
-
-    # Concatenate all clips with crossfade transitions (only on video->picture)
-    concatenate_videos(processed_clips, OUTPUT_VIDEO, source_is_video)
-
-    # Generate compilation metadata with month timestamps
-    metadata = generate_compilation_metadata(clip_metadata, source_is_video)
+    # Generate compilation metadata from month manifests
+    month_manifests = [mr[2] for mr in month_results]
+    metadata = generate_metadata_from_months(month_manifests)
     metadata_path = OUTPUT_DIR / "compilation-metadata.json"
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
-    print(f"\nMetadata generated: {len(metadata['months'])} months, {metadata['clip_count']} clips")
+    print(f"\nMetadata: {metadata['clip_count']} clips across {len(metadata['months'])} months")
+
+    # Generate "latest" video (most recent month's video)
+    latest_month = month_results[-1]
+    latest_video_path = OUTPUT_DIR / "latest.mp4"
+    shutil.copy(latest_month[1], latest_video_path)
+    print(f"Latest video: {latest_month[0]} ({latest_month[2]['clip_count']} clips)")
 
     print(f"\n{'=' * 60}")
-    print(f"SUCCESS! Compilation video created:")
-    print(f"  {OUTPUT_VIDEO}")
-    print(f"  Total clips: {len(processed_clips)}")
+    print(f"SUCCESS! Compilation: {OUTPUT_VIDEO}")
+    print(f"  Months: {len(month_results)}")
+    print(f"  Total clips: {metadata['clip_count']}")
     print(f"{'=' * 60}")
 
-    # Upload to GCS if requested
+    # Upload to GCS
     if args.upload_to_gcs:
-        bucket_name = args.gcs_bucket or os.environ.get('GCS_BUCKET_NAME')
         if not bucket_name:
             print("\n[ERROR] No GCS bucket specified!")
             print("Use --gcs-bucket or set GCS_BUCKET_NAME environment variable")
             return 1
 
         try:
-            public_url = upload_to_gcs(OUTPUT_VIDEO, bucket_name, args.gcs_path)
-            print(f"\n[OK] Video is now publicly accessible at:")
-            print(f"  {public_url}")
-
-            # Also upload metadata JSON
+            upload_to_gcs(OUTPUT_VIDEO, bucket_name, args.gcs_path)
             metadata_gcs_path = args.gcs_path.replace('.mp4', '-metadata.json')
             upload_to_gcs(metadata_path, bucket_name, metadata_gcs_path)
-            print(f"[OK] Metadata uploaded to: {metadata_gcs_path}")
+            upload_to_gcs(latest_video_path, bucket_name, 'latest.mp4')
+            print(f"\n[OK] All files uploaded to GCS")
         except Exception as e:
             print(f"\n[ERROR] Upload failed: {e}")
             return 1
 
-    # Delete source files from Drive if requested (only after successful processing, not with --skip-download)
-    if args.delete_after_process and successfully_processed_files and not args.skip_download:
-        print(f"\nDeleting {len(successfully_processed_files)} processed files from Google Drive...")
-        deleted_count = 0
-        for file_id, filename in successfully_processed_files:
-            if delete_drive_file(service, file_id, filename):
-                deleted_count += 1
-        print(f"[OK] Deleted {deleted_count}/{len(successfully_processed_files)} files from Drive")
+    # Warn if delete-after-process is used (not recommended with incremental builds)
+    if args.delete_after_process:
+        print("\nWARNING: --delete-after-process is not recommended with incremental builds.")
+        print("Drive folders are the source of truth for change detection.")
 
     return 0
 

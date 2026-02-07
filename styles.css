@@ -195,6 +195,14 @@ h1 {
     opacity: 0.9;
 }
 
+.nav-card-preview {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 12px;
+    max-height: 150px;
+    object-fit: cover;
+}
+
 @media (max-width: 768px) {
     h1 { font-size: 2em; }
     .intro-section {
