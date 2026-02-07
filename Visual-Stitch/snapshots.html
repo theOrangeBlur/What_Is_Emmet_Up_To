@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./style.css">
   <style>
     .month-selector {
-      background: #f5f5f5;
+      background: #142883;
       border-radius: 8px;
       padding: 1rem;
       margin-bottom: 1rem;
@@ -16,7 +16,7 @@
     .month-selector h3 {
       margin: 0 0 0.75rem 0;
       font-size: 1rem;
-      color: #333;
+      color: white;
     }
     .month-controls {
       display: flex;
@@ -31,7 +31,7 @@
     }
     .month-select label {
       font-size: 0.9rem;
-      color: #666;
+      color: #7dd3fc;
     }
     .month-select select {
       padding: 0.4rem 0.6rem;
@@ -42,15 +42,16 @@
     }
     .jump-btn {
       padding: 0.4rem 1rem;
-      background: #007bff;
-      color: white;
+      background: #7dd3fc;
+      color: #142883;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 0.9rem;
+      font-weight: bold;
     }
     .jump-btn:hover {
-      background: #0056b3;
+      background: #a5b4fc;
     }
     .jump-btn:disabled {
       background: #ccc;
@@ -58,7 +59,7 @@
     }
     .compilation-stats {
       font-size: 0.85rem;
-      color: #666;
+      color: #a5b4fc;
       margin-top: 0.75rem;
     }
     .month-selector.loading {
@@ -102,8 +103,17 @@
   </header>
 
   <div class="container">
+    <div class="video-container">
+      <video id="compilation-video" controls preload="auto">
+        <!-- Source set dynamically based on environment -->
+        <source id="video-source" src="" type="video/mp4">
+        Your browser doesn't support the video tag. Please try a different browser.
+      </video>
+      <div class="timeline-bar" id="timeline-bar"></div>
+    </div>
+
     <div class="month-selector loading" id="month-selector">
-      <h3>Jump to Month</h3>
+      <h3>Emmet's Magic Month Selector</h3>
       <div class="month-controls">
         <div class="month-select">
           <label for="month-start">From:</label>
@@ -117,18 +127,9 @@
             <option>Loading...</option>
           </select>
         </div>
-        <button class="jump-btn" id="jump-btn" disabled>Jump to Selection</button>
+        <button class="jump-btn" id="jump-btn" disabled>Away we go!</button>
       </div>
       <div class="compilation-stats" id="compilation-stats">Loading compilation info...</div>
-    </div>
-
-    <div class="video-container">
-      <video id="compilation-video" controls preload="auto">
-        <!-- Source set dynamically based on environment -->
-        <source id="video-source" src="" type="video/mp4">
-        Your browser doesn't support the video tag. Please try a different browser.
-      </video>
-      <div class="timeline-bar" id="timeline-bar"></div>
     </div>
 
     <div class="info-section">
@@ -201,14 +202,20 @@
       monthEndSelect.innerHTML = '';
 
       months.forEach((m, idx) => {
+        const color = getMonthColor(m.month);
+
         const optStart = document.createElement('option');
         optStart.value = idx;
         optStart.textContent = formatMonth(m.month);
+        optStart.style.color = color;
+        optStart.style.fontWeight = 'bold';
         monthStartSelect.appendChild(optStart);
 
         const optEnd = document.createElement('option');
         optEnd.value = idx;
         optEnd.textContent = formatMonth(m.month);
+        optEnd.style.color = color;
+        optEnd.style.fontWeight = 'bold';
         monthEndSelect.appendChild(optEnd);
       });
 
