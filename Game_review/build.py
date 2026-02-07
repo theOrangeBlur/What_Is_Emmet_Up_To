@@ -8,7 +8,10 @@ Outputs: games.html
 """
 
 import csv
+import json
 import re
+import urllib.request
+import urllib.parse
 from pathlib import Path
 from datetime import datetime
 
@@ -18,6 +21,17 @@ SRC_DIR = SCRIPT_DIR / "src"
 REVIEWS_FILE = SRC_DIR / "reviews.md"
 TEMPLATE_FILE = SRC_DIR / "template.html"
 OUTPUT_FILE = SCRIPT_DIR / "games.html"
+IMAGE_CACHE_FILE = SRC_DIR / "image_cache.json"
+
+# RAWG API key — loaded from config.json (gitignored)
+CONFIG_FILE = SCRIPT_DIR / "config.json"
+if CONFIG_FILE.exists():
+    _config = json.loads(CONFIG_FILE.read_text(encoding='utf-8'))
+    RAWG_API_KEY = _config.get('rawg_api_key', '')
+else:
+    RAWG_API_KEY = ''
+    print("Warning: config.json not found — RAWG image fetch will be skipped")
+    print("  Create Game_review/config.json with: {\"rawg_api_key\": \"YOUR_KEY\"}")
 
 
 def find_csv_file() -> Path:
@@ -30,6 +44,62 @@ def find_csv_file() -> Path:
         if path.exists():
             return path
     return SRC_DIR / "games.csv"  # Default
+
+
+def load_image_cache() -> dict:
+    """Load cached game image URLs."""
+    if IMAGE_CACHE_FILE.exists():
+        return json.loads(IMAGE_CACHE_FILE.read_text(encoding='utf-8'))
+    return {}
+
+
+def save_image_cache(cache: dict):
+    """Save game image cache to disk."""
+    IMAGE_CACHE_FILE.write_text(
+        json.dumps(cache, indent=2, ensure_ascii=False),
+        encoding='utf-8'
+    )
+
+
+def fetch_game_image(name: str, cache: dict, rawg_id: str = '') -> str:
+    """Fetch game background image from RAWG API, with caching."""
+    if name in cache:
+        return cache[name]
+
+    if not RAWG_API_KEY:
+        return ""  # Don't cache — will retry once key is added
+
+    try:
+        if rawg_id:
+            # Direct lookup by RAWG ID — guaranteed correct result
+            url = f"https://api.rawg.io/api/games/{rawg_id}?key={RAWG_API_KEY}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'EmmetGameReviews/1.0'})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                image_url = data.get('background_image', '')
+                cache[name] = image_url
+                return image_url
+        else:
+            # Search by name — works for well-known titles
+            query = urllib.parse.urlencode({
+                'key': RAWG_API_KEY,
+                'search': name,
+                'page_size': 1
+            })
+            url = f"https://api.rawg.io/api/games?{query}"
+            req = urllib.request.Request(url, headers={'User-Agent': 'EmmetGameReviews/1.0'})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                results = data.get('results', [])
+                if results:
+                    image_url = results[0].get('background_image', '')
+                    cache[name] = image_url
+                    return image_url
+    except Exception as e:
+        print(f"    Warning: Could not fetch image for '{name}': {e}")
+
+    cache[name] = ""
+    return ""
 
 
 def slugify(name: str) -> str:
@@ -99,6 +169,9 @@ def load_games(csv_path: Path) -> tuple:
             # Get date last played
             date_last_played = row.get('Date Last Played', '').strip()
 
+            # Optional RAWG ID override for ambiguous game names
+            rawg_id = (row.get('RAWG ID') or '').strip()
+
             games.append({
                 'id': slugify(name),
                 'name': name,
@@ -111,6 +184,7 @@ def load_games(csv_path: Path) -> tuple:
                 'platform': platform,
                 'play_order': play_order,
                 'date_last_played': date_last_played,
+                'rawg_id': rawg_id,
             })
 
     return games, summary_stats
@@ -271,7 +345,7 @@ def generate_backlog_card(game: dict) -> str:
                 </div>'''
 
 
-def generate_game_card(game: dict, review_html: str = None) -> str:
+def generate_game_card(game: dict, review_html: str = None, image_url: str = '') -> str:
     """Generate HTML for a single game card."""
     hours_display = f"{game['hours_played']:.1f}h" if game['hours_played'] else ''
 
@@ -286,39 +360,53 @@ def generate_game_card(game: dict, review_html: str = None) -> str:
 
     meta_html = '\n                        '.join(meta_items)
 
+    # Image in header
+    cover_html = ''
+    if image_url:
+        cover_html = f'<img class="game-card__cover" src="{image_url}" alt="{game["name"]}" loading="lazy">'
+
+    # Expandable class and icon only for cards with reviews
+    expandable_class = ' expandable' if review_html else ''
+    expand_icon = '<span class="expand-icon">+</span>' if review_html else ''
+
+    # Review in collapsible details section
     review_section = ''
     if review_html:
         review_section = f'''
-            <div class="game-card__review">
-                {review_html}
+            <div class="game-card__details">
+                <div class="game-card__content">
+                    {review_html}
+                </div>
             </div>'''
 
     return f'''
-        <article class="game-card" id="{game['id']}"
+        <article class="game-card{expandable_class}" id="{game['id']}"
                  data-hours="{game['hours_played']}"
                  data-status="{game['status']}"
                  data-name="{game['name']}"
                  data-play-order="{game['play_order']}"
                  data-date-last-played="{game['date_last_played']}">
             <div class="game-card__header">
+                {cover_html}
                 <div class="game-card__info">
                     <h3>{game['name']}</h3>
                     <div class="game-meta">
                         {meta_html}
                     </div>
                 </div>
+                {expand_icon}
             </div>{review_section}
         </article>'''
 
 
-def build_page(games: list, reviews: dict, template: str, stats: dict) -> str:
+def build_page(games: list, reviews: dict, template: str, stats: dict, image_cache: dict) -> str:
     """Build the complete HTML page."""
     # Separate games by status
     must_play = [g for g in games if g['status'] == 'must-play']
     tracked = [g for g in games if g['status'] != 'must-play']
 
-    # Sort tracked games by play order (most recently played first)
-    tracked.sort(key=lambda g: g['play_order'], reverse=True)
+    # Sort tracked games by date last played (most recent first)
+    tracked.sort(key=lambda g: g['date_last_played'] or '', reverse=True)
 
     # Generate HTML sections
     stats_html = generate_stats_html(stats)
@@ -330,7 +418,7 @@ def build_page(games: list, reviews: dict, template: str, stats: dict) -> str:
 
     if tracked:
         tracked_html = '\n'.join(
-            generate_game_card(g, reviews.get(g['id']))
+            generate_game_card(g, reviews.get(g['id']), image_cache.get(g['name'], ''))
             for g in tracked
         )
     else:
@@ -369,11 +457,30 @@ def main():
         return 1
     template = TEMPLATE_FILE.read_text(encoding='utf-8')
 
+    # Fetch game images
+    print("\nLoading game images...")
+    image_cache = load_image_cache()
+    tracked_games = [g for g in games if g['status'] != 'must-play']
+    if not RAWG_API_KEY:
+        print("  No RAWG API key set — skipping image fetch")
+        print("  Get a free key at https://rawg.io/apidocs")
+    else:
+        fetched = 0
+        for game in tracked_games:
+            if game['name'] not in image_cache:
+                fetch_game_image(game['name'], image_cache, game.get('rawg_id', ''))
+                fetched += 1
+        if fetched:
+            print(f"  Fetched {fetched} new images from RAWG")
+        save_image_cache(image_cache)
+    cached = sum(1 for g in tracked_games if image_cache.get(g['name']))
+    print(f"  {cached}/{len(tracked_games)} games have images")
+
     print("\nCalculating stats...")
     stats = calculate_stats(games, summary_stats)
 
     print("\nBuilding page...")
-    output_html = build_page(games, reviews, template, stats)
+    output_html = build_page(games, reviews, template, stats, image_cache)
 
     print(f"\nWriting to {OUTPUT_FILE}...")
     OUTPUT_FILE.write_text(output_html, encoding='utf-8')

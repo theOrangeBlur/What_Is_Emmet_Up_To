@@ -17,15 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
         game.dataset.originalIndex = index;
     });
 
+    // Click to expand/collapse reviews
+    gameList.addEventListener('click', (e) => {
+        const card = e.target.closest('.game-card.expandable');
+        if (!card) return;
+        if (e.target.tagName === 'A') return;
+        card.classList.toggle('expanded');
+    });
+
     function applyFiltersAndSort() {
         const sortBy = sortSelect.value;
         const filterStatus = filterSelect.value;
 
-        // Filter
+        // Collapse all expanded cards on filter/sort change
         games.forEach(game => {
             const status = game.dataset.status;
             const visible = filterStatus === 'all' || status === filterStatus;
             game.style.display = visible ? '' : 'none';
+            game.classList.remove('expanded');
         });
 
         // Get visible games for sorting
@@ -40,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
                 case 'date':
                 default:
-                    // Sort by play order (most recently played first)
-                    return parseInt(b.dataset.playOrder || 0) - parseInt(a.dataset.playOrder || 0);
+                    // Sort by date last played (most recent first)
+                    return (b.dataset.dateLastPlayed || '').localeCompare(a.dataset.dateLastPlayed || '');
             }
         });
 

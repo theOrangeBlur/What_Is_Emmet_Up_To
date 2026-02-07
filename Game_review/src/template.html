@@ -30,21 +30,6 @@
     </header>
 
     <div class="container">
-        <!-- Stats Section -->
-        <section class="stats-summary glass-card">
-            <h2>📊 Stats</h2>
-            {{STATS}}
-        </section>
-
-        <!-- Must-Play Backlog -->
-        <section class="backlog-section">
-            <h2>📋 The Backlog</h2>
-            <p class="section-intro">Games I'm itching to play when time allows.</p>
-            <div class="backlog-grid">
-                {{MUST_PLAY}}
-            </div>
-        </section>
-
         <!-- Tracked Games with Reviews -->
         <section class="tracked-section">
             <h2>🎮 Games I've Played</h2>
@@ -60,11 +45,27 @@
                     <option value="completed">Completed</option>
                     <option value="in-progress">In Progress</option>
                     <option value="dropped">Dropped</option>
+                    <option value="finished">Finished</option>
                 </select>
             </div>
 
             <div class="game-list" id="game-list">
                 {{TRACKED_GAMES}}
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-summary glass-card">
+            <h2>📊 Stats</h2>
+            {{STATS}}
+        </section>
+
+        <!-- Must-Play Backlog -->
+        <section class="backlog-section">
+            <h2>📋 The Backlog</h2>
+            <p class="section-intro">Games I'm itching to play when time allows.</p>
+            <div class="backlog-grid">
+                {{MUST_PLAY}}
             </div>
         </section>
 

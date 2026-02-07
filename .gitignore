@@ -5,6 +5,9 @@ Visual-Stitch/temp_downloads/
 Visual-Stitch/mylist.txt
 Visual-Stitch/output/
 
+# API keys / local config
+Game_review/config.json
+
 # Google Cloud credentials (NEVER commit these!)
 Visual-Stitch/client_secret.json
 Visual-Stitch/token.json
