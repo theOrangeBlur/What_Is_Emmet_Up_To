@@ -16,6 +16,8 @@ import argparse
 from pathlib import Path
 from typing import List, Tuple, Optional
 from datetime import datetime
+import ssl
+import time
 import tempfile
 import io
 import shutil
@@ -239,10 +241,11 @@ def should_skip_file(filename: str) -> bool:
     return filename.startswith('_SKIP_')
 
 
-def get_media_from_folder(service, folder_id: str, limit: int = None) -> List[dict]:
+def get_media_from_folder(service, folder_id: str, limit: int = None, _retries: int = 3) -> List[dict]:
     """
     Fetch all media files from a specific Google Drive folder.
     Returns list of file dictionaries, optionally limited to first N items.
+    Retries on transient SSL/connection errors.
     """
     print(f"\nFetching media from folder: {folder_id}")
 
@@ -254,59 +257,79 @@ def get_media_from_folder(service, folder_id: str, limit: int = None) -> List[di
     mime_query = " or ".join(mime_queries)
     query = f"'{folder_id}' in parents and ({mime_query}) and trashed=false"
 
-    try:
-        media_items = []
-        page_token = None
+    for attempt in range(_retries):
+        try:
+            media_items = []
+            page_token = None
 
-        while True:
-            results = service.files().list(
-                q=query,
-                pageSize=100,
-                fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, imageMediaMetadata/time, videoMediaMetadata)",
-                pageToken=page_token
-            ).execute()
+            while True:
+                results = service.files().list(
+                    q=query,
+                    pageSize=100,
+                    fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, imageMediaMetadata/time, videoMediaMetadata)",
+                    pageToken=page_token
+                ).execute()
 
-            items = results.get('files', [])
-            media_items.extend(items)
+                items = results.get('files', [])
+                media_items.extend(items)
 
-            page_token = results.get('nextPageToken')
-            if not page_token:
-                break
+                page_token = results.get('nextPageToken')
+                if not page_token:
+                    break
 
-        # Sort by filename for chronological order (PXL_YYYYMMDD_HHMMSS pattern)
-        media_items.sort(key=lambda x: x.get('name', ''))
+            # Sort by filename for chronological order (PXL_YYYYMMDD_HHMMSS pattern)
+            media_items.sort(key=lambda x: x.get('name', ''))
 
-        if limit and len(media_items) > limit:
-            print(f"[TEST MODE] Limiting to {limit} of {len(media_items)} files")
-            media_items = media_items[:limit]
+            if limit and len(media_items) > limit:
+                print(f"[TEST MODE] Limiting to {limit} of {len(media_items)} files")
+                media_items = media_items[:limit]
 
-        print(f"Found {len(media_items)} media items in folder")
-        return media_items
+            print(f"Found {len(media_items)} media items in folder")
+            return media_items
 
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return []
+        except (ssl.SSLError, ConnectionError, OSError) as error:
+            if attempt < _retries - 1:
+                wait = 5 * (attempt + 1)
+                print(f"  Connection error (attempt {attempt + 1}/{_retries}): {error}")
+                print(f"  Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"  Failed after {_retries} attempts: {error}")
+                return []
+        except HttpError as error:
+            print(f"An API error occurred: {error}")
+            return []
 
 
-def download_drive_file(service, file_id: str, filename: str, output_path: Path) -> bool:
+def download_drive_file(service, file_id: str, filename: str, output_path: Path, _retries: int = 3) -> bool:
     """
-    Download a file from Google Drive.
+    Download a file from Google Drive with retry on transient errors.
     Returns True if successful, False otherwise.
     """
-    try:
-        request = service.files().get_media(fileId=file_id)
+    for attempt in range(_retries):
+        try:
+            request = service.files().get_media(fileId=file_id)
 
-        with open(output_path, 'wb') as f:
-            downloader = MediaIoBaseDownload(f, request)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
+            with open(output_path, 'wb') as f:
+                downloader = MediaIoBaseDownload(f, request)
+                done = False
+                while not done:
+                    status, done = downloader.next_chunk()
 
-        return True
+            return True
 
-    except Exception as e:
-        print(f"  Error downloading {filename}: {e}")
-        return False
+        except (ssl.SSLError, ConnectionError, OSError) as e:
+            if attempt < _retries - 1:
+                wait = 5 * (attempt + 1)
+                print(f"  Connection error downloading {filename} (attempt {attempt + 1}/{_retries}): {e}")
+                print(f"  Retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                print(f"  Failed to download {filename} after {_retries} attempts: {e}")
+                return False
+        except Exception as e:
+            print(f"  Error downloading {filename}: {e}")
+            return False
 
 
 def delete_drive_file(service, file_id: str, filename: str) -> bool:
@@ -999,8 +1022,11 @@ def main():
         print("\nPlease ensure client_secret.json is in the Visual-Stitch directory")
         return 1
 
-    # Build Drive service
-    service = build('drive', 'v3', credentials=creds)
+    # Build Drive service (helper to rebuild on stale connections)
+    def build_service():
+        return build('drive', 'v3', credentials=creds)
+
+    service = build_service()
 
     # Handle auth-only mode
     if args.auth_only:
@@ -1111,6 +1137,10 @@ def main():
     for month_folder in month_subfolders:
         month_name = month_folder['name']
         month_video_path = MONTH_VIDEO_DIR / f"{month_name}.mp4"
+
+        # Rebuild Drive service to avoid stale SSL connections
+        # (processing a month can take 10+ minutes, killing the connection)
+        service = build_service()
 
         # Check if rebuild is needed
         needs_rebuild = args.force_rebuild
