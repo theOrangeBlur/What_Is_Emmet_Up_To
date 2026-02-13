@@ -131,12 +131,14 @@ function generateProjectCard(project) {
         : '';
 
     const slug = folder.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const status = meta.status || 'completed';
+    const statusSlug = status.toLowerCase().replace(/\s+/g, '-');
 
     return `
         <article class="project-card"
                  id="${slug}"
                  data-tags="${tagsData}"
-                 data-status="${meta.status || 'completed'}"
+                 data-status="${status}"
                  data-date="${meta.end_date || meta.start_date || ''}">
             <div class="project-card__preview" onclick="toggleProject('${slug}')">
                 ${thumbnailPath ? `<img src="${thumbnailPath}" alt="${meta.title}" class="project-thumbnail" loading="lazy">` : '<div class="project-thumbnail-placeholder"></div>'}
@@ -144,7 +146,7 @@ function generateProjectCard(project) {
                     <h3>${meta.title || folder}</h3>
                     <div class="project-meta">
                         ${dateRange ? `<span class="date">${dateRange}</span>` : ''}
-                        <span class="status-badge status-${meta.status || 'completed'}">${meta.status || 'completed'}</span>
+                        <span class="status-badge status-${statusSlug}">${status}</span>
                     </div>
                     <div class="project-tags">
                         ${tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
