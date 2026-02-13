@@ -29,6 +29,12 @@ jobs:
           echo "Downloaded CSV:"
           head -5 Game_review/src/games.csv
 
+      - name: Fetch Google Doc reviews
+        run: |
+          curl -L "https://docs.google.com/document/d/11qfBD3qx2nzRz-QpZl4IywJSB3oqsIvcYhNt_21dBsA/export?format=txt" -o Game_review/src/reviews.md
+          echo "Downloaded reviews:"
+          head -5 Game_review/src/reviews.md
+
       - name: Set up RAWG API key
         run: |
           echo '{"rawg_api_key": "${{ secrets.RAWG_API_KEY }}"}' > Game_review/config.json
@@ -52,7 +58,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add Game_review/src/games.csv Game_review/games.html Game_review/src/image_cache.json
+          git add Game_review/src/games.csv Game_review/src/reviews.md Game_review/games.html Game_review/src/image_cache.json
           git commit -m "Update game review data [automated]"
           git push
         env:

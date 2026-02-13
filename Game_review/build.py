@@ -5,6 +5,8 @@ Static site generator for Emmet's Game Reviews page.
 Usage: python build.py
 Reads: src/games.csv (or games.csv.csv), src/reviews.md, src/template.html
 Outputs: games.html
+
+Reviews are fetched from a Google Doc on each build and saved to src/reviews.md.
 """
 
 import csv
@@ -23,6 +25,9 @@ TEMPLATE_FILE = SRC_DIR / "template.html"
 OUTPUT_FILE = SCRIPT_DIR / "games.html"
 IMAGE_CACHE_FILE = SRC_DIR / "image_cache.json"
 
+# Google Doc containing written reviews (exported as plain text)
+REVIEWS_DOC_ID = "11qfBD3qx2nzRz-QpZl4IywJSB3oqsIvcYhNt_21dBsA"
+
 # RAWG API key — loaded from config.json (gitignored)
 CONFIG_FILE = SCRIPT_DIR / "config.json"
 if CONFIG_FILE.exists():
@@ -32,6 +37,78 @@ else:
     RAWG_API_KEY = ''
     print("Warning: config.json not found — RAWG image fetch will be skipped")
     print("  Create Game_review/config.json with: {\"rawg_api_key\": \"YOUR_KEY\"}")
+
+
+def fetch_reviews_from_gdoc() -> bool:
+    """Fetch reviews from Google Doc (HTML export) and convert to reviews.md.
+
+    Google Docs uses 'title'-class paragraphs for game names rather than
+    proper heading tags, so we parse the HTML and convert to markdown with
+    # headers that load_reviews() expects.
+
+    Returns True if successful, False otherwise (falls back to local file).
+    """
+    url = f"https://docs.google.com/document/d/{REVIEWS_DOC_ID}/export?format=html"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'EmmetGameReviews/1.0'})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode('utf-8')
+
+        return _convert_gdoc_html_to_md(html)
+    except Exception as e:
+        print(f"  Warning: Could not fetch reviews from Google Doc: {e}")
+        return False
+
+
+def _convert_gdoc_html_to_md(html: str) -> bool:
+    """Convert Google Doc HTML export to markdown reviews file."""
+    import html as html_module
+
+    # Extract the body content
+    body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL)
+    if not body_match:
+        print("  Warning: Could not find body in Google Doc HTML")
+        return False
+
+    body = body_match.group(1)
+
+    # Find all paragraphs with their classes and content
+    paragraphs = re.findall(r'<p[^>]*class="([^"]*)"[^>]*>(.*?)</p>', body, re.DOTALL)
+
+    md_lines = []
+
+    for classes, content in paragraphs:
+        # Strip HTML tags but preserve italic/bold markers
+        text = content
+        # Convert italic spans
+        text = re.sub(r'<span[^>]*font-style:italic[^>]*>(.*?)</span>', r'*\1*', text)
+        text = re.sub(r'<span[^>]*class="[^"]*c8[^"]*"[^>]*>(.*?)</span>', r'*\1*', text)
+        # Strip remaining HTML tags, preserving <br> as newlines
+        text = text.replace('<br>', '\n')
+        text = re.sub(r'<[^>]+>', '', text)
+        # Decode HTML entities
+        text = html_module.unescape(text)
+        # Normalize whitespace within each line but preserve paragraph breaks
+        text = re.sub(r'[ \t]+', ' ', text).strip()
+        # Convert non-breaking spaces to regular spaces
+        text = text.replace('\u00a0', ' ')
+
+        if not text:
+            continue
+
+        if 'title' in classes:
+            # This is a game title heading
+            md_lines.append(f'\n# {text}\n')
+        else:
+            md_lines.append(text)
+
+    if not md_lines:
+        print("  Warning: No content extracted from Google Doc HTML")
+        return False
+
+    md_content = '\n'.join(md_lines)
+    REVIEWS_FILE.write_text(md_content, encoding='utf-8')
+    return True
 
 
 def find_csv_file() -> Path:
@@ -399,8 +476,65 @@ def generate_game_card(game: dict, review_html: str = None, image_url: str = '')
         </article>'''
 
 
+def match_reviews_to_games(games: list, reviews: dict) -> dict:
+    """Match review slugs to game slugs, handling title differences.
+
+    The Google Doc titles may differ slightly from the CSV names
+    (e.g. "Rogue Prince of Persia" vs "The Rogue Prince"), so we try
+    exact match first, then substring containment.
+
+    Returns a dict mapping game_id -> review_html.
+    """
+    matched = {}
+    unmatched_reviews = dict(reviews)
+
+    # Pass 1: exact slug match
+    for game in games:
+        if game['id'] in unmatched_reviews:
+            matched[game['id']] = unmatched_reviews.pop(game['id'])
+
+    # Pass 2: substring containment (longer slug contains shorter)
+    if unmatched_reviews:
+        for game in games:
+            if game['id'] in matched:
+                continue
+            for review_slug, review_html in list(unmatched_reviews.items()):
+                if game['id'] in review_slug or review_slug in game['id']:
+                    matched[game['id']] = review_html
+                    del unmatched_reviews[review_slug]
+                    break
+
+    # Pass 3: significant word overlap (e.g. "The Rogue Prince" vs "Rogue Prince of Persia")
+    if unmatched_reviews:
+        stop_words = {'the', 'a', 'an', 'of', 'and', 'in', 'on', 'at', 'to', 'for'}
+        for game in games:
+            if game['id'] in matched:
+                continue
+            game_words = set(game['id'].split('-')) - stop_words
+            if len(game_words) < 2:
+                continue
+            for review_slug, review_html in list(unmatched_reviews.items()):
+                review_words = set(review_slug.split('-')) - stop_words
+                overlap = game_words & review_words
+                # Match if most significant words overlap
+                if len(overlap) >= min(len(game_words), len(review_words)):
+                    matched[game['id']] = review_html
+                    del unmatched_reviews[review_slug]
+                    break
+
+    if unmatched_reviews:
+        print(f"  Warning: {len(unmatched_reviews)} review(s) could not be matched to games:")
+        for slug in unmatched_reviews:
+            print(f"    - {slug}")
+
+    return matched
+
+
 def build_page(games: list, reviews: dict, template: str, stats: dict, image_cache: dict) -> str:
     """Build the complete HTML page."""
+    # Match reviews to games (handles title differences between Doc and CSV)
+    matched_reviews = match_reviews_to_games(games, reviews)
+
     # Separate games by status
     must_play = [g for g in games if g['status'] == 'must-play']
     tracked = [g for g in games if g['status'] != 'must-play']
@@ -418,7 +552,7 @@ def build_page(games: list, reviews: dict, template: str, stats: dict, image_cac
 
     if tracked:
         tracked_html = '\n'.join(
-            generate_game_card(g, reviews.get(g['id']), image_cache.get(g['name'], ''))
+            generate_game_card(g, matched_reviews.get(g['id']), image_cache.get(g['name'], ''))
             for g in tracked
         )
     else:
@@ -446,6 +580,12 @@ def main():
     print(f"  Loaded {len(games)} games")
     if summary_stats:
         print(f"  Found summary stats: {summary_stats}")
+
+    print("\nFetching reviews from Google Doc...")
+    if fetch_reviews_from_gdoc():
+        print("  Successfully fetched reviews from Google Doc")
+    else:
+        print("  Using local reviews.md as fallback")
 
     print("\nLoading reviews...")
     reviews = load_reviews(REVIEWS_FILE)
