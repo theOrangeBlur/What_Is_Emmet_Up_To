@@ -147,7 +147,215 @@ video {
     margin-bottom: 8px;
 }
 
+/* Month Selector */
+.month-selector {
+    background: #142883;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.month-selector h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: white;
+}
+.month-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.month-select {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.month-select label {
+    font-size: 0.9rem;
+    color: #7dd3fc;
+}
+.month-select select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: white;
+    font-weight: bold;
+}
+.month-select select option {
+    color: white;
+    font-weight: bold;
+}
+.jump-btn {
+    padding: 0.4rem 1rem;
+    background: #7dd3fc;
+    color: #142883;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+.jump-btn:hover {
+    background: #a5b4fc;
+}
+.jump-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+.compilation-stats {
+    font-size: 0.85rem;
+    color: #a5b4fc;
+    margin-top: 0.75rem;
+}
+.month-selector.loading {
+    opacity: 0.6;
+}
+.month-selector .error {
+    color: #c00;
+    font-size: 0.85rem;
+}
+
+/* Video Timeline */
+.video-container {
+    position: relative;
+}
+.timeline-bar {
+    position: absolute;
+    bottom: 28px;
+    left: 20px;
+    right: 20px;
+    height: 8px;
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.timeline-segment {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    transition: opacity 0.2s ease;
+}
+
+/* Custom Select Dropdowns */
+.month-select select.has-custom {
+    display: none;
+}
+.custom-select {
+    position: relative;
+    display: inline-block;
+}
+.custom-select-trigger {
+    padding: 0.4rem 2rem 0.4rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 150px;
+    user-select: none;
+    position: relative;
+}
+.custom-select-trigger::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-top: 6px solid white;
+}
+.custom-select.open .custom-select-trigger::after {
+    border-top: none;
+    border-bottom: 6px solid white;
+}
+.custom-select-options {
+    display: none;
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    min-width: 100%;
+    z-index: 100;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.custom-select.open .custom-select-options {
+    display: block;
+}
+.custom-select-option {
+    padding: 0.4rem 0.6rem;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: filter 0.15s ease;
+    white-space: nowrap;
+}
+.custom-select-option:hover {
+    filter: brightness(0.7);
+}
+.custom-select-option.selected {
+    filter: brightness(1.15);
+}
+
+/* Animations */
+@keyframes jiggle {
+    0%, 100% { transform: rotate(0deg); }
+    10% { transform: rotate(-6deg) scale(1.1); }
+    20% { transform: rotate(6deg) scale(1.1); }
+    30% { transform: rotate(-4deg) scale(1.05); }
+    40% { transform: rotate(4deg) scale(1.05); }
+    50% { transform: rotate(-2deg); }
+    60% { transform: rotate(2deg); }
+    70% { transform: rotate(-1deg); }
+}
+.jump-btn.jiggle {
+    animation: jiggle 0.5s ease;
+}
+
+@keyframes particle-burst {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    50% { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+.magic-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1000;
+    animation: particle-burst 0.7s ease-out forwards;
+}
+
 /* Responsive Design */
+@media (min-width: 900px) {
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1rem;
+        align-items: start;
+    }
+    .video-container {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .month-selector {
+        grid-column: 2;
+        grid-row: 1;
+        margin-bottom: 0;
+    }
+    .month-controls {
+        flex-direction: column;
+    }
+    .info-section,
+    .todo-section {
+        grid-column: 1 / -1;
+    }
+}
+
 @media (max-width: 768px) {
     h1 {
         font-size: 2em;

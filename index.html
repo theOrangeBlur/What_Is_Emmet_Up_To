@@ -54,6 +54,7 @@
                 <p>What has Emmet been tinkering with?</p>
                 <img id="latest-project-img" class="nav-card-preview" alt="Latest project" style="display:none;">
                 <span id="latest-project-title" class="preview-subtitle"></span>
+                <span id="latest-project-date" class="preview-subtitle"></span>
             </a>
             <a href="Movies/movies.html" class="nav-card card-movies">
                 <span class="section-label">MOVIE COLUMN</span>
@@ -66,6 +67,7 @@
                         <span id="latest-movie-rating" class="star-rating"></span>
                     </div>
                 </div>
+                <span id="latest-movie-date" class="preview-subtitle"></span>
             </a>
             <a href="Game_review/games.html" class="nav-card card-games">
                 <span class="section-label">GAME CRITIC</span>
@@ -82,13 +84,19 @@
                         <span id="latest-game-genre" class="game-genre"></span>
                     </div>
                 </div>
+                <span id="latest-game-date" class="preview-subtitle"></span>
             </a>
             <a href="Discipline/discipline.html" class="nav-card card-discipline">
                 <span class="section-label">SHAME EMMET</span>
                 <h3>🎯 Discipline</h3>
                 <p>Is Emmet working on himself?</p>
-                <div id="discipline-preview" class="discipline-dots"></div>
-                <span id="discipline-date" class="preview-subtitle"></span>
+                <div class="discipline-preview-row">
+                    <div class="discipline-dots-col">
+                        <div id="discipline-preview" class="discipline-dots"></div>
+                        <span id="discipline-date" class="preview-subtitle"></span>
+                    </div>
+                    <img id="discipline-emmet" class="discipline-emmet-img" alt="Emmet reaction" style="display:none;">
+                </div>
             </a>
         </nav>
         <br>
@@ -102,12 +110,13 @@
                     <li>Improve the cursor design. Maybe little picture of my face? :D</li>
                     <li>Add new pictures that are picked randomly and change daily</li>
                     <li>Make yellow daily text "randomness" smarter</li>
-                    <li>Add a few more pages:</li>
+                    <li>Add a few more pages:
                         <ul>
                             <li>Fish!</li>
                             <li>Blog!</li>
                             <li>Puzzles!!!</li>
                         </ul>
+                    </li>
                 </ul>
             </p>
         </div>

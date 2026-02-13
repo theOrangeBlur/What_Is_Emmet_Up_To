@@ -153,6 +153,17 @@ async function loadProjectPreview() {
         if (title && data.title) {
             title.textContent = 'Latest: ' + data.title;
         }
+        const projectDateEl = document.getElementById('latest-project-date');
+        if (projectDateEl && data.date) {
+            const parts = data.date.split('-');
+            if (parts.length === 3) {
+                const d = new Date(data.date + 'T00:00:00');
+                projectDateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            } else if (parts.length === 2) {
+                const d = new Date(parts[0], parts[1] - 1);
+                projectDateEl.textContent = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+            }
+        }
     } catch (e) { /* silently fail */ }
 }
 
@@ -176,6 +187,7 @@ async function loadMoviePreview() {
         const name = row[1];
         const year = row[2];
         const rating = parseFloat(row[4]);
+        const watchedDate = row[8];
 
         // Look up poster
         const cacheKey = name + '|' + year;
@@ -184,6 +196,7 @@ async function loadMoviePreview() {
         const posterImg = document.getElementById('latest-movie-poster');
         const titleEl = document.getElementById('latest-movie-title');
         const ratingEl = document.getElementById('latest-movie-rating');
+        const movieDateEl = document.getElementById('latest-movie-date');
 
         if (posterImg && posterData && posterData.poster) {
             posterImg.src = posterData.poster;
@@ -194,6 +207,10 @@ async function loadMoviePreview() {
         }
         if (ratingEl && !isNaN(rating)) {
             ratingEl.textContent = renderStars(rating);
+        }
+        if (movieDateEl && watchedDate) {
+            const d = new Date(watchedDate + 'T00:00:00');
+            movieDateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         }
     } catch (e) { /* silently fail */ }
 }
@@ -259,7 +276,8 @@ async function loadGamePreview() {
                     genre: row[1],
                     timePlayed: row[4],
                     actualBeat: row[3],
-                    playOrder: playOrder
+                    playOrder: playOrder,
+                    dateLastPlayed: row[12]
                 };
             }
         }
@@ -293,6 +311,12 @@ async function loadGamePreview() {
 
         if (genreEl && bestGame.genre) {
             genreEl.textContent = bestGame.genre;
+        }
+
+        const gameDateEl = document.getElementById('latest-game-date');
+        if (gameDateEl && bestGame.dateLastPlayed) {
+            const d = new Date(bestGame.dateLastPlayed + 'T00:00:00');
+            gameDateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         }
     } catch (e) { /* silently fail */ }
 }
@@ -374,6 +398,19 @@ async function loadDisciplinePreview() {
                 }
                 container.appendChild(dot);
             });
+        }
+
+        // Count missed (empty) entries and pick Emmet reaction image
+        const emmetImg = document.getElementById('discipline-emmet');
+        if (emmetImg) {
+            const missed = entries.filter(e => !e.action).length;
+            let emmetFile;
+            if (missed === 0) emmetFile = 'Emmet_nice.jpg';
+            else if (missed <= 2) emmetFile = 'Emmet_serious.jpg';
+            else if (missed === 3) emmetFile = 'Emmet_mad.jpg';
+            else emmetFile = 'Emmet_frozen.jpg';
+            emmetImg.src = 'media/' + emmetFile;
+            emmetImg.style.display = 'block';
         }
 
         if (dateEl) {

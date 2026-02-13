@@ -139,7 +139,7 @@ function generateProjectCard(project) {
                  id="${slug}"
                  data-tags="${tagsData}"
                  data-status="${status}"
-                 data-date="${meta.end_date || meta.start_date || ''}">
+                 data-date="${meta.end_date || meta.last_work_date || meta.start_date || ''}">
             <div class="project-card__preview" onclick="toggleProject('${slug}')">
                 ${thumbnailPath ? `<img src="${thumbnailPath}" alt="${meta.title}" class="project-thumbnail" loading="lazy">` : '<div class="project-thumbnail-placeholder"></div>'}
                 <div class="project-card__info">
@@ -178,9 +178,9 @@ function generateTagFilters(projects) {
 function generatePage(projects) {
     const projectCards = projects
         .sort((a, b) => {
-            // Sort by end_date descending (most recent first)
-            const dateA = a.meta.end_date || a.meta.start_date || '';
-            const dateB = b.meta.end_date || b.meta.start_date || '';
+            // Sort by most recent date descending
+            const dateA = a.meta.end_date || a.meta.last_work_date || a.meta.start_date || '';
+            const dateB = b.meta.end_date || b.meta.last_work_date || b.meta.start_date || '';
             return dateB.localeCompare(dateA);
         })
         .map(generateProjectCard)
@@ -249,18 +249,20 @@ ${projectCards}
 // Generate latest-project.json for home page preview
 function generateLatestProjectJson(projects) {
     const sorted = [...projects].sort((a, b) => {
-        const dateA = a.meta.end_date || a.meta.start_date || '';
-        const dateB = b.meta.end_date || b.meta.start_date || '';
+        const dateA = a.meta.end_date || a.meta.last_work_date || a.meta.start_date || '';
+        const dateB = b.meta.end_date || b.meta.last_work_date || b.meta.start_date || '';
         return dateB.localeCompare(dateA);
     });
 
     if (sorted.length === 0) return;
 
     const latest = sorted[0];
+    const latestDate = latest.meta.end_date || latest.meta.last_work_date || latest.meta.start_date || null;
     const data = {
         title: latest.meta.title || latest.folder,
         thumbnail: latest.meta.thumbnail ? `${latest.folder}/${latest.meta.thumbnail}` : null,
-        folder: latest.folder
+        folder: latest.folder,
+        date: latestDate
     };
 
     const jsonPath = path.join(PROJECTS_DIR, 'latest-project.json');

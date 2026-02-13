@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+ul ul {
+    padding-left: 30px;
+}
+
 body {
     font-family: 'Courier New', monospace;
     background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
@@ -279,14 +283,17 @@ h1 {
     display: flex;
     gap: 12px;
     margin-top: 12px;
-    align-items: flex-start;
+    align-items: stretch;
+    flex: 1;
 }
 
 .game-cover-preview {
-    max-height: 180px;
+    flex: 1;
+    min-width: 0;
+    max-height: 200px;
+    object-fit: cover;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    flex-shrink: 0;
 }
 
 .game-preview-info {
@@ -332,11 +339,34 @@ h1 {
 }
 
 /* Discipline Preview */
+.discipline-preview-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 12px;
+    flex: 1;
+}
+
+.discipline-dots-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+}
+
 .discipline-dots {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 12px;
+}
+
+.discipline-emmet-img {
+    flex: 1;
+    min-width: 0;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
 .discipline-dot {
