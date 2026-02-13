@@ -72,14 +72,16 @@ def parse_rss(xml_content: str) -> list:
         if description_elem is not None and description_elem.text:
             # The description contains HTML - extract text after the image
             desc = description_elem.text
-            # Remove HTML tags to get clean review text
-            # The format is typically: <p><img .../></p><p>Watched on DATE</p><p>Review text...</p>
-            # Let's extract review paragraphs after "Watched on" line
+            # Format A: <p><img .../></p><p>Watched on DATE</p><p>Review text...</p>
+            # Format B: <p><img .../></p><p>Review text...</p>  (no "Watched on" line)
             parts = re.split(r'<p>Watched on [^<]+</p>', desc, maxsplit=1)
             if len(parts) > 1:
                 review_html = parts[1]
-                # Remove HTML tags
-                review_text = re.sub(r'<[^>]+>', '', review_html).strip()
+            else:
+                # No "Watched on" line — strip the poster image paragraph
+                review_html = re.sub(r'<p>\s*<img[^>]*/>\s*</p>', '', desc, count=1)
+            # Remove HTML tags
+            review_text = re.sub(r'<[^>]+>', '', review_html).strip()
 
         movie = {
             'Date': datetime.now().strftime('%Y-%m-%d'),  # When synced
@@ -117,18 +119,23 @@ def merge_movies(existing: dict, new_movies: list) -> tuple:
     added = 0
     merged = dict(existing)
 
+    updated = 0
     for movie in new_movies:
         key = (movie['Name'], movie['Watched Date'])
         if key not in merged:
             merged[key] = movie
             added += 1
             print(f"  + {movie['Name']} ({movie['Year']}) - {movie['Watched Date']}")
+        elif movie.get('Review') and not merged[key].get('Review'):
+            merged[key]['Review'] = movie['Review']
+            updated += 1
+            print(f"  ~ Updated review for {movie['Name']} ({movie['Year']})")
 
     # Convert back to list and sort by watched date (newest first)
     result = list(merged.values())
     result.sort(key=lambda m: m.get('Watched Date', ''), reverse=True)
 
-    return result, added
+    return result, added, updated
 
 
 def save_movies(movies: list, csv_path: Path):
@@ -173,10 +180,10 @@ def main():
 
     # Merge
     print("\nMerging new entries...")
-    merged, added_count = merge_movies(existing, new_movies)
+    merged, added_count, updated_count = merge_movies(existing, new_movies)
 
-    if added_count == 0:
-        print("  No new movies to add")
+    if added_count == 0 and updated_count == 0:
+        print("  No new movies to add or reviews to update")
         print("\n" + "=" * 50)
         print("Sync complete - no changes")
         print("=" * 50)
@@ -187,7 +194,7 @@ def main():
     save_movies(merged, REVIEWS_FILE)
 
     print("\n" + "=" * 50)
-    print(f"Sync complete - added {added_count} new movie(s)")
+    print(f"Sync complete - added {added_count} new movie(s), updated {updated_count} review(s)")
     print("=" * 50)
 
     return 0
