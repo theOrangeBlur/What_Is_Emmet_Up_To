@@ -232,9 +232,14 @@ function parseCSVRow(line) {
 // ── Game Preview ──
 async function loadGamePreview() {
     try {
-        const resp = await fetch('Game_review/src/games.csv');
-        if (!resp.ok) return;
-        const csvText = await resp.text();
+        const [csvResp, cacheResp] = await Promise.all([
+            fetch('Game_review/src/games.csv'),
+            fetch('Game_review/src/image_cache.json')
+        ]);
+        if (!csvResp.ok) return;
+
+        const csvText = await csvResp.text();
+        const imageCache = cacheResp.ok ? await cacheResp.json() : {};
         const lines = csvText.trim().split('\n');
         if (lines.length < 2) return;
 
@@ -261,10 +266,16 @@ async function loadGamePreview() {
 
         if (!bestGame) return;
 
+        const coverImg = document.getElementById('latest-game-cover');
         const titleEl = document.getElementById('latest-game-title');
         const statusEl = document.getElementById('latest-game-status');
         const hoursEl = document.getElementById('latest-game-hours');
         const genreEl = document.getElementById('latest-game-genre');
+
+        if (coverImg && imageCache[bestGame.title]) {
+            coverImg.src = imageCache[bestGame.title];
+            coverImg.style.display = 'block';
+        }
 
         if (titleEl) titleEl.textContent = bestGame.title;
 

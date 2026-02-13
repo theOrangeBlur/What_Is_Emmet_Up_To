@@ -276,7 +276,20 @@ h1 {
 
 /* Game Preview */
 .game-preview {
+    display: flex;
+    gap: 12px;
     margin-top: 12px;
+    align-items: flex-start;
+}
+
+.game-cover-preview {
+    max-height: 180px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+}
+
+.game-preview-info {
     display: flex;
     flex-direction: column;
     gap: 6px;
