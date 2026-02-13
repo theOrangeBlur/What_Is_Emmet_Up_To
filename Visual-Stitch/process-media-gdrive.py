@@ -24,6 +24,7 @@ import shutil
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -55,70 +56,62 @@ def get_ffprobe():
         return str(FFPROBE_WINDOWS_PATH)
     return 'ffprobe'
 
-# Google Drive API scopes (full access needed for delete after processing)
-SCOPES = ['https://www.googleapis.com/auth/drive']
+# Google Drive API scopes (read-only access for downloading media)
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 # Supported formats
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.m4v', '.3gp'}
 ALL_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
 
-def get_credentials() -> Credentials:
+def get_credentials():
     """
-    Get Google Drive API credentials using OAuth 2.0.
-    Looks for token.json for existing auth, or client_secret.json for new auth.
+    Get Google Drive API credentials.
+    Priority:
+      1. Service account via GOOGLE_APPLICATION_CREDENTIALS env var or file (for CI)
+      2. OAuth token.json (for local development)
+      3. OAuth flow via client_secret.json (for first-time local setup)
     """
+    # 1. Service account (used in GitHub Actions)
+    sa_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+    if sa_path and Path(sa_path).exists():
+        print("Using service account credentials...")
+        return service_account.Credentials.from_service_account_file(
+            sa_path, scopes=SCOPES)
+
+    # 2. Existing OAuth token (local development)
     creds = None
     token_path = SCRIPT_DIR / 'token.json'
     client_secret_path = SCRIPT_DIR / 'client_secret.json'
 
-    # Check for token in environment variable (for GitHub Actions)
-    token_json = os.environ.get('GOOGLE_DRIVE_TOKEN')
-    if token_json:
-        try:
-            token_data = json.loads(token_json)
-            creds = Credentials.from_authorized_user_info(token_data, SCOPES)
-        except Exception as e:
-            print(f"Warning: Could not load token from environment: {e}")
-
-    # Load from file if available
-    if not creds and token_path.exists():
+    if token_path.exists():
         creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
 
     # Refresh if expired
     if creds and creds.expired and creds.refresh_token:
         print("Refreshing expired credentials...")
         creds.refresh(Request())
-        # Save refreshed token
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
 
-    # Get new credentials if needed
-    if not creds or not creds.valid:
-        if not client_secret_path.exists():
-            # Check environment variable
-            client_secret_json = os.environ.get('GOOGLE_DRIVE_CLIENT_SECRET')
-            if client_secret_json:
-                with open(client_secret_path, 'w') as f:
-                    f.write(client_secret_json)
-            else:
-                raise FileNotFoundError(
-                    f"No credentials found. Please download client_secret.json from "
-                    f"Google Cloud Console and place it in {SCRIPT_DIR}"
-                )
+    if creds and creds.valid:
+        return creds
 
-        flow = InstalledAppFlow.from_client_secrets_file(
-            str(client_secret_path), SCOPES)
-        creds = flow.run_local_server(port=0)
+    # 3. OAuth flow for first-time local setup
+    if not client_secret_path.exists():
+        raise FileNotFoundError(
+            f"No credentials found. For CI, set GOOGLE_APPLICATION_CREDENTIALS "
+            f"to a service account key. For local dev, place client_secret.json in {SCRIPT_DIR}"
+        )
 
-        # Save credentials for future use
-        with open(token_path, 'w') as token:
-            token.write(creds.to_json())
+    flow = InstalledAppFlow.from_client_secrets_file(
+        str(client_secret_path), SCOPES)
+    creds = flow.run_local_server(port=0)
 
-        print(f"\n[OK] Authentication successful! Token saved to {token_path}")
-        print(f"Add this token to GitHub Secrets as GOOGLE_DRIVE_TOKEN:\n")
-        print(creds.to_json())
+    with open(token_path, 'w') as token:
+        token.write(creds.to_json())
 
+    print(f"\n[OK] Authentication successful! Token saved to {token_path}")
     return creds
 
 

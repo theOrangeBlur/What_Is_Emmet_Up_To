@@ -38,19 +38,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Set up Google Cloud credentials
+      - name: Set up Google credentials
         run: |
           echo '${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}' > /tmp/gcs-key.json
 
-      - name: Set up Google Drive credentials
-        run: |
-          cd Visual-Stitch
-          echo '${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}' > client_secret.json
-          echo '${{ secrets.GOOGLE_DRIVE_TOKEN }}' > token.json
-
       - name: Build and upload latest video
         env:
-          GOOGLE_DRIVE_TOKEN: ${{ secrets.GOOGLE_DRIVE_TOKEN }}
           GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
           GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcs-key.json
@@ -67,5 +60,3 @@ jobs:
         if: always()
         run: |
           rm -f /tmp/gcs-key.json
-          rm -f Visual-Stitch/client_secret.json
-          rm -f Visual-Stitch/token.json
