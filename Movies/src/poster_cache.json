@@ -126,5 +126,9 @@
   "BlacKkKlansman|2018": {
     "poster": "https://image.tmdb.org/t/p/w300/8jxqAvSDoneSKRczaK8v9X5gqBp.jpg",
     "director": "Spike Lee"
+  },
+  "Ocean's Twelve|2004": {
+    "poster": "https://image.tmdb.org/t/p/w300/pE5anFf7nf6ah7V3VRezQ1KSovi.jpg",
+    "director": "Steven Soderbergh"
   }
 }
