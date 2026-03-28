@@ -130,5 +130,13 @@
   "Ocean's Twelve|2004": {
     "poster": "https://image.tmdb.org/t/p/w300/pE5anFf7nf6ah7V3VRezQ1KSovi.jpg",
     "director": "Steven Soderbergh"
+  },
+  "Project Hail Mary|2026": {
+    "poster": "https://image.tmdb.org/t/p/w300/yihdXomYb5kTeSivtFndMy5iDmf.jpg",
+    "director": "Phil Lord"
+  },
+  "The Secret Life of Walter Mitty|2013": {
+    "poster": "https://image.tmdb.org/t/p/w300/iAo1hlzsPV9XpYcLQp6Ud065tGO.jpg",
+    "director": "Ben Stiller"
   }
 }
