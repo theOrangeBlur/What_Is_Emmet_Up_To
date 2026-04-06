@@ -552,37 +552,28 @@ section h2 {
     animation-delay: 0.2s;
 }
 
-/* ============================================
-   TODO SECTION
-   ============================================ */
-.todo-section {
-    margin-top: 40px;
+/* TODO Section */
+.TODO {
+    opacity: 0.8;
 }
 
-.todo-section h5 {
-    font-size: 1.2em;
-    margin-bottom: 15px;
+.TODO h5 {
     color: #ffd700;
+    margin-bottom: 10px;
 }
 
-.todo-section ul {
-    list-style-type: disc;
-    padding-left: 25px;
+.TODO ul {
+    margin-left: 20px;
 }
 
-.todo-section li {
-    font-size: 1em;
-    line-height: 1.8;
-    margin-bottom: 8px;
+.TODO li {
+    margin-bottom: 5px;
+    line-height: 1.6;
 }
 
-.todo-section ul ul {
-    margin-top: 8px;
-}
-
-.todo-section em {
-    color: #a5b4fc;
-    font-style: italic;
+hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Director Display */

@@ -398,3 +398,31 @@ body {
         max-width: 100%;
     }
 }
+
+/* TODO Section */
+.TODO {
+    opacity: 0.8;
+}
+
+.TODO h5 {
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.TODO ul {
+    margin-left: 20px;
+}
+
+.TODO li {
+    margin-bottom: 5px;
+    line-height: 1.6;
+}
+
+.TODO a {
+    color: #5eead4;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
