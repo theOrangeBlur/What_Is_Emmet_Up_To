@@ -18,19 +18,12 @@ body {
     overflow-x: hidden;
 }
 
-/* Top Navigation Bar */
+/* Home Button */
 .top-nav {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    padding: 15px 20px;
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    position: sticky;
-    top: 0;
+    position: fixed;
+    top: 12px;
+    left: 12px;
     z-index: 1000;
-    flex-wrap: wrap;
 }
 
 .top-nav a {
@@ -40,13 +33,22 @@ body {
     padding: 8px 16px;
     border-radius: 8px;
     transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
     border: 1px solid transparent;
+    display: inline-block;
 }
 
-.top-nav a:hover,
-.top-nav a.active {
+.top-nav a:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: #ffd700;
+}
+
+@media (max-width: 1024px) {
+    .top-nav {
+        position: static;
+        padding: 12px 0 0 12px;
+    }
 }
 
 /* Page Header */
