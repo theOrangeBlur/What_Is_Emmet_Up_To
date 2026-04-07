@@ -50,6 +50,65 @@ body {
     }
 }
 
+/* Companion fish */
+.companion-fish {
+    position: fixed;
+    pointer-events: none;
+    z-index: 500;
+    font-size: 2em;
+    line-height: 1;
+    user-select: none;
+}
+
+/* Swimming critters */
+.swimmer {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 2em;
+    animation: linear forwards;
+    white-space: nowrap;
+}
+
+.swimmer.going-right {
+    animation-name: swim-right;
+}
+
+.swimmer.going-left {
+    animation-name: swim-left;
+}
+
+/* going-right: start at left:-120px, scaleX(-1) flips emoji to face right */
+@keyframes swim-right {
+    from { transform: scaleX(-1) translateX(0); }
+    to   { transform: scaleX(-1) translateX(calc(100vw + 240px)); }
+}
+
+/* going-left: start at left:calc(100vw+120px), no flip — emoji already faces left */
+@keyframes swim-left {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(-100vw - 240px)); }
+}
+
+/* Bubbles */
+.bubble {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0.05));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    animation: rise linear forwards;
+    z-index: -1;
+}
+
+@keyframes rise {
+    0%   { transform: translateY(0) translateX(0);   opacity: 0; }
+    10%  { opacity: 0.7; }
+    50%  { transform: translateY(-50vh) translateX(var(--sway)); }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-105vh) translateX(0); opacity: 0; }
+}
+
 /* Page Header */
 .page-header {
     text-align: center;

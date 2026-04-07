@@ -467,3 +467,314 @@ async function loadTanks() {
 }
 
 document.addEventListener('DOMContentLoaded', loadTanks);
+
+// Swimming critters
+const SWIMMERS = ['🐟', '🐠', '🐡', '🦈', '🐙', '🦑', '🦐', '🦀', '🐬', '🐳', '🐢', '🦞', '🪸'];
+const activeSwimmers = []; // track live swimmers for proximity detection
+
+function createSwimmer() {
+    const el = document.createElement('div');
+    el.className = 'swimmer';
+    const goingRight = Math.random() < 0.5;
+    el.classList.add(goingRight ? 'going-right' : 'going-left');
+    el.textContent = SWIMMERS[Math.floor(Math.random() * SWIMMERS.length)];
+    const duration = Math.random() * 12 + 10; // 10–22s
+
+    // Pixel-based Y so oscillation can adjust it
+    const baseY = window.innerHeight * (Math.random() * 0.8 + 0.05);
+    el.style.top = baseY + 'px';
+    el.style.animationDuration = duration + 's';
+
+    // Start off-screen on the correct side
+    if (goingRight) el.style.left = '-120px';
+    else el.style.left = 'calc(100vw + 120px)';
+
+    // Oscillation proportional to speed (faster swimmer = bigger wobble)
+    const speed = (window.innerWidth + 240) / duration; // px/s
+    const amplitude = Math.min(speed * 0.35, 25);
+    let oscT = Math.random() * Math.PI * 2;
+    const oscInterval = setInterval(() => {
+        oscT += 0.05;
+        el.style.top = (baseY + Math.sin(oscT) * amplitude) + 'px';
+    }, 16);
+
+    const sw = { el, goingRight, oscInterval, fleeing: false, removeTimeout: null };
+    activeSwimmers.push(sw);
+
+    sw.removeTimeout = setTimeout(() => {
+        clearInterval(oscInterval);
+        const idx = activeSwimmers.indexOf(sw);
+        if (idx !== -1) activeSwimmers.splice(idx, 1);
+        el.remove();
+    }, duration * 1000);
+
+    document.body.appendChild(el);
+}
+
+function scheduleNextSwimmer() {
+    const delay = Math.random() * 25000 + 15000; // 15–40s
+    setTimeout(() => {
+        createSwimmer();
+        scheduleNextSwimmer();
+    }, delay);
+}
+
+scheduleNextSwimmer();
+
+// Bubbles
+function createBubble() {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const size = Math.random() * 10 + 4; // 4–14px
+    const duration = Math.random() * 6 + 6; // 6–12s
+    const sway = (Math.random() - 0.5) * 60; // -30px to +30px horizontal drift
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = Math.random() * 100 + 'vw';
+    bubble.style.bottom = '-20px';
+    bubble.style.setProperty('--sway', sway + 'px');
+    bubble.style.animationDuration = duration + 's';
+    document.body.appendChild(bubble);
+    setTimeout(() => bubble.remove(), duration * 1000);
+}
+
+setInterval(createBubble, 600);
+for (let i = 0; i < 12; i++) {
+    setTimeout(createBubble, Math.random() * 4000);
+}
+
+// ============================================================
+// COMPANION FISH
+// ============================================================
+
+const companionFish = document.createElement('div');
+companionFish.className = 'companion-fish';
+companionFish.textContent = '🐠';
+document.body.appendChild(companionFish);
+
+// Position & velocity
+let fishX = window.innerWidth / 2;
+let fishY = window.innerHeight / 2;
+let fishVX = 0, fishVY = 0;
+let fishFacing = 1;   // 1 = right, -1 = left
+let nipScale = 1.0;
+let idleT = 0;        // time counter driving idle oscillation
+let targetX = fishX, targetY = fishY;
+
+// Mouse tracking
+let mouseX = 0, mouseY = 0, lastMoveTime = 0;
+let prevMouseX = 0, prevMouseY = 0;
+let cvx = 0, cvy = 0; // smoothed cursor velocity
+
+// Jitter offset — random position around the cursor
+let jitterX = 0, jitterY = 0;
+function randomizeSideJitter() {
+    const angle = Math.random() * Math.PI * 2;   // full 360°
+    const radius = 80 + Math.random() * 100;     // 80–180px from cursor
+    jitterX = Math.cos(angle) * radius;
+    jitterY = Math.sin(angle) * radius;
+}
+
+// State machine  — states: 'idle' | 'curious' | 'nipping' | 'attacking'
+const STATE = {
+    current: 'idle',
+    idleTimer: null,
+    curiousTimeout: null,
+    nipPhase: 'none',   // 'darting' | 'bouncing'
+    nipDartTarget: { x: 0, y: 0 },
+    nipBounceTarget: { x: 0, y: 0 },
+};
+
+// Attack state
+const ATTACK = { target: null, nipsRemaining: 0 };
+
+// Curious rotation — tracks smooth angle-toward-cursor when settled
+let curiousRotation = 0;
+
+const MARGIN = 60;
+
+function clampX(x) { return Math.max(MARGIN, Math.min(window.innerWidth  - MARGIN, x)); }
+function clampY(y) { return Math.max(MARGIN, Math.min(window.innerHeight - MARGIN, y)); }
+
+function pickNewIdleTarget() {
+    targetX = clampX(MARGIN + Math.random() * (window.innerWidth  - MARGIN * 2));
+    targetY = clampY(MARGIN + Math.random() * (window.innerHeight - MARGIN * 2));
+    STATE.idleTimer = setTimeout(pickNewIdleTarget, 3000 + Math.random() * 3000);
+}
+
+function enterIdle() {
+    clearTimeout(STATE.idleTimer);
+    clearTimeout(STATE.curiousTimeout);
+    clearTimeout(STATE.orbitTimer);
+    STATE.current = 'idle';
+    STATE.nipPhase = 'none';
+    pickNewIdleTarget();
+}
+
+function scheduleJitterReshuffle() {
+    STATE.orbitTimer = setTimeout(function reshuffleJitter() {
+        if (STATE.current === 'curious') {
+            randomizeSideJitter();
+            scheduleJitterReshuffle();
+        }
+    }, 1000 + Math.random() * 2000);
+}
+
+function enterCurious() {
+    const wasAlreadyCurious = STATE.current === 'curious';
+    clearTimeout(STATE.curiousTimeout);
+    STATE.current = 'curious';
+    STATE.nipPhase = 'none';
+    STATE.curiousTimeout = setTimeout(enterIdle, 10000);
+    // Only randomize jitter and start reshuffle timer on fresh entry
+    if (!wasAlreadyCurious) {
+        clearTimeout(STATE.idleTimer);
+        randomizeSideJitter();
+        scheduleJitterReshuffle();
+    }
+}
+
+function enterNip(clickX, clickY) {
+    clearTimeout(STATE.idleTimer);
+    clearTimeout(STATE.curiousTimeout);
+    clearTimeout(STATE.orbitTimer);
+    STATE.current = 'nipping';
+    STATE.nipPhase = 'darting';
+
+    const dx = clickX - fishX;
+    const dy = clickY - fishY;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len, ny = dy / len;
+
+    // Dart to the click point itself, bounce 80px back along the approach vector
+    STATE.nipDartTarget.x = clampX(clickX);
+    STATE.nipDartTarget.y = clampY(clickY);
+    STATE.nipBounceTarget.x = clampX(clickX - nx * 80);
+    STATE.nipBounceTarget.y = clampY(clickY - ny * 80);
+
+    targetX = STATE.nipDartTarget.x;
+    targetY = STATE.nipDartTarget.y;
+}
+
+function endNip() {
+    STATE.nipPhase = 'none';
+    if (Date.now() - lastMoveTime < 2500) {
+        enterCurious();
+    } else {
+        enterIdle();
+    }
+}
+
+function updateFish() {
+    // Determine lerp factor
+    let lerp;
+    if (STATE.current === 'nipping') {
+        lerp = STATE.nipPhase === 'darting' ? 0.18 : 0.22;
+    } else if (STATE.current === 'curious') {
+        const speed = Math.hypot(cvx, cvy);
+        if (speed > 0.5) {
+            // Trail behind the cursor in its movement direction, with perpendicular jitter
+            const nx = cvx / speed, ny = cvy / speed;
+            const trailDist = 60 + Math.min(speed * 4, 60); // 60–120px behind
+            // Project jitter onto perpendicular axis so fish varies its side while trailing
+            const perp = (-ny) * jitterX + (nx) * jitterY;
+            targetX = mouseX - nx * trailDist + (-ny) * perp;
+            targetY = mouseY - ny * trailDist + ( nx) * perp;
+        } else {
+            // Cursor nearly still — roam freely around the cursor
+            targetX = mouseX + jitterX;
+            targetY = mouseY + jitterY;
+        }
+        lerp = 0.055;
+    } else {
+        // Vary speed between 0.005 and 0.00125 on a slow sine cycle
+        lerp = 0.005 * (0.25 + 0.75 * (0.5 + 0.5 * Math.sin(idleT * 0.12)));
+    }
+
+    // Move fish
+    const prevX = fishX, prevY = fishY;
+    fishX += (targetX - fishX) * lerp;
+    fishY += (targetY - fishY) * lerp;
+
+    // Smooth velocity
+    fishVX += ((fishX - prevX) - fishVX) * 0.2;
+    fishVY += ((fishY - prevY) - fishVY) * 0.2;
+
+    // Facing direction
+    // 🐠 emoji naturally faces left, so flip logic: moving right = scaleX(-1)
+    if (STATE.current === 'curious') {
+        // Always face toward the cursor
+        fishFacing = mouseX > fishX ? -1 : 1;
+    } else {
+        // Face direction of travel (only update when moving decisively)
+        if      (fishVX >  0.3) fishFacing = -1;
+        else if (fishVX < -0.3) fishFacing =  1;
+    }
+
+    // Tilt based on vertical speed
+    const tilt = Math.max(-12, Math.min(12, fishVY * 8));
+
+    // Nip scale pulse — lerp back to 1.0 each frame
+    nipScale += (1.0 - nipScale) * 0.15;
+
+    // Idle oscillation — sine wave perpendicular to direction of travel
+    let renderX = fishX, renderY = fishY;
+    if (STATE.current === 'idle') {
+        idleT += 0.045;
+        const spd = Math.hypot(fishVX, fishVY);
+        if (spd > 0.05) {
+            const px = -fishVY / spd;
+            const py =  fishVX / spd;
+            const wave = Math.sin(idleT) * spd * 30;
+            renderX += px * wave;
+            renderY += py * wave;
+        }
+    }
+
+    // Apply
+    companionFish.style.left = renderX + 'px';
+    companionFish.style.top  = renderY + 'px';
+    companionFish.style.transform =
+        `scaleX(${fishFacing}) rotate(${tilt * fishFacing}deg) scale(${nipScale})`;
+
+    // Nip phase transitions
+    if (STATE.current === 'nipping') {
+        const tx = STATE.nipPhase === 'darting' ? STATE.nipDartTarget.x : STATE.nipBounceTarget.x;
+        const ty = STATE.nipPhase === 'darting' ? STATE.nipDartTarget.y : STATE.nipBounceTarget.y;
+        const dist = Math.hypot(tx - fishX, ty - fishY);
+
+        if (STATE.nipPhase === 'darting' && dist < 8) {
+            STATE.nipPhase = 'bouncing';
+            nipScale = 1.25;    // trigger pulse
+            targetX = STATE.nipBounceTarget.x;
+            targetY = STATE.nipBounceTarget.y;
+        } else if (STATE.nipPhase === 'bouncing' && dist < 10) {
+            endNip();
+        }
+    }
+
+    requestAnimationFrame(updateFish);
+}
+
+// Event listeners
+document.addEventListener('mousemove', e => {
+    cvx += ((e.clientX - prevMouseX) - cvx) * 0.25;
+    cvy += ((e.clientY - prevMouseY) - cvy) * 0.25;
+    prevMouseX = mouseX = e.clientX;
+    prevMouseY = mouseY = e.clientY;
+    lastMoveTime = Date.now();
+    if (STATE.current !== 'nipping') enterCurious();
+});
+
+document.addEventListener('mousedown', e => {
+    lastMoveTime = Date.now();
+    enterNip(e.clientX, e.clientY);
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && STATE.current !== 'nipping') enterIdle();
+});
+
+// Start
+enterIdle();
+requestAnimationFrame(updateFish);
