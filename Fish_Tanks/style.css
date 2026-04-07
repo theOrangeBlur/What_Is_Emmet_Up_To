@@ -1,0 +1,342 @@
+/* ============================================
+   FISH TANKS PAGE STYLES
+   Matches main site design language
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #142883 0%, #2d0259 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* Home Button */
+.top-nav {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1000;
+}
+
+.top-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+    display: inline-block;
+}
+
+.top-nav a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+
+@media (max-width: 1024px) {
+    .top-nav {
+        position: static;
+        padding: 12px 0 0 12px;
+    }
+}
+
+/* Page Header */
+.page-header {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.page-header h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+}
+
+.page-header .intro-text {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.8;
+    opacity: 0.9;
+    font-size: 1.05em;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Glass Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 30px;
+}
+
+/* Tanks List */
+.tanks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* Tank Card — full-width row */
+.tank-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+    padding: 24px;
+}
+
+.tank-card:hover {
+    border-color: rgba(255, 215, 0, 0.4);
+}
+
+/* Tank Name */
+.tank-name {
+    font-size: 1.6em;
+    color: #ffd700;
+    margin-bottom: 20px;
+}
+
+/* Tank Body: photo on top, data below */
+.tank-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Tank Photo */
+.tank-photo-wrap {
+    width: 90vw;
+    max-width: 100%;
+    position: relative;
+}
+
+.tank-gallons {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.tank-photo {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+}
+
+/* Tank Info */
+.tank-info {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Fish List */
+.fish-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fish-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1em;
+    line-height: 1.4;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fish-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Species Photo */
+.species-photo-slot {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.species-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.species-photo.loaded {
+    opacity: 1;
+}
+
+/* Count Badge */
+.fish-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    background: rgba(255, 215, 0, 0.15);
+    color: #ffd700;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 6px;
+    font-size: 0.95em;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* States */
+.loading-message,
+.empty-tank,
+.error-message {
+    opacity: 0.7;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+.error-message {
+    color: #f87171;
+    opacity: 0.9;
+}
+
+.setup-message {
+    padding: 30px;
+    text-align: center;
+    line-height: 1.8;
+    opacity: 0.85;
+}
+
+.setup-message code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #ffd700;
+}
+
+.tank-card--error {
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* TODO Section */
+.TODO {
+    opacity: 0.8;
+}
+
+.TODO h5 {
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.TODO ul {
+    margin-left: 20px;
+}
+
+.TODO li {
+    margin-bottom: 5px;
+    line-height: 1.6;
+}
+
+/* Water Parameters Section */
+.water-params {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.water-params-title {
+    font-size: 0.85em;
+    color: #ffd700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: normal;
+}
+
+.water-params-pending {
+    opacity: 0.5;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+.param-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.param-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px 8px;
+}
+
+.param-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.param-status--good   { background: #4ade80; box-shadow: 0 0 6px #4ade8066; }
+.param-status--warn   { background: #facc15; box-shadow: 0 0 6px #facc1566; }
+.param-status--danger { background: #f87171; box-shadow: 0 0 6px #f8717166; }
+
+.param-value {
+    font-size: 1.25em;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.param-label {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.param-updated {
+    font-size: 0.72em;
+    color: rgba(255, 255, 255, 0.35);
+    text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+
+}

@@ -1,0 +1,277 @@
+// ============================================================
+// TANK CONFIGURATION
+//
+// "photo" is optional — drop images into the Fish_Tanks/images/
+// folder and reference them here. Leave as null for no photo.
+// ============================================================
+
+const SHEET_ID = '1sVb8HqV8Ttmv2EVFQmZtnDbubgd_OBp7';
+
+const TANKS = [
+    { name: "Office Tank",  gallons: 10, gid: "1907567120", photo: "images/10G.jpg", hasWaterParams: true },
+    { name: "Wooded Tank",  gallons: 20, gid: "1561707960", photo: "images/20G.jpg" },
+    { name: "55 Gallon",    gallons: 55, gid: "1334361544", photo: null },
+];
+
+// ============================================================
+// CSV PARSING
+//
+// The sheet has two header rows:
+//   Row 0: main headers (Type, Amount, Temperature (F), ...)
+//   Row 1: sub-headers (Min, Max, Min, Max, ...)
+// Data starts at row 2.
+//
+// We stop reading when we hit a "No longer in tank" sentinel row.
+// We skip empty rows and summary rows (Range:, Measured:).
+// ============================================================
+
+function parseCSVRow(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    result.push(current.trim());
+    return result;
+}
+
+// Sentinel values in the "Type" column that mean "stop reading"
+const STOP_SENTINELS = ['no longer in tank'];
+
+// Values in the "Type" column to skip (summary/aggregate rows)
+const SKIP_PREFIXES = ['range:', 'measured:'];
+
+function parseTankCSV(text) {
+    const allLines = text.split('\n');
+    if (allLines.length < 3) return [];
+
+    // Row 0 is the main header — "Type" and "Amount" are here
+    const headers = parseCSVRow(allLines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    const typeIdx   = headers.findIndex(h => h.toLowerCase() === 'type');
+    const amountIdx = headers.findIndex(h => h.toLowerCase() === 'amount');
+
+    // Row 1 is sub-headers — skip it. Data starts at row 2.
+    const inhabitants = [];
+
+    for (let i = 2; i < allLines.length; i++) {
+        const line = allLines[i];
+        if (!line.trim()) continue;
+
+        const values = parseCSVRow(line).map(v => v.replace(/^"|"$/g, '').trim());
+        const typeName = typeIdx >= 0 ? (values[typeIdx] || '') : '';
+
+        // Stop at "No longer in tank" section
+        if (STOP_SENTINELS.some(s => typeName.toLowerCase().startsWith(s))) break;
+
+        // Skip empty, summary, or aggregate rows
+        if (!typeName) continue;
+        if (SKIP_PREFIXES.some(p => typeName.toLowerCase().startsWith(p))) continue;
+
+        const amount = amountIdx >= 0 ? (values[amountIdx] || '') : '';
+        inhabitants.push({ species: typeName, amount });
+    }
+
+    return inhabitants;
+}
+
+// ============================================================
+// SPECIES IMAGES
+//
+// Local images live in images/species/. To swap one out, drop
+// a replacement file in that folder and update the path here.
+// ============================================================
+
+const SPECIES_IMAGES = {
+    "Ricefish":               "images/species/ricefish.jpg",
+    "Fancy Guppy":            "images/species/Fancy_Guppy.jpg",
+    "Guppies":                "images/species/guppies.jpg",
+    "Guppy":                  "images/species/guppies.jpg",
+    "Red Ramshorn Snail":     "images/species/red_ramshorn_snail.jpg",
+    "Bladder Snail":          "images/species/bladder_snail.jpg",
+    "Assassin Snail":         "images/species/assassin_snail.png",
+    "water spangles":         "images/species/water_spangles.jpg",
+    "Hornwort":               "images/species/hornwort.jpg",
+    "Java Fern":              "images/species/java_fern.jpg",
+    "Philodendron":           "images/species/philodendron.jpg",
+    "Coleus":                 "images/species/coleus.jpg",
+    "Cardinal Tetra":         "images/species/cardinal_tetra.jpg",
+    "Mystery Snail":          "images/species/mystery_snail.jpg",
+    "Nerite Snail":           "images/species/nerite_snail.png",
+    "Anubias barteri":        "images/species/anubias_barteri.jpg",
+    "Cryptocoryne spiralis":  "images/species/Cryptocoryne_Spiralis.jpg",
+    "Moneywort":              "images/species/Moneywort.jpg",
+};
+
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// ============================================================
+// FETCH + RENDER
+// ============================================================
+
+function buildSheetURL(gid) {
+    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+}
+
+async function fetchTank(tank) {
+    const response = await fetch(buildSheetURL(tank.gid));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.text();
+}
+
+async function fetchWaterParams() {
+    try {
+        const res = await fetch('water-params.json');
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
+const PARAM_META = {
+    temperature_f: { label: 'Temperature', unit: '°F' },
+    ph:            { label: 'pH',          unit: ''   },
+    tds:           { label: 'TDS',         unit: ' ppm' },
+};
+
+function paramStatus(value, range) {
+    if (value < range.min || value > range.max) return 'danger';
+    const slack = (range.max - range.min) * 0.1;
+    if (value < range.min + slack || value > range.max - slack) return 'warn';
+    return 'good';
+}
+
+function renderWaterParams(waterData) {
+    const params  = waterData.params  || {};
+    const ranges  = waterData.ranges  || {};
+    const updated = waterData.updated || null;
+
+    const keys = Object.keys(PARAM_META).filter(k => k in params);
+
+    if (keys.length === 0) {
+        return `<div class="water-params">
+            <h3 class="water-params-title">Water Parameters</h3>
+            <p class="water-params-pending">Awaiting first sensor reading...</p>
+        </div>`;
+    }
+
+    const cards = keys.map(k => {
+        const { label, unit } = PARAM_META[k];
+        const value  = params[k];
+        const status = ranges[k] ? paramStatus(value, ranges[k]) : 'good';
+        return `<div class="param-card">
+            <span class="param-status param-status--${status}"></span>
+            <span class="param-value">${value}${escapeHTML(unit)}</span>
+            <span class="param-label">${label}</span>
+        </div>`;
+    }).join('');
+
+    const updatedHTML = updated
+        ? `<p class="param-updated">Updated ${new Date(updated).toLocaleString()}</p>`
+        : '';
+
+    return `<div class="water-params">
+        <h3 class="water-params-title">Water Parameters</h3>
+        <div class="param-grid">${cards}</div>
+        ${updatedHTML}
+    </div>`;
+}
+
+function renderTankCard(tank, csvText, waterData = null) {
+    const inhabitants = parseTankCSV(csvText);
+
+    // Don't render cards for tanks with nothing in them yet
+    if (inhabitants.length === 0) return null;
+
+    const card = document.createElement('div');
+    card.className = 'tank-card glass-card';
+
+    let photoHTML = '';
+    if (tank.photo) {
+        photoHTML = `<img class="tank-photo" src="${tank.photo}" alt="${tank.name}" onerror="this.parentElement.style.display='none'">`;
+    }
+
+    const items = inhabitants.map(({ species, amount }) => {
+        const safe = escapeHTML(species);
+        const imgPath = SPECIES_IMAGES[species] || null;
+        const imgHTML = imgPath
+            ? `<img class="species-photo loaded" src="${imgPath}" alt="${safe}">`
+            : '';
+        return `<li>
+            <div class="species-photo-slot">${imgHTML}</div>
+            <span class="fish-count">${escapeHTML(amount || '?')}</span>
+            ${safe}
+        </li>`;
+    }).join('');
+
+    const waterParamsHTML = (tank.hasWaterParams && waterData)
+        ? renderWaterParams(waterData)
+        : '';
+
+    card.innerHTML = `
+        <h2 class="tank-name">${escapeHTML(tank.name)}</h2>
+        <div class="tank-body">
+            ${photoHTML ? `<div class="tank-photo-wrap">${photoHTML}${tank.gallons ? `<span class="tank-gallons">${tank.gallons} gal</span>` : ''}</div>` : ''}
+            <div class="tank-info">
+                <ul class="fish-list">${items}</ul>
+            </div>
+        </div>
+        ${waterParamsHTML}
+    `;
+
+    return card;
+}
+
+function renderError(tank, message) {
+    const card = document.createElement('div');
+    card.className = 'tank-card glass-card tank-card--error';
+    card.innerHTML = `
+        <div class="tank-info">
+            <h2>${tank.name}</h2>
+            <p class="error-message">Couldn't load tank data. (${message})</p>
+        </div>
+    `;
+    return card;
+}
+
+async function loadTanks() {
+    const grid = document.getElementById('tanks-grid');
+    grid.innerHTML = '';
+
+    const [tankResults, waterData] = await Promise.all([
+        Promise.allSettled(TANKS.map(fetchTank)),
+        fetchWaterParams(),
+    ]);
+
+    tankResults.forEach((result, i) => {
+        const tank = TANKS[i];
+        let card;
+        if (result.status === 'fulfilled') {
+            try {
+                card = renderTankCard(tank, result.value, waterData);
+            } catch (e) {
+                card = renderError(tank, e.message);
+            }
+        } else {
+            card = renderError(tank, result.reason?.message || 'fetch failed');
+        }
+        if (card) grid.appendChild(card);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadTanks);
