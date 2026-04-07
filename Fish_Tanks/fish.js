@@ -103,7 +103,7 @@ function parseTankWaterParams(text) {
         const line = allLines[i];
         if (!line.trim()) continue;
         const values   = parseCSVRow(line).map(v => v.replace(/^"|"$/g, '').trim());
-        const typeName = (values[0] || '').toLowerCase().trim();
+        const typeName = ((values[0] || '').trim() || (values[1] || '').trim()).toLowerCase();
 
         if (typeName === 'measured' || typeName.startsWith('measured:')) {
             measuredRow  = values;
@@ -141,11 +141,30 @@ function parseTankCSV(text) {
     if (allLines.length < 3) return [];
 
     // Row 0 is the main header — "Type" and "Amount" are here
-    const headers = parseCSVRow(allLines[0]).map(h => h.replace(/^"|"$/g, '').trim());
-    const typeIdx   = headers.findIndex(h => h.toLowerCase() === 'type');
-    const amountIdx = headers.findIndex(h => h.toLowerCase() === 'amount');
+    const mainHeaders = parseCSVRow(allLines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    const subHeaders  = parseCSVRow(allLines[1]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+    const typeIdx   = mainHeaders.findIndex(h => h.toLowerCase() === 'type');
+    const amountIdx = mainHeaders.findIndex(h => h.toLowerCase() === 'amount');
 
-    // Row 1 is sub-headers — skip it. Data starts at row 2.
+    // Build param column mapping (same logic as parseTankWaterParams)
+    const HEADER_TO_KEY = {
+        'temperature (f)': 'temperature_f', 'temperature(f)': 'temperature_f',
+        'temperature': 'temperature_f', 'ph': 'ph', 'tds': 'tds',
+    };
+    const paramCols = {};
+    mainHeaders.forEach((h, i) => {
+        const key = HEADER_TO_KEY[h.toLowerCase()];
+        if (!key) return;
+        let minCol = i, maxCol = i;
+        for (let j = i; j < subHeaders.length; j++) {
+            if (j > i && mainHeaders[j]) break;
+            if (subHeaders[j] === 'min') minCol = j;
+            if (subHeaders[j] === 'max') maxCol = j;
+        }
+        paramCols[key] = { minCol, maxCol };
+    });
+
+    // Data starts at row 2.
     const inhabitants = [];
 
     for (let i = 2; i < allLines.length; i++) {
@@ -163,7 +182,18 @@ function parseTankCSV(text) {
         if (SKIP_PREFIXES.some(p => typeName.toLowerCase().startsWith(p))) continue;
 
         const amount = amountIdx >= 0 ? (values[amountIdx] || '') : '';
-        inhabitants.push({ species: typeName, amount });
+
+        // Parse per-species parameter ranges from the sheet
+        const ranges = {};
+        for (const [key, { minCol, maxCol }] of Object.entries(paramCols)) {
+            const minVal = parseFloat(values[minCol]);
+            const maxVal = parseFloat(values[maxCol]);
+            if (!isNaN(minVal) && !isNaN(maxVal)) {
+                ranges[key] = { min: minVal, max: maxVal };
+            }
+        }
+
+        inhabitants.push({ species: typeName, amount, ranges });
     }
 
     return inhabitants;
@@ -235,14 +265,84 @@ const PARAM_META = {
     tds:           { label: 'TDS',         unit: ' ppm' },
 };
 
-function paramStatus(value, range) {
-    if (value < range.min || value > range.max) return 'danger';
-    const slack = (range.max - range.min) * 0.1;
-    if (value < range.min + slack || value > range.max - slack) return 'warn';
-    return 'good';
+// How far outside the range before escalating from yellow to red
+const PARAM_THRESHOLDS = {
+    temperature_f: 5,
+    ph: 1.0,
+};
+
+const PARAM_GREEN_MESSAGES = {
+    temperature_f: 'Everyone thinks the temperature feels great!',
+    ph: 'Goldilocks would be proud!',
+};
+
+function paramStatus(value, range, key) {
+    if (value >= range.min && value <= range.max) return 'good';
+    const threshold = PARAM_THRESHOLDS[key];
+    if (threshold !== undefined) {
+        const overage = value > range.max ? value - range.max : range.min - value;
+        return overage <= threshold ? 'warn' : 'danger';
+    }
+    return 'danger';
 }
 
-function renderWaterParams(waterData) {
+function speciesParamMessage(k, species, value, r) {
+    if (value >= r.min && value <= r.max) return null;
+    const threshold = PARAM_THRESHOLDS[k];
+    if (k === 'temperature_f') {
+        if (value > r.max) {
+            const over = value - r.max;
+            return over <= threshold
+                ? { status: 'warn',   message: `${species} thinks it's a little warm!` }
+                : { status: 'danger', message: `${species} thinks it's too hot!` };
+        } else {
+            const under = r.min - value;
+            return under <= threshold
+                ? { status: 'warn',   message: `${species} thinks it's a little cool!` }
+                : { status: 'danger', message: `${species} thinks it's too cold!` };
+        }
+    }
+    if (k === 'ph') {
+        if (value > r.max) {
+            const over = value - r.max;
+            return over <= threshold
+                ? { status: 'warn',   message: `${species} thinks it's a little basic in here!` }
+                : { status: 'danger', message: `${species} thinks it's too alkaline!` };
+        } else {
+            const under = r.min - value;
+            return under <= threshold
+                ? { status: 'warn',   message: `${species} thinks it's a little acidic in here!` }
+                : { status: 'danger', message: `${species} thinks it's too acidic!!` };
+        }
+    }
+    return null;
+}
+
+function computeParamDisplay(k, value, tankRange, inhabitants) {
+    const speciesWithRange = inhabitants.filter(i => i.ranges && i.ranges[k]);
+    if (speciesWithRange.length > 0) {
+        const complaints = speciesWithRange
+            .map(({ species, ranges: r }) => speciesParamMessage(k, species, value, r[k]))
+            .filter(Boolean);
+        const status = complaints.some(c => c.status === 'danger') ? 'danger'
+            : complaints.some(c => c.status === 'warn') ? 'warn' : 'good';
+        const tooltip = complaints.length === 0
+            ? (PARAM_GREEN_MESSAGES[k] || "Everyone's comfortable!")
+            : complaints.map(c => c.message).join('\n');
+        return { status, tooltip };
+    }
+    // Fallback: use tank-level range when no individual species ranges exist
+    if (tankRange) {
+        const status = paramStatus(value, tankRange, k);
+        const tooltip = status === 'good'
+            ? (PARAM_GREEN_MESSAGES[k] || "Everyone's comfortable!")
+            : 'Out of range';
+        return { status, tooltip };
+    }
+    return { status: 'good', tooltip: PARAM_GREEN_MESSAGES[k] || "Everyone's comfortable!" };
+}
+
+function renderWaterParams(waterData, inhabitants = []) {
     const params  = waterData.params  || {};
     const ranges  = waterData.ranges  || {};
     const updated = waterData.updated || null;
@@ -259,8 +359,10 @@ function renderWaterParams(waterData) {
     const cards = keys.map(k => {
         const { label, unit } = PARAM_META[k];
         const value  = params[k];
-        const status = ranges[k] ? paramStatus(value, ranges[k]) : 'good';
-        return `<div class="param-card">
+        const { status, tooltip } = computeParamDisplay(k, value, ranges[k], inhabitants);
+        const titleAttr = ` title="${escapeHTML(tooltip)}"`;
+
+        return `<div class="param-card"${titleAttr}>
             <span class="param-status param-status--${status}"></span>
             <span class="param-value">${value}${escapeHTML(unit)}</span>
             <span class="param-label">${label}</span>
@@ -310,7 +412,7 @@ function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null
     }).join('');
 
     const effectiveWaterData = (tank.hasWaterParams && waterData) ? waterData : sheetWaterParams;
-    const waterParamsHTML = effectiveWaterData ? renderWaterParams(effectiveWaterData) : '';
+    const waterParamsHTML = effectiveWaterData ? renderWaterParams(effectiveWaterData, inhabitants) : '';
 
     card.innerHTML = `
         <h2 class="tank-name">${escapeHTML(tank.name)}</h2>
