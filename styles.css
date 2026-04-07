@@ -170,7 +170,8 @@ h1 {
     grid-template-areas:
         "headline headline"
         "projects movies"
-        "games discipline";
+        "games discipline"
+        "fish fish";
     gap: 20px;
     margin-top: 40px;
 }
@@ -180,6 +181,7 @@ h1 {
 .card-movies     { grid-area: movies; }
 .card-games      { grid-area: games; }
 .card-discipline { grid-area: discipline; }
+.card-fish       { grid-area: fish; }
 
 .nav-card {
     background: rgba(255, 255, 255, 0.15);
@@ -413,6 +415,7 @@ h1 {
             "projects"
             "movies"
             "games"
-            "discipline";
+            "discipline"
+            "fish";
     }
 }
