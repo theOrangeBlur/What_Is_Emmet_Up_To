@@ -132,6 +132,16 @@ def parse_status(status_list: list) -> dict:
 # ---------------------------------------------------------------------------
 
 def main():
+    out_path = "Fish_Tanks/water-params.json"
+
+    # Load previous readings so we can preserve params the sensor didn't report this run.
+    previous_params = {}
+    try:
+        with open(out_path) as f:
+            previous_params = json.load(f).get("params", {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+
     print(f"Connecting to Tuya OpenAPI ({BASE_URL})...")
     token = get_token()
     print("Token acquired.")
@@ -139,9 +149,9 @@ def main():
     print(f"Fetching status for device {DEVICE_ID}...")
     status = get_device_status(token)
 
-    params = parse_status(status)
+    new_params = parse_status(status)
 
-    if not params:
+    if not new_params:
         print(
             "\nERROR: No recognized parameter codes found in the device status.\n"
             "Check the raw output above, identify the relevant codes, and add\n"
@@ -150,6 +160,9 @@ def main():
         )
         sys.exit(1)
 
+    # Merge: start with previous readings, then overlay whatever the sensor reported now.
+    params = {**previous_params, **new_params}
+
     output = {
         "tank":    "Office Tank",
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -157,7 +170,6 @@ def main():
         "ranges":  RANGES,
     }
 
-    out_path = "Fish_Tanks/water-params.json"
     with open(out_path, "w") as f:
         json.dump(output, f, indent=2)
 
