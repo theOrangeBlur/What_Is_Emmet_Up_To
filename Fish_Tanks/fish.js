@@ -48,7 +48,93 @@ function parseCSVRow(line) {
 const STOP_SENTINELS = ['no longer in tank'];
 
 // Values in the "Type" column to skip (summary/aggregate rows)
-const SKIP_PREFIXES = ['range:', 'measured:'];
+const SKIP_PREFIXES = ['range:', 'measured:', 'measured'];
+
+// ============================================================
+// WATER PARAMS FROM SHEET
+//
+// Sheets have "Range:" and "Measured:" summary rows that we
+// skip during species parsing. This function reads those rows
+// to get the last recorded water parameter values.
+// ============================================================
+
+function parseTankWaterParams(text) {
+    // Row 0: main headers  (e.g. "Temperature (F)", "pH", "TDS")
+    // Row 1: sub-headers   (e.g. "Min", "Max" under each param)
+    // Measured row: value goes in the "Max" sub-column for each param;
+    //               date goes in column B (index 1).
+    const allLines = text.split('\n');
+    if (allLines.length < 2) return null;
+
+    const mainHeaders = parseCSVRow(allLines[0]).map(h => h.replace(/^"|"$/g, '').trim());
+    const subHeaders  = parseCSVRow(allLines[1]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+
+    const HEADER_TO_KEY = {
+        'temperature (f)': 'temperature_f',
+        'temperature(f)':  'temperature_f',
+        'temperature':     'temperature_f',
+        'ph':              'ph',
+        'tds':             'tds',
+    };
+
+    // For each param, find its main column and the offset to the "Max" sub-column.
+    const paramInfo = {}; // key -> { minCol, maxCol }
+    mainHeaders.forEach((h, i) => {
+        const key = HEADER_TO_KEY[h.toLowerCase()];
+        if (!key) return;
+
+        let minCol = i, maxCol = i;
+        for (let j = i; j < subHeaders.length; j++) {
+            // Stop when we reach the next non-empty main header (next param group)
+            if (j > i && mainHeaders[j]) break;
+            if (subHeaders[j] === 'min') minCol = j;
+            if (subHeaders[j] === 'max') maxCol = j;
+        }
+        paramInfo[key] = { minCol, maxCol };
+    });
+
+    if (Object.keys(paramInfo).length === 0) return null;
+
+    let measuredRow  = null;
+    let rangeRow     = null;
+    let measuredDate = null;
+
+    for (let i = 1; i < allLines.length; i++) {
+        const line = allLines[i];
+        if (!line.trim()) continue;
+        const values   = parseCSVRow(line).map(v => v.replace(/^"|"$/g, '').trim());
+        const typeName = (values[0] || '').toLowerCase().trim();
+
+        if (typeName === 'measured' || typeName.startsWith('measured:')) {
+            measuredRow  = values;
+            measuredDate = values[1] || null; // date is in column B
+        } else if (typeName === 'range' || typeName.startsWith('range:')) {
+            rangeRow = values;
+        }
+    }
+
+    if (!measuredRow) return null;
+
+    const params = {};
+    const ranges = {};
+
+    for (const [key, { minCol, maxCol }] of Object.entries(paramInfo)) {
+        const val = parseFloat(measuredRow[maxCol]); // reading under "Max" sub-header
+        if (!isNaN(val)) params[key] = val;
+
+        if (rangeRow) {
+            const minVal = parseFloat(rangeRow[minCol]);
+            const maxVal = parseFloat(rangeRow[maxCol]);
+            if (!isNaN(minVal) && !isNaN(maxVal)) {
+                ranges[key] = { min: minVal, max: maxVal };
+            }
+        }
+    }
+
+    if (Object.keys(params).length === 0) return null;
+
+    return { params, ranges, updated: measuredDate || null, source: 'sheet' };
+}
 
 function parseTankCSV(text) {
     const allLines = text.split('\n');
@@ -182,7 +268,11 @@ function renderWaterParams(waterData) {
     }).join('');
 
     const updatedHTML = updated
-        ? `<p class="param-updated">Updated ${new Date(updated).toLocaleString()}</p>`
+        ? `<p class="param-updated">${
+            waterData.source === 'sheet'
+                ? `Last tested ${escapeHTML(updated)}`
+                : `Updated ${new Date(updated).toLocaleString()}`
+          }</p>`
         : '';
 
     return `<div class="water-params">
@@ -192,7 +282,7 @@ function renderWaterParams(waterData) {
     </div>`;
 }
 
-function renderTankCard(tank, csvText, waterData = null) {
+function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null) {
     const inhabitants = parseTankCSV(csvText);
 
     // Don't render cards for tanks with nothing in them yet
@@ -219,9 +309,8 @@ function renderTankCard(tank, csvText, waterData = null) {
         </li>`;
     }).join('');
 
-    const waterParamsHTML = (tank.hasWaterParams && waterData)
-        ? renderWaterParams(waterData)
-        : '';
+    const effectiveWaterData = (tank.hasWaterParams && waterData) ? waterData : sheetWaterParams;
+    const waterParamsHTML = effectiveWaterData ? renderWaterParams(effectiveWaterData) : '';
 
     card.innerHTML = `
         <h2 class="tank-name">${escapeHTML(tank.name)}</h2>
@@ -263,7 +352,8 @@ async function loadTanks() {
         let card;
         if (result.status === 'fulfilled') {
             try {
-                card = renderTankCard(tank, result.value, waterData);
+                const sheetWaterParams = parseTankWaterParams(result.value);
+                card = renderTankCard(tank, result.value, waterData, sheetWaterParams);
             } catch (e) {
                 card = renderError(tank, e.message);
             }
