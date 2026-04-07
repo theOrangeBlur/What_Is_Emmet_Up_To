@@ -200,13 +200,7 @@ function generatePage(projects) {
 </head>
 <body>
     <nav class="top-nav">
-        <a href="../index.html">🏠 Home</a>
-        <a href="../Visual-Stitch/snapshots.html">📹 Daily Snapshots</a>
-        <a href="./projects.html" class="active">🛠️ Projects</a>
-        <a href="../Puzzle/puzzle.html">🧩 Puzzles</a>
-        <a href="../Game_review/games.html">🎮 Game Reviews</a>
-        <a href="../Blog/blog.html">📢 Blog</a>
-        <a href="../Discipline/discipline.html">🎯 Discipline</a>
+        <a href="../index.html">Take me home, please!</a>
     </nav>
 
     <header class="page-header">
@@ -238,6 +232,21 @@ ${projectCards}
         <footer class="page-footer">
             <p>Last updated: ${today}</p>
         </footer>
+
+        <!-- Improvements Section -->
+        <div class="TODO">
+            <h5>Things Emmet is going to work on for this page:</h5>
+            <p>
+                <ul>
+                    <li>Add future, planned projects</li>
+                    <li>Find past projects to post
+                        <ul>
+                            <li>Old <a href="https://vthunt.com" target="_blank">VTHunt</a> projects for sure</li>
+                        </ul>
+                    </li>
+                </ul>
+            </p>
+        </div>
     </div>
 
     <script src="./projects.js"></script>

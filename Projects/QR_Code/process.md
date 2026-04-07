@@ -1,7 +1,7 @@
 ---
 title: "Wifi QR Code"
 status: "completed"
-tags: ["3d-printing", "3d-modeling", "home"]
+tags: ["3d-printing", "3d-modeling", "Home"]
 start_date: "2026-02-01"
 end_date: "2026-02-02"
 thumbnail: "images/final.jpg"

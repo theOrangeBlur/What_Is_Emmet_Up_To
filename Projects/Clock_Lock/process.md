@@ -1,7 +1,7 @@
 ---
 title: "Clock Lock"
 status: "completed"
-tags: ["3d-printing", "robotics", "3d-modeling", "VT Hunt"]
+tags: ["3d-printing", "Robotics", "3d-modeling", "VT Hunt"]
 start_date: "2025-02"
 end_date: "2025-04"
 thumbnail: "images/Final.jpg"

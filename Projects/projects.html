@@ -27,9 +27,9 @@
                     <button class="tag-filter active" data-tag="all">All</button>
                     <button class="tag-filter" data-tag="3d-modeling">3d-modeling</button>
                     <button class="tag-filter" data-tag="3d-printing">3d-printing</button>
+                    <button class="tag-filter" data-tag="Home">Home</button>
+                    <button class="tag-filter" data-tag="Robotics">Robotics</button>
                     <button class="tag-filter" data-tag="VT Hunt">VT Hunt</button>
-                    <button class="tag-filter" data-tag="home">home</button>
-                    <button class="tag-filter" data-tag="robotics">robotics</button>
                 </div>
                 <select id="sort-by">
                     <option value="date">Sort by Date</option>
@@ -40,8 +40,40 @@
             <div class="project-list" id="project-list">
 
         <article class="project-card"
+                 id="poop-clip"
+                 data-tags="3d-printing,3d-modeling"
+                 data-status="completed"
+                 data-date="2026-04">
+            <div class="project-card__preview" onclick="toggleProject('poop-clip')">
+                <img src="Poop_Clip/images/prototypes.jpg" alt="Poop Clip" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Poop Clip</h3>
+                    <div class="project-meta">
+                        <span class="date">Mar 2026 - Apr 2026</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="poop-clip-details">
+                <h3>Problem</h3>
+I broke the old dog poop bag holder! Now I have to carry a stinky poop bag!
+<h3>Process</h3>
+I modeled Cypher's face after looking at a lot of line art of dog faces online. 
+It was trickier than I thought it would be to make a good channel for the poop bag not to slip out of, so it took a few tries. I ended up testing with a bag I filled with some gravel.
+<img src="Poop_Clip/images/prototypes.jpg" alt="V1 Draft Right" class="project-image" loading="lazy">
+<h3>Result</h3>
+The final version holds that bag no problem! Cypher even had a record breaking three poop walk recently, which the holder handled with no drops. Hooray!
+<img src="Poop_Clip/images/on_leash.jpg" alt="final Cypher poop clip on leash" class="project-image" loading="lazy">
+            </div>
+        </article>
+
+        <article class="project-card"
                  id="liquer-cabinet"
-                 data-tags="3d-printing,home,3d-modeling"
+                 data-tags="3d-printing,Home,3d-modeling"
                  data-status="completed"
                  data-date="2026-02-12">
             <div class="project-card__preview" onclick="toggleProject('liquer-cabinet')">
@@ -53,7 +85,7 @@
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">home</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3d-printing</span><span class="tag">Home</span><span class="tag">3d-modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -89,7 +121,7 @@ I love the painted copper art Julia borught back from New Zealand as well.
 
         <article class="project-card"
                  id="qr-code"
-                 data-tags="3d-printing,3d-modeling,home"
+                 data-tags="3d-printing,3d-modeling,Home"
                  data-status="completed"
                  data-date="2026-02-02">
             <div class="project-card__preview" onclick="toggleProject('qr-code')">
@@ -101,7 +133,7 @@ I love the painted copper art Julia borught back from New Zealand as well.
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">home</span>
+                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">Home</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -127,7 +159,7 @@ She scans beautifully, and now lives on our fridge!
 
         <article class="project-card"
                  id="oven-skirt"
-                 data-tags="3d-printing,home,3d-modeling"
+                 data-tags="3d-printing,Home,3d-modeling"
                  data-status="completed"
                  data-date="2026-01-29">
             <div class="project-card__preview" onclick="toggleProject('oven-skirt')">
@@ -139,7 +171,7 @@ She scans beautifully, and now lives on our fridge!
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">home</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3d-printing</span><span class="tag">Home</span><span class="tag">3d-modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -218,7 +250,7 @@ Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters i
 
         <article class="project-card"
                  id="clock-lock"
-                 data-tags="3d-printing,robotics,3d-modeling,VT Hunt"
+                 data-tags="3d-printing,Robotics,3d-modeling,VT Hunt"
                  data-status="completed"
                  data-date="2025-04">
             <div class="project-card__preview" onclick="toggleProject('clock-lock')">
@@ -230,7 +262,7 @@ Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters i
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">robotics</span><span class="tag">3d-modeling</span><span class="tag">VT Hunt</span>
+                        <span class="tag">3d-printing</span><span class="tag">Robotics</span><span class="tag">3d-modeling</span><span class="tag">VT Hunt</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -260,16 +292,49 @@ A few of the inputs required the device to know the actual time and date, so a t
 I ended up not putting this out for the Hunt, as I knew people would simply break it. However it was fully functional, and many people got to play with and enjoy it!
             </div>
         </article>
+
+        <article class="project-card"
+                 id="eye-puzzle"
+                 data-tags="3d-printing,3d-modeling,VT Hunt"
+                 data-status="completed"
+                 data-date="2024-10">
+            <div class="project-card__preview" onclick="toggleProject('eye-puzzle')">
+                <img src="Eye Puzzle/images/portrait.jpg" alt="Realistic Eyes!" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Realistic Eyes!</h3>
+                    <div class="project-meta">
+                        <span class="date">Sep 2024 - Oct 2024</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">VT Hunt</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="eye-puzzle-details">
+                <h3>Problem</h3>
+A member of the VT Hunt team designed a creepy puzzle that required eyes with specific vein patterns!
+<h3>Process</h3>
+Having some experience with using silicone for a soft robotics project in college, I knew it would make some disturbingly realistic eyeballs. I modeled and printed some eye models, as well as a seperate piece for the clear lens and used them to cast molds with the aid of a small vacuum chamber I found online.
+For the puzzle mechanic to work, veins also had to modeled in readibly, which was a fun challenge.
+<img src="Eye Puzzle/images/trail.jpg" alt="A trail map" class="project-image" loading="lazy">
+<p>For each of the six eyes, I had to print a piece, cast a mold of the eye, paint the eye, also cast and make a clear lens piece, and dry it all together with more silicone.</p>
+<img src="Eye Puzzle/images/lineup.jpg" alt="six colored eyes" class="project-image" loading="lazy">
+<img src="Eye Puzzle/images/jar.jpg" alt="eyes in a jar of red colored water" class="project-image" loading="lazy">
+Plopped them in a jar of water colored red for the solvers to have to reach in and get for an added layer of disgust!
+<h3>Result</h3>
+I couldn't be happier with these eyeballs. The puzzle functioned quite well, and the eyes are so fun to play with. They feel like bouncy balls! 
+<img src="Eye Puzzle/images/lineup.jpg" alt="six colored eyes" class="project-image" loading="lazy">
+A playable version is availble at the VT Hunt website <a href="https://vthunt.com/past-hunts/haunt-2024/eyes" target="_blank">here</a>!
+            </div>
+        </article>
             </div>
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-02-13</p>
+            <p>Last updated: 2026-04-07</p>
         </footer>
-
-        <br>
-        <hr>
-        <br>
 
         <!-- Improvements Section -->
         <div class="TODO">

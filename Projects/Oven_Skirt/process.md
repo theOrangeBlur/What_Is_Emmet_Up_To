@@ -1,7 +1,7 @@
 ---
 title: "Oven Gap Spacers"
 status: "completed"
-tags: ["3d-printing", "home", "3d-modeling"]
+tags: ["3d-printing", "Home", "3d-modeling"]
 start_date: "2026-01-28"
 end_date: "2026-01-29"
 thumbnail: "images/Final-Side.jpg"
