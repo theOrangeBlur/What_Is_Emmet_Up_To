@@ -9,12 +9,26 @@
 </head>
 <body>
     <nav class="top-nav">
-        <a href="Visual-Stitch/snapshots.html">📹 Daily Snapshots</a>
-        <a href="Projects/projects.html">🛠️ Tech Projects</a>
-        <a href="Game_review/games.html">🎮 Game Reviews</a>
-        <a href="Movies/movies.html">🎬 Movie Reviews</a>
-        <a href="Discipline/discipline.html">🎯 Discipline</a>
-        <a href="Fish_Tanks/fish.html">🐟 Fish Tanks</a>
+        <a href="Visual-Stitch/snapshots.html">📹 <span class="nav-long">Daily Snapshots</span><span class="nav-short">Video Stitch</span></a>
+        <a href="Projects/projects.html">🛠️ <span class="nav-long">Tech Projects</span><span class="nav-short">Projects</span></a>
+        <a class="reviews-solo" href="Game_review/games.html">🎮 Game Reviews</a>
+        <a class="reviews-solo" href="Movies/movies.html">🎬 Movie Reviews</a>
+        <div class="dropdown" id="dropdown-reviews">
+            <button class="dropdown-btn">⭐ Reviews ▾</button>
+            <div class="dropdown-menu">
+                <a href="Game_review/games.html">🎮 Game Reviews</a>
+                <a href="Movies/movies.html">🎬 Movie Reviews</a>
+            </div>
+        </div>
+        <a class="misc-solo" href="Discipline/discipline.html">🎯 Discipline</a>
+        <a class="misc-solo" href="Fish_Tanks/fish.html">🐟 Fish Tanks</a>
+        <div class="dropdown" id="dropdown-misc">
+            <button class="dropdown-btn">🧩 Misc ▾</button>
+            <div class="dropdown-menu">
+                <a href="Discipline/discipline.html">🎯 Discipline</a>
+                <a href="Fish_Tanks/fish.html">🐟 Fish Tanks</a>
+            </div>
+        </div>
     </nav>
 
     <div class="custom-cursor"></div>

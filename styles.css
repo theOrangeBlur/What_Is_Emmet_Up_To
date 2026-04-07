@@ -61,8 +61,9 @@ body {
     backdrop-filter: blur(10px);
     padding: 15px 20px;
     display: flex;
-    justify-content: center;
-    gap: 30px;
+    justify-content: space-evenly;
+    gap: 0;
+    flex-wrap: nowrap;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: sticky;
     top: 0;
@@ -82,6 +83,66 @@ body {
 .top-nav a:hover {
     background: rgba(255, 255, 255, 0.15);
     border-color: #ffd700;
+}
+
+/* Dropdowns */
+.dropdown {
+    display: none;
+    position: relative;
+}
+.dropdown-btn {
+    color: #fff;
+    background: none;
+    border: 1px solid transparent;
+    font-size: 0.95em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+.dropdown-btn:hover,
+.dropdown.open .dropdown-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    min-width: 160px;
+    padding: 6px 0;
+    z-index: 1001;
+    margin-top: 4px;
+}
+.dropdown.open .dropdown-menu {
+    display: block;
+}
+.dropdown-menu a {
+    display: block;
+    padding: 8px 16px;
+    border-radius: 0;
+    border: none;
+    white-space: nowrap;
+}
+.dropdown-menu a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+}
+
+.nav-short { display: none; }
+
+@media (max-width: 900px) {
+    .reviews-solo, .misc-solo { display: none; }
+    .dropdown { display: block; }
+    .nav-long { display: none; }
+    .nav-short { display: inline; }
 }
 
 header {
@@ -401,12 +462,11 @@ h1 {
         height: 200px;
     }
     .top-nav {
-        flex-wrap: wrap;
-        gap: 10px;
+        padding: 10px 12px;
     }
-    .top-nav a {
-        font-size: 0.85em;
-        padding: 6px 12px;
+    .top-nav a, .dropdown-btn {
+        font-size: 0.8em;
+        padding: 6px 10px;
     }
     .nav-grid.newspaper {
         grid-template-columns: 1fr;
