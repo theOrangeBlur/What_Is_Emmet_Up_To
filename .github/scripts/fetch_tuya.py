@@ -84,8 +84,11 @@ def get_device_logs(access_token: str) -> list:
     is more reliable for properties like pH that may not be in the live status.
     Returns a flat list of {"code": ..., "value": ...} dicts (most recent first).
     """
-    path = f"/v1.0/devices/{DEVICE_ID}/logs?type=2&size=20"
-    resp = requests.get(BASE_URL + path, headers=_headers(path, access_token), timeout=15)
+    # Sign using only the path (no query string) — Tuya's signing spec for
+    # authenticated endpoints excludes query parameters from the signature.
+    sign_path = f"/v1.0/devices/{DEVICE_ID}/logs"
+    full_path  = sign_path + "?type=2&size=20"
+    resp = requests.get(BASE_URL + full_path, headers=_headers(sign_path, access_token), timeout=15)
     resp.raise_for_status()
     data = resp.json()
     if not data.get("success"):
