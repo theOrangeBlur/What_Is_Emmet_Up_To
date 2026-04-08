@@ -1044,7 +1044,21 @@ function stopHoldNipping() {
     holdNipInterval = null;
 }
 
+let lastTouchTime = 0;
+
+document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    lastTouchTime = Date.now();
+    mouseX = t.clientX;
+    mouseY = t.clientY;
+    lastMoveTime = Date.now();
+    checkSwarmTrigger();
+    enterNip(t.clientX, t.clientY);
+    startHoldNipping();
+}, { passive: true });
+
 document.addEventListener('mousedown', e => {
+    if (Date.now() - lastTouchTime < 500) return; // already handled by touchstart
     lastMoveTime = Date.now();
     checkSwarmTrigger();
     enterNip(e.clientX, e.clientY);
