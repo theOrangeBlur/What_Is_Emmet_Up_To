@@ -111,10 +111,10 @@ PARAM_CODES = {
     "temp_value":     ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     "va_temperature": ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     # pH — Tuya typically sends pH × 10
-    "ph_value":       ("ph",            lambda v: round(v / 10, 1)),
-    "va_ph":          ("ph",            lambda v: round(v / 10, 1)),
-    "ph":             ("ph",            lambda v: round(v / 10, 1)),
-    "ph_current":     ("ph",            lambda v: round(v / 10, 1)),
+    "ph_value":       ("ph",            lambda v: round(v / 100, 2)),
+    "va_ph":          ("ph",            lambda v: round(v / 100, 2)),
+    "ph":             ("ph",            lambda v: round(v / 100, 2)),
+    "ph_current":     ("ph",            lambda v: round(v / 100, 2)),
     # TDS — ppm, direct value
     "tds_in":         ("tds",           lambda v: int(v)),
     "tds":            ("tds",           lambda v: int(v)),
