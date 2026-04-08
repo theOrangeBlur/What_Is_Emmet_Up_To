@@ -658,6 +658,10 @@ function enterCurious() {
     }
 }
 
+function hapticNip(duration = 15) {
+    if (navigator.vibrate) navigator.vibrate(duration);
+}
+
 function enterNip(clickX, clickY) {
     clearTimeout(STATE.idleTimer);
     clearTimeout(STATE.curiousTimeout);
@@ -836,6 +840,7 @@ function updateFish() {
         if (STATE.nipPhase === 'darting' && dist < 8) {
             STATE.nipPhase = 'bouncing';
             nipScale = 1.25;
+            hapticNip(15);
             targetX = STATE.nipBounceTarget.x;
             targetY = STATE.nipBounceTarget.y;
         } else if (STATE.nipPhase === 'bouncing' && dist < 10) {
@@ -855,6 +860,7 @@ function updateFish() {
                 // Landed a nip — bounce back
                 STATE.nipPhase = 'bouncing';
                 nipScale = 1.3;
+                hapticNip(18);
                 const dx = fishX - swX, dy = fishY - swY;
                 const len = Math.hypot(dx, dy) || 1;
                 targetX = clampX(fishX + (dx / len) * 70);
@@ -943,6 +949,7 @@ function spawnSwarmFish() {
             if (Math.hypot(mouseX - sf.x, mouseY - sf.y) < 18) {
                 sf.phase = 'bouncing';
                 sf.nipScale = 1.45;
+                hapticNip(12);
                 const dx = sf.x - mouseX, dy = sf.y - mouseY;
                 const len = Math.hypot(dx, dy) || 1;
                 sf.bounceTargetX = sf.x + (dx / len) * 65;
