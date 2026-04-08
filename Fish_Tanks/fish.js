@@ -1027,11 +1027,53 @@ document.addEventListener('mousemove', e => {
     if (STATE.current !== 'nipping') enterCurious();
 });
 
+let holdNipInterval = null;
+
+function startHoldNipping() {
+    clearInterval(holdNipInterval);
+    holdNipInterval = setInterval(() => {
+        if (STATE.current !== 'attacking') {
+            lastMoveTime = Date.now();
+            enterNip(mouseX, mouseY);
+        }
+    }, 600);
+}
+
+function stopHoldNipping() {
+    clearInterval(holdNipInterval);
+    holdNipInterval = null;
+}
+
 document.addEventListener('mousedown', e => {
     lastMoveTime = Date.now();
     checkSwarmTrigger();
     enterNip(e.clientX, e.clientY);
+    startHoldNipping();
 });
+
+document.addEventListener('mouseup', stopHoldNipping);
+
+document.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    mouseX = t.clientX;
+    mouseY = t.clientY;
+    lastMoveTime = Date.now();
+    checkSwarmTrigger();
+    enterNip(t.clientX, t.clientY);
+    startHoldNipping();
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    mouseX = t.clientX;
+    mouseY = t.clientY;
+    lastMoveTime = Date.now();
+    if (STATE.current !== 'nipping') enterCurious();
+}, { passive: true });
+
+document.addEventListener('touchend', stopHoldNipping);
+document.addEventListener('touchcancel', stopHoldNipping);
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden && STATE.current !== 'nipping') enterIdle();
