@@ -1061,7 +1061,7 @@ document.addEventListener('touchstart', e => {
     checkSwarmTrigger();
     enterNip(t.clientX, t.clientY);
     startHoldNipping();
-});
+}, { passive: true });
 
 document.addEventListener('touchmove', e => {
     const t = e.touches[0];
