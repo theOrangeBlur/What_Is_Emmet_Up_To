@@ -511,6 +511,26 @@ function createSwimmer() {
     document.body.appendChild(el);
 }
 
+function fleeSwimmer(sw) {
+    if (sw.fleeing) return;
+    sw.fleeing = true;
+    clearInterval(sw.oscInterval);
+    clearTimeout(sw.removeTimeout);
+
+    const rect = sw.el.getBoundingClientRect();
+    sw.el.style.animation = 'none';
+    sw.el.style.left = rect.left + 'px';
+    sw.el.style.top  = rect.top  + 'px';
+    void sw.el.offsetWidth; // force reflow
+
+    sw.el.style.transition = 'left 1.2s ease-in';
+    sw.el.style.left = (sw.goingRight ? window.innerWidth + 200 : -200) + 'px';
+
+    const idx = activeSwimmers.indexOf(sw);
+    if (idx !== -1) activeSwimmers.splice(idx, 1);
+    setTimeout(() => sw.el.remove(), 1500);
+}
+
 function scheduleNextSwimmer() {
     const delay = Math.random() * 25000 + 15000; // 15–40s
     setTimeout(() => {
@@ -665,11 +685,48 @@ function endNip() {
     }
 }
 
+function enterAttack(sw) {
+    clearTimeout(STATE.idleTimer);
+    clearTimeout(STATE.curiousTimeout);
+    clearTimeout(STATE.orbitTimer);
+    STATE.current = 'attacking';
+    STATE.nipPhase = 'darting';
+    ATTACK.target = sw;
+    ATTACK.nipsRemaining = 4 + Math.floor(Math.random() * 3); // 4–6 nips
+    fleeSwimmer(sw); // swimmer panics immediately
+    // Dart target will be updated each frame to the swimmer's moving position
+}
+
+function endAttack() {
+    ATTACK.target = null;
+    STATE.nipPhase = 'none';
+    if (Date.now() - lastMoveTime < 2500) {
+        enterCurious();
+    } else {
+        enterIdle();
+    }
+}
+
 function updateFish() {
+    // Proximity check — attack nearest swimmer within 180px
+    if (STATE.current !== 'attacking') {
+        for (const sw of activeSwimmers) {
+            const r = sw.el.getBoundingClientRect();
+            const swX = r.left + r.width / 2;
+            const swY = r.top  + r.height / 2;
+            if (Math.hypot(swX - fishX, swY - fishY) < 180) {
+                enterAttack(sw);
+                break;
+            }
+        }
+    }
+
     // Determine lerp factor
     let lerp;
     if (STATE.current === 'nipping') {
         lerp = STATE.nipPhase === 'darting' ? 0.18 : 0.22;
+    } else if (STATE.current === 'attacking') {
+        lerp = STATE.nipPhase === 'darting' ? 0.22 : 0.25;
     } else if (STATE.current === 'curious') {
         const speed = Math.hypot(cvx, cvy);
         if (speed > 0.5) {
@@ -700,13 +757,21 @@ function updateFish() {
     fishVX += ((fishX - prevX) - fishVX) * 0.2;
     fishVY += ((fishY - prevY) - fishVY) * 0.2;
 
+    // Keep attacking dart target updated to swimmer's current position
+    if (STATE.current === 'attacking' && ATTACK.target && STATE.nipPhase === 'darting') {
+        const r = ATTACK.target.el.getBoundingClientRect();
+        targetX = r.left + r.width  / 2;
+        targetY = r.top  + r.height / 2;
+    }
+
     // Facing direction
     // 🐠 emoji naturally faces left, so flip logic: moving right = scaleX(-1)
     if (STATE.current === 'curious') {
-        // Always face toward the cursor
         fishFacing = mouseX > fishX ? -1 : 1;
+    } else if (STATE.current === 'attacking' && ATTACK.target) {
+        const r = ATTACK.target.el.getBoundingClientRect();
+        fishFacing = (r.left + r.width / 2) > fishX ? -1 : 1;
     } else {
-        // Face direction of travel (only update when moving decisively)
         if      (fishVX >  0.3) fishFacing = -1;
         else if (fishVX < -0.3) fishFacing =  1;
     }
@@ -731,11 +796,32 @@ function updateFish() {
         }
     }
 
+    // Curious rotation — horizontal while swimming, faces cursor when settled
+    let finalRot;
+    if (STATE.current === 'curious') {
+        const distToTarget = Math.hypot(targetX - fishX, targetY - fishY);
+        const cursorSpeed  = Math.hypot(cvx, cvy);
+        const settled = distToTarget < 25 && cursorSpeed < 1;
+        let targetRot;
+        if (settled) {
+            const angleDeg = Math.atan2(mouseY - fishY, mouseX - fishX) * 180 / Math.PI;
+            // Emoji faces left; fishFacing=-1 (scaleX flips rotation sign)
+            targetRot = fishFacing === -1 ? -angleDeg : angleDeg - 180;
+        } else {
+            targetRot = 0; // horizontal while swimming
+        }
+        curiousRotation += (targetRot - curiousRotation) * 0.05;
+        finalRot = curiousRotation;
+    } else {
+        curiousRotation += (0 - curiousRotation) * 0.1; // reset smoothly
+        finalRot = tilt * fishFacing;
+    }
+
     // Apply
     companionFish.style.left = renderX + 'px';
     companionFish.style.top  = renderY + 'px';
     companionFish.style.transform =
-        `scaleX(${fishFacing}) rotate(${tilt * fishFacing}deg) scale(${nipScale})`;
+        `scaleX(${fishFacing}) rotate(${finalRot}deg) scale(${nipScale})`;
 
     // Nip phase transitions
     if (STATE.current === 'nipping') {
@@ -745,7 +831,7 @@ function updateFish() {
 
         if (STATE.nipPhase === 'darting' && dist < 8) {
             STATE.nipPhase = 'bouncing';
-            nipScale = 1.25;    // trigger pulse
+            nipScale = 1.25;
             targetX = STATE.nipBounceTarget.x;
             targetY = STATE.nipBounceTarget.y;
         } else if (STATE.nipPhase === 'bouncing' && dist < 10) {
@@ -753,7 +839,171 @@ function updateFish() {
         }
     }
 
+    // Attack nip-cycle transitions
+    if (STATE.current === 'attacking' && ATTACK.target) {
+        const r = ATTACK.target.el.getBoundingClientRect();
+        const swX = r.left + r.width  / 2;
+        const swY = r.top  + r.height / 2;
+
+        if (STATE.nipPhase === 'darting') {
+            const dist = Math.hypot(swX - fishX, swY - fishY);
+            if (dist < 20) {
+                // Landed a nip — bounce back
+                STATE.nipPhase = 'bouncing';
+                nipScale = 1.3;
+                const dx = fishX - swX, dy = fishY - swY;
+                const len = Math.hypot(dx, dy) || 1;
+                targetX = clampX(fishX + (dx / len) * 70);
+                targetY = clampY(fishY + (dy / len) * 70);
+                ATTACK.nipsRemaining--;
+            }
+        } else if (STATE.nipPhase === 'bouncing') {
+            const dist = Math.hypot(targetX - fishX, targetY - fishY);
+            if (dist < 12) {
+                if (ATTACK.nipsRemaining > 0) {
+                    STATE.nipPhase = 'darting'; // charge again
+                } else {
+                    endAttack();
+                }
+            }
+        }
+    }
+
     requestAnimationFrame(updateFish);
+}
+
+// ============================================================
+// SWARM ATTACK — 20 rapid clicks triggers a 30-second assault
+// ============================================================
+
+const SWARM_EMOJIS = ['🐟', '🐠', '🐡', '🦈', '🐬', '🦐', '🦞', '🦑', '🐙', '🦀'];
+const recentClicks = [];
+let swarmActive = false;
+let swarmEndTimeout = null;
+const swarmFishList = [];
+
+function checkSwarmTrigger() {
+    const now = Date.now();
+    recentClicks.push(now);
+    while (recentClicks.length && now - recentClicks[0] > 3000) recentClicks.shift();
+    if (recentClicks.length >= 10 && !swarmActive) {
+        recentClicks.length = 0;
+        triggerSwarm();
+    }
+}
+
+function spawnSwarmFish() {
+    const el = document.createElement('div');
+    el.className = 'companion-fish swarm-fish';
+    el.textContent = SWARM_EMOJIS[Math.floor(Math.random() * SWARM_EMOJIS.length)];
+    document.body.appendChild(el);
+
+    // Spawn from a random screen edge
+    const edge = Math.floor(Math.random() * 4);
+    let sx, sy;
+    if      (edge === 0) { sx = Math.random() * window.innerWidth;  sy = -60; }
+    else if (edge === 1) { sx = window.innerWidth  + 60; sy = Math.random() * window.innerHeight; }
+    else if (edge === 2) { sx = Math.random() * window.innerWidth;  sy = window.innerHeight + 60; }
+    else                 { sx = -60; sy = Math.random() * window.innerHeight; }
+
+    const sf = {
+        el, x: sx, y: sy,
+        facing: 1, nipScale: 1.0,
+        phase: 'chasing',   // 'chasing' | 'bouncing' | 'fleeing'
+        bounceTargetX: 0, bounceTargetY: 0,
+        fleeTargetX: 0, fleeTargetY: 0,
+        nipsLeft: 3,
+        alive: true,
+    };
+    swarmFishList.push(sf);
+
+    (function loop() {
+        if (!sf.alive) return;
+
+        if (sf.phase === 'fleeing') {
+            const dx = sf.fleeTargetX - sf.x;
+            const dy = sf.fleeTargetY - sf.y;
+            const dist = Math.hypot(dx, dy) || 1;
+            sf.x += (dx / dist) * 14;
+            sf.y += (dy / dist) * 14;
+            if (sf.x < -150 || sf.x > window.innerWidth + 150 ||
+                sf.y < -150 || sf.y > window.innerHeight + 150) {
+                sf.alive = false;
+                el.remove();
+                return;
+            }
+
+        } else if (sf.phase === 'chasing') {
+            sf.x += (mouseX - sf.x) * 0.10;
+            sf.y += (mouseY - sf.y) * 0.10;
+            if (Math.hypot(mouseX - sf.x, mouseY - sf.y) < 18) {
+                sf.phase = 'bouncing';
+                sf.nipScale = 1.45;
+                const dx = sf.x - mouseX, dy = sf.y - mouseY;
+                const len = Math.hypot(dx, dy) || 1;
+                sf.bounceTargetX = sf.x + (dx / len) * 65;
+                sf.bounceTargetY = sf.y + (dy / len) * 65;
+            }
+
+        } else { // bouncing
+            sf.x += (sf.bounceTargetX - sf.x) * 0.20;
+            sf.y += (sf.bounceTargetY - sf.y) * 0.20;
+            if (Math.hypot(sf.bounceTargetX - sf.x, sf.bounceTargetY - sf.y) < 10) {
+                sf.nipsLeft--;
+                if (sf.nipsLeft <= 0) {
+                    // Done — flee away from cursor, spawn a fresh replacement
+                    sf.phase = 'fleeing';
+                    const dx = sf.x - mouseX, dy = sf.y - mouseY;
+                    const len = Math.hypot(dx, dy);
+                    const ndx = len < 1 ? Math.cos(Math.random() * Math.PI * 2) : dx / len;
+                    const ndy = len < 1 ? Math.sin(Math.random() * Math.PI * 2) : dy / len;
+                    sf.fleeTargetX = sf.x + ndx * (window.innerWidth  + 300);
+                    sf.fleeTargetY = sf.y + ndy * (window.innerHeight + 300);
+                    if (swarmActive) setTimeout(spawnSwarmFish, 400);
+                } else {
+                    sf.phase = 'chasing';
+                }
+            }
+        }
+
+        sf.nipScale += (1.0 - sf.nipScale) * 0.15;
+        sf.facing = (mouseX > sf.x) ? -1 : 1; // emoji faces left natively
+
+        el.style.left = sf.x + 'px';
+        el.style.top  = sf.y + 'px';
+        el.style.transform = `scaleX(${sf.facing}) scale(${sf.nipScale})`;
+
+        requestAnimationFrame(loop);
+    })();
+
+    return sf;
+}
+
+function triggerSwarm() {
+    swarmActive = true;
+    const count = 12 + Math.floor(Math.random() * 5); // 12–16 fish
+    for (let i = 0; i < count; i++) {
+        setTimeout(spawnSwarmFish, i * 120);
+    }
+    swarmEndTimeout = setTimeout(endSwarm, 5000);
+}
+
+function endSwarm() {
+    swarmActive = false;
+    clearTimeout(swarmEndTimeout);
+    swarmFishList.forEach(sf => {
+        if (!sf.alive) return;
+        sf.phase = 'fleeing';
+        const dx = sf.x - window.innerWidth  / 2;
+        const dy = sf.y - window.innerHeight / 2;
+        const len = Math.hypot(dx, dy);
+        let ndx, ndy;
+        if (len < 1) { const a = Math.random() * Math.PI * 2; ndx = Math.cos(a); ndy = Math.sin(a); }
+        else { ndx = dx / len; ndy = dy / len; }
+        sf.fleeTargetX = sf.x + ndx * (window.innerWidth  + 300);
+        sf.fleeTargetY = sf.y + ndy * (window.innerHeight + 300);
+    });
+    setTimeout(() => { swarmFishList.length = 0; }, 4000);
 }
 
 // Event listeners
@@ -768,6 +1018,7 @@ document.addEventListener('mousemove', e => {
 
 document.addEventListener('mousedown', e => {
     lastMoveTime = Date.now();
+    checkSwarmTrigger();
     enterNip(e.clientX, e.clientY);
 });
 
