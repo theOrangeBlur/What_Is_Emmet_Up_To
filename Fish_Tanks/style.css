@@ -15,6 +15,7 @@ body {
     min-height: 100vh;
     color: #fff;
     overflow-x: hidden;
+    touch-action: manipulation;
 }
 
 /* Home Button */
