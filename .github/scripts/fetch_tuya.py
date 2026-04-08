@@ -76,6 +76,27 @@ def get_device_status(access_token: str) -> list:
     return data["result"]
 
 
+def get_device_logs(access_token: str, codes: list) -> list:
+    """Fetch recent device report logs for the given property codes.
+
+    The status endpoint only returns properties the device has actively pushed
+    since its last connection. The logs endpoint gives historical readings and
+    is more reliable for properties like pH that may not be in the live status.
+    Returns a flat list of {"code": ..., "value": ...} dicts (most recent first).
+    """
+    codes_str = ",".join(codes)
+    path = f"/v1.0/devices/{DEVICE_ID}/logs?type=7&size=20&codes={codes_str}"
+    resp = requests.get(BASE_URL + path, headers=_headers(path, access_token), timeout=15)
+    resp.raise_for_status()
+    data = resp.json()
+    if not data.get("success"):
+        print(f"Warning: device logs request failed: {data}")
+        return []
+    logs = data.get("result", {})
+    # Response shape: {"result": {"logs": [{"code": ..., "value": ..., "event_time": ...}, ...]}}
+    return logs.get("logs", []) if isinstance(logs, dict) else []
+
+
 # ---------------------------------------------------------------------------
 # Parameter mapping
 #
@@ -93,6 +114,8 @@ PARAM_CODES = {
     # pH — Tuya typically sends pH × 10
     "ph_value":       ("ph",            lambda v: round(v / 10, 1)),
     "va_ph":          ("ph",            lambda v: round(v / 10, 1)),
+    "ph":             ("ph",            lambda v: round(v / 10, 1)),
+    "ph_current":     ("ph",            lambda v: round(v / 10, 1)),
     # TDS — ppm, direct value
     "tds_in":         ("tds",           lambda v: int(v)),
     "tds":            ("tds",           lambda v: int(v)),
@@ -159,6 +182,20 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+
+    # If any expected params are missing from the live status, try the logs API.
+    expected = {"temperature_f", "ph", "tds"}
+    missing = expected - new_params.keys()
+    if missing:
+        print(f"\nNote: {sorted(missing)} not in live status — checking device logs...")
+        ph_codes = [c for c, (name, _) in PARAM_CODES.items() if name == "ph"]
+        logs = get_device_logs(token, ph_codes)
+        print(f"Device logs: {json.dumps(logs, indent=2)}")
+        log_params = parse_status(logs)
+        for k, v in log_params.items():
+            if k not in new_params:
+                print(f"  Filled '{k}' from logs: {v}")
+                new_params[k] = v
 
     # Merge: start with previous readings, then overlay whatever the sensor reported now.
     params = {**previous_params, **new_params}
