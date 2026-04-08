@@ -662,6 +662,32 @@ function hapticNip(duration = 15) {
     if (navigator.vibrate) navigator.vibrate(duration);
 }
 
+let _audioCtx = null;
+function getAudioCtx() {
+    if (!_audioCtx) _audioCtx = new AudioContext();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+}
+document.addEventListener('pointerdown', () => getAudioCtx(), { once: true });
+
+function playNipClick() {
+    try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        const pitch = 1200 + Math.random() * 1200; // 1200–2400 Hz
+        osc.frequency.setValueAtTime(pitch, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(pitch * 0.5, ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.06);
+    } catch (e) {}
+}
+
 function enterNip(clickX, clickY) {
     clearTimeout(STATE.idleTimer);
     clearTimeout(STATE.curiousTimeout);
@@ -841,6 +867,7 @@ function updateFish() {
             STATE.nipPhase = 'bouncing';
             nipScale = 1.25;
             hapticNip(15);
+            playNipClick();
             targetX = STATE.nipBounceTarget.x;
             targetY = STATE.nipBounceTarget.y;
         } else if (STATE.nipPhase === 'bouncing' && dist < 10) {
@@ -861,6 +888,7 @@ function updateFish() {
                 STATE.nipPhase = 'bouncing';
                 nipScale = 1.3;
                 hapticNip(18);
+                playNipClick();
                 const dx = fishX - swX, dy = fishY - swY;
                 const len = Math.hypot(dx, dy) || 1;
                 targetX = clampX(fishX + (dx / len) * 70);
@@ -950,6 +978,7 @@ function spawnSwarmFish() {
                 sf.phase = 'bouncing';
                 sf.nipScale = 1.45;
                 hapticNip(12);
+                playNipClick();
                 const dx = sf.x - mouseX, dy = sf.y - mouseY;
                 const len = Math.hypot(dx, dy) || 1;
                 sf.bounceTargetX = sf.x + (dx / len) * 65;
@@ -1030,17 +1059,22 @@ document.addEventListener('mousemove', e => {
 let holdNipInterval = null;
 
 function startHoldNipping() {
-    clearInterval(holdNipInterval);
-    holdNipInterval = setInterval(() => {
-        if (STATE.current !== 'attacking') {
-            lastMoveTime = Date.now();
-            enterNip(mouseX, mouseY);
-        }
-    }, 600);
+    clearTimeout(holdNipInterval);
+    function scheduleNext() {
+        const delay = 300 + Math.random() * 600; // 300–900ms
+        holdNipInterval = setTimeout(() => {
+            if (STATE.current !== 'attacking') {
+                lastMoveTime = Date.now();
+                enterNip(mouseX, mouseY);
+            }
+            scheduleNext();
+        }, delay);
+    }
+    scheduleNext();
 }
 
 function stopHoldNipping() {
-    clearInterval(holdNipInterval);
+    clearTimeout(holdNipInterval);
     holdNipInterval = null;
 }
 
