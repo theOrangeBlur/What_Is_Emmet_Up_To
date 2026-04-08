@@ -1054,7 +1054,6 @@ document.addEventListener('mousedown', e => {
 document.addEventListener('mouseup', stopHoldNipping);
 
 document.addEventListener('touchstart', e => {
-    e.preventDefault();
     const t = e.touches[0];
     mouseX = t.clientX;
     mouseY = t.clientY;
@@ -1062,7 +1061,7 @@ document.addEventListener('touchstart', e => {
     checkSwarmTrigger();
     enterNip(t.clientX, t.clientY);
     startHoldNipping();
-}, { passive: false });
+});
 
 document.addEventListener('touchmove', e => {
     const t = e.touches[0];
