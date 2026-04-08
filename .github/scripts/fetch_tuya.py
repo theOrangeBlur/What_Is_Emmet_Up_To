@@ -76,27 +76,24 @@ def get_device_status(access_token: str) -> list:
     return data["result"]
 
 
-def get_device_logs(access_token: str) -> list:
-    """Fetch recent device data-report logs.
+def get_dp_latest(access_token: str) -> list:
+    """Fetch latest DP values for all data points on the device.
 
-    The status endpoint only returns properties the device has actively pushed
-    since its last connection. The logs endpoint gives historical readings and
-    is more reliable for properties like pH that may not be in the live status.
-    Returns a flat list of {"code": ..., "value": ...} dicts (most recent first).
+    Unlike /status (which only returns standard-mapped DPs), this endpoint
+    returns every DP the device has ever reported, including non-standard ones
+    like pH that aren't in the standard instruction set.
+    Returns a list of {"code": ..., "value": ...} dicts.
     """
-    # Sign using only the path (no query string) — Tuya's signing spec for
-    # authenticated endpoints excludes query parameters from the signature.
-    sign_path = f"/v1.0/devices/{DEVICE_ID}/logs"
-    full_path  = sign_path + "?type=2&size=20"
-    resp = requests.get(BASE_URL + full_path, headers=_headers(sign_path, access_token), timeout=15)
+    path = f"/v1.0/devices/{DEVICE_ID}/dp-latest"
+    resp = requests.get(BASE_URL + path, headers=_headers(path, access_token), timeout=15)
     resp.raise_for_status()
     data = resp.json()
     if not data.get("success"):
-        print(f"Warning: device logs request failed: {data}")
+        print(f"Warning: dp-latest request failed: {data}")
         return []
-    logs = data.get("result", {})
-    # Response shape: {"result": {"logs": [{"code": ..., "value": ..., "event_time": ...}, ...]}}
-    return logs.get("logs", []) if isinstance(logs, dict) else []
+    result = data.get("result", [])
+    # Response shape: {"result": [{"code": ..., "value": ..., "t": ...}, ...]}
+    return result if isinstance(result, list) else []
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +110,8 @@ PARAM_CODES = {
     "temp_current":   ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     "temp_value":     ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     "va_temperature": ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
-    # pH — Tuya typically sends pH × 10
+    # pH — some sensors send pH × 10 as int, others send the direct decimal value
+    "pH":             ("ph",            lambda v: round(float(v), 2)),
     "ph_value":       ("ph",            lambda v: round(v / 10, 1)),
     "va_ph":          ("ph",            lambda v: round(v / 10, 1)),
     "ph":             ("ph",            lambda v: round(v / 10, 1)),
@@ -190,12 +188,12 @@ def main():
     missing = expected - new_params.keys()
     if missing:
         print(f"\nNote: {sorted(missing)} not in live status — checking device logs...")
-        logs = get_device_logs(token)
-        print(f"Device logs: {json.dumps(logs, indent=2)}")
-        log_params = parse_status(logs)
-        for k, v in log_params.items():
+        dp_latest = get_dp_latest(token)
+        print(f"DP-latest: {json.dumps(dp_latest, indent=2)}")
+        dp_params = parse_status(dp_latest)
+        for k, v in dp_params.items():
             if k not in new_params:
-                print(f"  Filled '{k}' from logs: {v}")
+                print(f"  Filled '{k}' from dp-latest: {v}")
                 new_params[k] = v
 
     # Merge: start with previous readings, then overlay whatever the sensor reported now.
