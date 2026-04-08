@@ -8,8 +8,8 @@
 const SHEET_ID = '1sVb8HqV8Ttmv2EVFQmZtnDbubgd_OBp7';
 
 const TANKS = [
-    { name: "Office Tank",  gallons: 10, gid: "1907567120", photo: "images/10G.jpg", hasWaterParams: true },
-    { name: "Wooded Tank",  gallons: 20, gid: "1561707960", photo: "images/20G.jpg" },
+    { name: "Office Tank",  gallons: 10, gid: "1907567120", photo: "images/10G.mp4", hasWaterParams: true },
+    { name: "Wooded Tank",  gallons: 20, gid: "1561707960", photo: "images/20G.mp4" },
     { name: "55 Gallon",    gallons: 55, gid: "1334361544", photo: null },
 ];
 
@@ -395,7 +395,11 @@ function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null
 
     let photoHTML = '';
     if (tank.photo) {
-        photoHTML = `<img class="tank-photo" src="${tank.photo}" alt="${tank.name}" onerror="this.parentElement.style.display='none'">`;
+        if (tank.photo.endsWith('.mp4') || tank.photo.endsWith('.webm')) {
+            photoHTML = `<video class="tank-photo" src="${tank.photo}" autoplay loop muted playsinline></video>`;
+        } else {
+            photoHTML = `<img class="tank-photo" src="${tank.photo}" alt="${tank.name}" onerror="this.parentElement.style.display='none'">`;
+        }
     }
 
     const items = inhabitants.map(({ species, amount }) => {
