@@ -76,16 +76,15 @@ def get_device_status(access_token: str) -> list:
     return data["result"]
 
 
-def get_device_logs(access_token: str, codes: list) -> list:
-    """Fetch recent device report logs for the given property codes.
+def get_device_logs(access_token: str) -> list:
+    """Fetch recent device data-report logs.
 
     The status endpoint only returns properties the device has actively pushed
     since its last connection. The logs endpoint gives historical readings and
     is more reliable for properties like pH that may not be in the live status.
     Returns a flat list of {"code": ..., "value": ...} dicts (most recent first).
     """
-    codes_str = ",".join(codes)
-    path = f"/v1.0/devices/{DEVICE_ID}/logs?type=7&size=20&codes={codes_str}"
+    path = f"/v1.0/devices/{DEVICE_ID}/logs?type=2&size=20"
     resp = requests.get(BASE_URL + path, headers=_headers(path, access_token), timeout=15)
     resp.raise_for_status()
     data = resp.json()
@@ -188,8 +187,7 @@ def main():
     missing = expected - new_params.keys()
     if missing:
         print(f"\nNote: {sorted(missing)} not in live status — checking device logs...")
-        ph_codes = [c for c, (name, _) in PARAM_CODES.items() if name == "ph"]
-        logs = get_device_logs(token, ph_codes)
+        logs = get_device_logs(token)
         print(f"Device logs: {json.dumps(logs, indent=2)}")
         log_params = parse_status(logs)
         for k, v in log_params.items():
