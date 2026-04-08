@@ -110,8 +110,7 @@ PARAM_CODES = {
     "temp_current":   ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     "temp_value":     ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
     "va_temperature": ("temperature_f", lambda v: round(v / 10 * 9 / 5 + 32, 1)),
-    # pH — some sensors send pH × 10 as int, others send the direct decimal value
-    "pH":             ("ph",            lambda v: round(float(v), 2)),
+    # pH — Tuya typically sends pH × 10
     "ph_value":       ("ph",            lambda v: round(v / 10, 1)),
     "va_ph":          ("ph",            lambda v: round(v / 10, 1)),
     "ph":             ("ph",            lambda v: round(v / 10, 1)),
