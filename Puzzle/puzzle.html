@@ -2,19 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video game page</title>
+  <title>Hexdoku | Emmet</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="" />
   <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <nav class="top-nav">
     <a href="../index.html">Take me home, please!</a>
   </nav>
-  <h1>What are some of Emmet's favorite puzzles?</h1>
-  <hr/>
-  <h2>(Coming soon!)</h2>
 
+  <h1>Hexdoku</h1>
+
+  <div class="instructions-box">
+    <p>Learn each level's rules from the completed puzzle on the left. Use these rules to complete the puzzle on the right. Use highlighted boxes to find the codeword.</p>
+  </div>
+
+  <!-- Level 1 -->
+  <section class="level" id="level-1">
+    <h2>Level 1</h2>
+    <div class="puzzle-row">
+      <div class="grid-wrap">
+        <h3>Reference</h3>
+        <svg id="l1-complete" class="hex-grid"></svg>
+      </div>
+      <div class="grid-wrap">
+        <h3>Puzzle</h3>
+        <svg id="l1-puzzle" class="hex-grid"></svg>
+      </div>
+    </div>
+    <div class="check-row">
+      <button class="check-btn" id="check-btn-1">Check</button>
+      <div class="check-result" id="l1-result"></div>
+    </div>
+  </section>
+
+  <!-- Level 2 -->
+  <section class="level" id="level-2">
+    <h2>Level 2</h2>
+    <div class="puzzle-row">
+      <div class="grid-wrap">
+        <h3>Reference</h3>
+        <svg id="l2-complete" class="hex-grid"></svg>
+      </div>
+      <div class="grid-wrap">
+        <h3>Puzzle</h3>
+        <svg id="l2-puzzle" class="hex-grid"></svg>
+      </div>
+    </div>
+    <div class="check-row">
+      <button class="check-btn" id="check-btn-2">Check</button>
+      <div class="check-result" id="l2-result"></div>
+    </div>
+  </section>
+
+  <!-- Level 3 -->
+  <section class="level" id="level-3">
+    <h2>Level 3</h2>
+    <div class="puzzle-row">
+      <div class="grid-wrap">
+        <h3>Reference</h3>
+        <svg id="l3-complete" class="hex-grid"></svg>
+      </div>
+      <div class="grid-wrap">
+        <h3>Puzzle</h3>
+        <svg id="l3-puzzle" class="hex-grid"></svg>
+      </div>
+    </div>
+    <div class="check-row">
+      <button class="check-btn" id="check-btn-3">Check</button>
+      <div class="check-result" id="l3-result"></div>
+    </div>
+  </section>
+
+  <script src="./hexdoku.js"></script>
 </body>
 </html>
