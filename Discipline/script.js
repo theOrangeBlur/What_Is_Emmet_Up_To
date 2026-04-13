@@ -11,7 +11,11 @@ const MIN_MONTH = 0; // January (0-indexed)
 const TRACKING_START_DATE = '2026-01-20';
 
 // Spanish tracking start date
-const SPANISH_START_DATE = '2026-02-02';
+// const SPANISH_START_DATE = '2026-02-02';
+
+// Weekly Goals Sheet
+const GOALS_SHEET_ID = '14xd6PvDOmxeAN6PT5hHFlqL2LQ_OQ2an';
+const GOALS_GID = '1619402346';
 
 // Dance animation state
 let danceInterval = null;
@@ -53,7 +57,7 @@ function parseCsvData(csvText) {
                 mind: [],
                 body: [],
                 spirit: [],
-                spanish: [],
+                // spanish: [],
                 exceptional: []
             };
         }
@@ -238,10 +242,10 @@ function isPerfectDay(dateStr) {
 
     if (!hasCore) return false;
 
-    // Spanish is only required from its start date onwards
-    if (dateStr >= SPANISH_START_DATE) {
-        return dayData.spanish && dayData.spanish.length > 0;
-    }
+    // // Spanish is only required from its start date onwards
+    // if (dateStr >= SPANISH_START_DATE) {
+    //     return dayData.spanish && dayData.spanish.length > 0;
+    // }
 
     return true;
 }
@@ -300,14 +304,14 @@ function updateStreakDisplay() {
     const mindStreak = calculateCurrentStreak('mind', TRACKING_START_DATE);
     const bodyStreak = calculateCurrentStreak('body', TRACKING_START_DATE);
     const spiritStreak = calculateCurrentStreak('spirit', TRACKING_START_DATE);
-    const spanishStreak = calculateCurrentStreak('spanish', SPANISH_START_DATE);
+    // const spanishStreak = calculateCurrentStreak('spanish', SPANISH_START_DATE);
     const perfectStreak = calculatePerfectDayStreak();
 
     // Update DOM elements
     document.getElementById('mindStreak').textContent = mindStreak;
     document.getElementById('bodyStreak').textContent = bodyStreak;
     document.getElementById('spiritStreak').textContent = spiritStreak;
-    document.getElementById('spanishStreak').textContent = spanishStreak;
+    // document.getElementById('spanishStreak').textContent = spanishStreak;
     document.getElementById('perfectStreak').textContent = perfectStreak;
 }
 
@@ -331,7 +335,7 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     const dots = document.createElement('div');
     dots.className = 'day-dots';
 
-    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [], spanish: [], exceptional: [] };
+    const dayData = disciplineData[dateStr] || { mind: [], body: [], spirit: [], /* spanish: [], */ exceptional: [] };
 
     // Mind dot
     dots.appendChild(createDot('mind', dayData.mind, dateStr));
@@ -340,9 +344,9 @@ function createDayCell(day, dateStr, isOtherMonth, isToday = false) {
     // Spirit dot
     dots.appendChild(createDot('spirit', dayData.spirit, dateStr));
     // Spanish dot (only for dates on or after Spanish tracking start)
-    if (dateStr >= SPANISH_START_DATE) {
-        dots.appendChild(createDot('spanish', dayData.spanish, dateStr));
-    }
+    // if (dateStr >= SPANISH_START_DATE) {
+    //     dots.appendChild(createDot('spanish', dayData.spanish, dateStr));
+    // }
     // Exceptional dot (only if there's data)
     if (dayData.exceptional && dayData.exceptional.length > 0) {
         dots.appendChild(createDot('exceptional', dayData.exceptional, dateStr));
@@ -476,5 +480,112 @@ function restartDanceAnimation() {
     startDanceAnimation();
 }
 
+// ============================================
+// WEEKLY GOALS
+// ============================================
+
+async function loadWeeklyGoals() {
+    const container = document.getElementById('weeklyGoalsContent');
+    if (!container) return;
+    const url = `https://docs.google.com/spreadsheets/d/${GOALS_SHEET_ID}/export?format=csv&gid=${GOALS_GID}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const csv = await response.text();
+        renderWeeklyGoals(csv, container);
+    } catch (error) {
+        console.error('Error loading weekly goals:', error);
+        container.innerHTML = '<p class="goals-error">Couldn\'t load goals right now.</p>';
+    }
+}
+
+function parseGoalsCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    const tasks = [];
+    let weekDate = null;
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+        // Row 0: date, task, status (3 columns)
+        // Rows 1+: task, status (2 columns — date column is absent, not empty)
+        if (i === 0) {
+            weekDate = cols[0] || null;
+            const task = cols[1] || '';
+            const status = cols[2] || '';
+            if (task) tasks.push({ name: task, status });
+        } else {
+            const task = cols[0] || '';
+            const status = cols[1] || '';
+            if (task) tasks.push({ name: task, status });
+        }
+    }
+    return { weekDate, tasks };
+}
+
+function formatWeekDate(dateStr) {
+    if (!dateStr) return 'This Week';
+    const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!slashMatch) return dateStr;
+    const [, month, day, year] = slashMatch;
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `Week of ${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function renderWeeklyGoals(csvText, container) {
+    const { weekDate, tasks } = parseGoalsCSV(csvText);
+    if (tasks.length === 0) {
+        container.innerHTML = '<p class="goals-empty">No goals set for this week.</p>';
+        return;
+    }
+    const subtitle = document.createElement('p');
+    subtitle.className = 'goals-week-label';
+    subtitle.textContent = formatWeekDate(weekDate);
+    const list = document.createElement('ul');
+    list.className = 'goals-list';
+    tasks.forEach(task => {
+        const item = document.createElement('li');
+        const status = (task.status || '').trim();
+
+        let statusClass = 'goal-status-not-started';
+        let tooltipText = 'Not Started';
+        let innerMark = '';
+
+        if (status === 'Done' || status === 'Complete') {
+            statusClass = 'goal-status-done';
+            tooltipText = status;
+            innerMark = '<svg class="goal-check-svg" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2"/></svg>';
+        } else if (status === 'In Progress') {
+            statusClass = 'goal-status-in-progress';
+            tooltipText = status;
+        } else if (status === 'Planned') {
+            statusClass = 'goal-status-planned';
+            tooltipText = status;
+            innerMark = '<svg class="goal-check-svg goal-check-dashed" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2"/></svg>';
+        } else if (status) {
+            tooltipText = status;
+        }
+
+        item.className = 'goal-item';
+        const checkbox = document.createElement('span');
+        checkbox.className = `goal-checkbox ${statusClass}`;
+        checkbox.innerHTML = innerMark + `<span class="goal-dot-tooltip">${tooltipText}</span>`;
+        const name = document.createElement('span');
+        name.className = 'goal-name';
+        name.textContent = task.name;
+        item.appendChild(checkbox);
+        item.appendChild(name);
+        list.appendChild(item);
+    });
+    container.innerHTML = '';
+    container.appendChild(subtitle);
+    container.appendChild(list);
+}
+
 // Initialize
-document.addEventListener('DOMContentLoaded', loadDisciplineData);
+document.addEventListener('DOMContentLoaded', () => {
+    loadDisciplineData();
+    loadWeeklyGoals();
+});

@@ -152,14 +152,14 @@ section h2 {
     box-shadow: 0 0 8px #5eead4;
 }
 
-.dot.spanish {
+/* .dot.spanish {
     border-color: #f472b6;
 }
 
 .dot.spanish.filled {
     background: #f472b6;
     box-shadow: 0 0 8px #f472b6;
-}
+} */
 
 .dot.exceptional {
     border-color: #ffd700;
@@ -242,9 +242,9 @@ section h2 {
     border-left-color: #5eead4;
 }
 
-.streak-card.streak-spanish {
+/* .streak-card.streak-spanish {
     border-left-color: #f472b6;
-}
+} */
 
 .streak-header {
     display: flex;
@@ -487,10 +487,10 @@ section h2 {
     box-shadow: 0 0 12px rgba(94, 234, 212, 0.5);
 }
 
-.dot.unfilled-past.dancing-shame.spanish {
+/* .dot.unfilled-past.dancing-shame.spanish {
     animation: dotShame 0.4s ease-out;
     box-shadow: 0 0 12px rgba(244, 114, 182, 0.5);
-}
+} */
 
 /* Exceptional animation - double bounce with bright glow */
 @keyframes dotExceptional {
@@ -570,9 +570,9 @@ section h2 {
     color: #5eead4;
 }
 
-.text-spanish {
+/* .text-spanish {
     color: #f472b6;
-}
+} */
 
 /* Explanation Section */
 .explanation p {
@@ -606,6 +606,142 @@ section h2 {
 hr {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   WEEKLY GOALS SECTION
+   ============================================ */
+
+.weekly-goals {
+    margin-top: 20px;
+}
+
+.weekly-goals h2 {
+    margin-bottom: 8px;
+}
+
+.goals-week-label {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.goals-loading,
+.goals-empty {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    font-size: 0.95em;
+}
+
+.goals-error {
+    color: rgba(255, 100, 100, 0.8);
+    font-style: italic;
+    font-size: 0.95em;
+}
+
+.goals-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.goal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 1em;
+}
+
+.goal-name {
+    flex: 1;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* The checkbox box */
+.goal-checkbox {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 3px;
+    flex-shrink: 0;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Status-specific box border colours */
+.goal-status-done        { border-color: #4ade80; }
+.goal-status-in-progress { border-color: #60a5fa; }
+.goal-status-planned     { border-color: #c084fc; }
+
+/* Blue dot for In Progress */
+.goal-status-in-progress::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #60a5fa;
+}
+
+/* SVG checkmarks */
+.goal-check-svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: #4ade80;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+}
+
+.goal-check-dashed {
+    stroke: #c084fc;
+    stroke-dasharray: 2 1.5;
+}
+
+/* Tooltip */
+.goal-dot-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    font-size: 0.78em;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 10;
+}
+
+.goal-dot-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.goal-checkbox:hover .goal-dot-tooltip {
+    visibility: visible;
+    opacity: 1;
 }
 
 /* Responsive */
