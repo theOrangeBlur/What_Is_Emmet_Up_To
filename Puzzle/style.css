@@ -150,6 +150,45 @@ h1 {
 .check-result.correct   { color: #1a5a2a; }
 .check-result.incorrect { color: #8a2000; }
 
+/* ── CLEAR BUTTON ────────────────────────────────────────────────── */
+
+.clear-btn {
+    position: relative;
+    overflow: hidden;
+    padding: 8px 28px;
+    font-size: 1rem;
+    font-family: sans-serif;
+    background: #8a2000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.clear-btn:hover {
+    background: #6a1500;
+}
+
+.clear-bar {
+    position: absolute;
+    inset: 0;
+    width: 0%;
+    background: rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+    transition: none;
+}
+
+.clear-btn.holding .clear-bar {
+    width: 100%;
+    transition: width 3s linear;
+}
+
+.clear-btn.holding {
+    background: #c04000;
+}
+
 /* ── SVG CELL STYLES ─────────────────────────────────────────────── */
 
 .hex-outline {

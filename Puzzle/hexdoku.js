@@ -703,6 +703,24 @@ function checkAnswers(levelIdx) {
   }
 }
 
+// ── CLEAR ─────────────────────────────────────────────────────────────────────
+
+function clearPuzzle(levelIdx) {
+  const inc = INCOMPLETE[levelIdx];
+  for (let hi = 0; hi < 9; hi++) {
+    for (let ti = 0; ti < 6; ti++) {
+      if (inc[hi][ti] !== 0) continue; // skip givens
+      userValues[levelIdx][hi][ti] = 0;
+      const cell = cellElements[levelIdx][hi][ti];
+      if (cell) cell.labelEl.textContent = '';
+    }
+  }
+  const resultEl = document.getElementById(`l${levelIdx + 1}-result`);
+  resultEl.textContent = '';
+  resultEl.className = 'check-result';
+  levelSolved[levelIdx] = false;
+}
+
 // ── DEBUG ─────────────────────────────────────────────────────────────────────
 
 function fillAnswers(levelIdx) {
@@ -774,6 +792,34 @@ function init() {
 
     const checkBtn = document.getElementById(`check-btn-${lvl + 1}`);
     checkBtn.addEventListener('click', () => checkAnswers(lvl));
+
+    const clearBtn = document.getElementById(`clear-btn-${lvl + 1}`);
+    let clearTimer = null;
+    const startClear = () => {
+      clearBtn.classList.add('holding');
+      clearTimer = setTimeout(() => {
+        clearPuzzle(lvl);
+        clearBtn.classList.remove('holding');
+        clearTimer = null;
+      }, 3000);
+    };
+    const cancelClear = () => {
+      if (clearTimer !== null) {
+        clearTimeout(clearTimer);
+        clearTimer = null;
+      }
+      // Force reflow so the bar width resets before transition is removed
+      void clearBtn.offsetWidth;
+      clearBtn.classList.remove('holding');
+    };
+    clearBtn.addEventListener('mousedown', startClear);
+    clearBtn.addEventListener('touchstart', e => { e.preventDefault(); startClear(); }, { passive: false });
+    clearBtn.addEventListener('mouseup', cancelClear);
+    clearBtn.addEventListener('mouseleave', cancelClear);
+    clearBtn.addEventListener('touchend', cancelClear);
+    clearBtn.addEventListener('touchcancel', cancelClear);
+    // Prevent the default click from firing after a completed hold
+    clearBtn.addEventListener('click', e => e.preventDefault());
 
     if (debugMode) {
       const fillBtn = document.createElement('button');
