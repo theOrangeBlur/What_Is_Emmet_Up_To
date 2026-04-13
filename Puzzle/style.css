@@ -218,3 +218,105 @@ h1 {
     stroke-linejoin: round;
     pointer-events: none;
 }
+
+/* ── MOBILE NUMBER BAR ─────────────────────────────────────────────── */
+
+#mobile-numbar {
+    display: none;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 500;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 6px;
+    background: rgba(255, 255, 255, 0.92);
+    border-left: 2px solid #2a7a5a;
+    border-radius: 12px 0 0 12px;
+    backdrop-filter: blur(8px);
+    box-shadow: -4px 0 18px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 600px) {
+    #mobile-numbar.numbar-visible {
+        display: flex;
+    }
+}
+
+.numbar-btn {
+    width: 44px;
+    flex: 1;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2a7a5a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.numbar-btn svg {
+    width: 20px;
+    height: auto;
+    fill: currentColor;
+}
+
+.numbar-btn:active {
+    background: #1a5a3a;
+    transform: scale(0.95);
+}
+
+.numbar-clear {
+    background: #8a2000;
+}
+
+.numbar-clear:active {
+    background: #6a1500;
+}
+
+#mobile-numbar.numbar-left {
+    right: auto;
+    left: 0;
+    border-left: none;
+    border-right: 2px solid #2a7a5a;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
+}
+
+#lefty-btn {
+    display: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: auto;
+    z-index: 600;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #2a7a5a;
+    border: 2px solid #2a7a5a;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+#lefty-btn.btn-left {
+    left: auto;
+    right: 10px;
+}
+
+@media (max-width: 600px) {
+    #lefty-btn.btn-visible {
+        display: block;
+    }
+
+    #lefty-btn:active {
+        background: #2a7a5a;
+        color: #fff;
+    }
+}

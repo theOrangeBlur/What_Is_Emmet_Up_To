@@ -15,10 +15,10 @@
   </nav>
 
   <h1>Hexdoku</h1>
+  <button id="lefty-btn">Lefty mode!</button>
 
   <div class="instructions-box">
     <p>Learn each level's rules from the completed puzzle on the left. Use these rules to complete the puzzle on the right. Use highlighted boxes to find the codeword.</p>
-    <p>This page doesn't work on mobile yet, but I'll get that worked out soon!!</p>
   </div>
 
   <!-- Level 1 -->
@@ -79,5 +79,59 @@
   </section>
 
   <script src="./hexdoku.js"></script>
+  <div id="mobile-numbar" aria-label="Number input" role="toolbar">
+    <button class="numbar-btn" data-value="1">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="15" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn" data-value="2">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="7" r="3"/>
+        <circle cx="10" cy="23" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn" data-value="3">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="7" r="3"/>
+        <circle cx="10" cy="15" r="3"/>
+        <circle cx="6" cy="23" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn" data-value="4">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="7" r="3"/>
+        <circle cx="14" cy="7" r="3"/>
+        <circle cx="6" cy="23" r="3"/>
+        <circle cx="14" cy="23" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn" data-value="5">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="7" r="3"/>
+        <circle cx="14" cy="7" r="3"/>
+        <circle cx="10" cy="15" r="3"/>
+        <circle cx="6" cy="23" r="3"/>
+        <circle cx="14" cy="23" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn" data-value="6">
+      <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="7" r="3"/>
+        <circle cx="14" cy="7" r="3"/>
+        <circle cx="6" cy="15" r="3"/>
+        <circle cx="14" cy="15" r="3"/>
+        <circle cx="6" cy="23" r="3"/>
+        <circle cx="14" cy="23" r="3"/>
+      </svg>
+    </button>
+    <button class="numbar-btn numbar-clear" data-value="0">
+      <svg viewBox="0 0 22 18" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="3" width="20" height="11" rx="2" fill="#ffc0c0"/>
+        <rect x="1" y="3" width="9" height="11" rx="2" fill="#e07070"/>
+        <line x1="10" y1="3" x2="10" y2="14" stroke="white" stroke-width="1" stroke-opacity="0.5"/>
+      </svg>
+    </button>
+  </div>
 </body>
 </html>

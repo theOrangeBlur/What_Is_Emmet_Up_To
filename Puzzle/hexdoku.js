@@ -434,6 +434,15 @@ const userValues = [
 ];
 
 let selectedCell = null; // { levelIdx, hexIdx, triIdx, pathEl, labelEl }
+let mobileNumbar = null; // assigned in init() after DOM ready
+let leftyBtn = null;     // assigned in init() after DOM ready
+
+function updateMobileNumbar() {
+  if (!mobileNumbar) return;
+  const show = selectedCell && !isGiven(selectedCell.levelIdx, selectedCell.hexIdx, selectedCell.triIdx);
+  mobileNumbar.classList.toggle('numbar-visible', !!show);
+  if (leftyBtn) leftyBtn.classList.toggle('btn-visible', !!show);
+}
 
 // cellElements[levelIdx][hexIdx][ti] = { pathEl, labelEl } for interactive grids
 const cellElements = Array.from({ length: 3 }, () =>
@@ -532,13 +541,23 @@ function selectCell(levelIdx, hexIdx, triIdx, pathEl, labelEl) {
     selectedCell.triIdx === triIdx
   ) {
     selectedCell = null;
+    updateMobileNumbar();
     return;
   }
   selectedCell = { levelIdx, hexIdx, triIdx, pathEl, labelEl };
   pathEl.classList.add('cell-selected');
+  updateMobileNumbar();
 }
 
 const ARROW_DIR = { ArrowRight: 0, ArrowDown: 1, ArrowLeft: 2, ArrowUp: 3 };
+
+document.addEventListener('pointerdown', e => {
+  if (!selectedCell) return;
+  if (e.target.closest('.hex-grid, #mobile-numbar, #lefty-btn')) return;
+  selectedCell.pathEl.classList.remove('cell-selected');
+  selectedCell = null;
+  updateMobileNumbar();
+});
 
 document.addEventListener('keydown', e => {
   if (!selectedCell) return;
@@ -703,6 +722,33 @@ function fillAnswers(levelIdx) {
 
 function init() {
   navMap = buildNavMap();
+  mobileNumbar = document.getElementById('mobile-numbar');
+  leftyBtn = document.getElementById('lefty-btn');
+  const applyLefty = isLefty => {
+    mobileNumbar.classList.toggle('numbar-left', isLefty);
+    leftyBtn.classList.toggle('btn-left', isLefty);
+    leftyBtn.textContent = isLefty ? 'Righty Tighty!' : 'Lefty mode!';
+  };
+  applyLefty(localStorage.getItem('hexdoku-lefty') === '1');
+  leftyBtn.addEventListener('click', () => {
+    const isLefty = !mobileNumbar.classList.contains('numbar-left');
+    applyLefty(isLefty);
+    localStorage.setItem('hexdoku-lefty', isLefty ? '1' : '0');
+  });
+  mobileNumbar.addEventListener('click', e => {
+    const btn = e.target.closest('.numbar-btn');
+    if (!btn || !selectedCell) return;
+    const { levelIdx, hexIdx, triIdx, labelEl } = selectedCell;
+    if (isGiven(levelIdx, hexIdx, triIdx)) return;
+    const value = parseInt(btn.dataset.value, 10);
+    if (value === 0) {
+      userValues[levelIdx][hexIdx][triIdx] = 0;
+      labelEl.textContent = '';
+    } else {
+      userValues[levelIdx][hexIdx][triIdx] = value;
+      labelEl.textContent = value;
+    }
+  });
   const debugMode = window.location.search.includes('debug');
 
   for (let lvl = 0; lvl < 3; lvl++) {
