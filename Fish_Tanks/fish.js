@@ -392,6 +392,7 @@ function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null
 
     const card = document.createElement('div');
     card.className = 'tank-card glass-card';
+    card.id = `tank-${tank.gallons}g`;
 
     let photoHTML = '';
     if (tank.photo) {
