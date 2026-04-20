@@ -126,10 +126,16 @@ def merge_movies(existing: dict, new_movies: list) -> tuple:
             merged[key] = movie
             added += 1
             print(f"  + {movie['Name']} ({movie['Year']}) - {movie['Watched Date']}")
-        elif movie.get('Review') and not merged[key].get('Review'):
-            merged[key]['Review'] = movie['Review']
-            updated += 1
-            print(f"  ~ Updated review for {movie['Name']} ({movie['Year']})")
+        else:
+            # Always overwrite mutable fields so edits on Letterboxd propagate
+            changed = []
+            for field in ('Review', 'Rating', 'Tags'):
+                if movie.get(field) != merged[key].get(field):
+                    merged[key][field] = movie.get(field, '')
+                    changed.append(field.lower())
+            if changed:
+                updated += 1
+                print(f"  ~ Updated {', '.join(changed)} for {movie['Name']} ({movie['Year']})")
 
     # Convert back to list and sort by watched date (newest first)
     result = list(merged.values())
