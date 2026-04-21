@@ -1,10 +1,10 @@
 {
   "tank": "Office Tank",
-  "updated": "2026-04-21T15:42:48Z",
+  "updated": "2026-04-21T16:41:52Z",
   "params": {
     "tds": 155,
     "temperature_f": 66.6,
-    "ph": 8.05
+    "ph": 7.93
   },
   "ranges": {
     "temperature_f": {
