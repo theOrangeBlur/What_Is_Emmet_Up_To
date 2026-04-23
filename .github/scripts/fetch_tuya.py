@@ -154,15 +154,33 @@ def parse_status(status_list: list) -> dict:
 # ---------------------------------------------------------------------------
 
 def main():
-    out_path = "Fish_Tanks/water-params.json"
+    out_path    = "Fish_Tanks/water-params.json"
+    config_path = "Fish_Tanks/probe-config.json"
 
-    # Load previous readings so we can preserve params the sensor didn't report this run.
-    previous_params = {}
+    with open(config_path) as f:
+        active_tank = json.load(f)["active_tank"]
+    print(f"Probe is in: {active_tank}")
+
+    # Load existing JSON to preserve previous readings and migrate old flat format.
+    all_readings = {}
     try:
         with open(out_path) as f:
-            previous_params = json.load(f).get("params", {})
+            existing = json.load(f)
+        all_readings = existing.get("readings", {})
+        if not all_readings and "params" in existing:
+            # Migrate from old flat structure
+            old_tank = existing.get("tank", active_tank)
+            all_readings[old_tank] = {
+                "updated": existing["updated"],
+                "params":  existing["params"],
+                "ranges":  existing["ranges"],
+            }
+            print(f"Migrated old flat entry for '{old_tank}' into readings.")
     except (FileNotFoundError, json.JSONDecodeError):
         pass
+
+    # Preserve params from the active tank's last run (sensor may not report all codes each time).
+    previous_params = all_readings.get(active_tank, {}).get("params", {})
 
     print(f"Connecting to Tuya OpenAPI ({BASE_URL})...")
     token = get_token()
@@ -198,11 +216,16 @@ def main():
     # Merge: start with previous readings, then overlay whatever the sensor reported now.
     params = {**previous_params, **new_params}
 
-    output = {
-        "tank":    "Office Tank",
+    # Update only the active tank's entry; all other tank entries stay untouched.
+    all_readings[active_tank] = {
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "params":  params,
         "ranges":  RANGES,
+    }
+
+    output = {
+        "active_tank": active_tank,
+        "readings":    all_readings,
     }
 
     with open(out_path, "w") as f:

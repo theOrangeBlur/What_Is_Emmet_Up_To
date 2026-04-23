@@ -8,7 +8,7 @@
 const SHEET_ID = '1sVb8HqV8Ttmv2EVFQmZtnDbubgd_OBp7';
 
 const TANKS = [
-    { name: "Office Tank",  gallons: 10, gid: "1907567120", photo: "images/10G.mp4", hasWaterParams: true },
+    { name: "Office Tank",  gallons: 10, gid: "1907567120", photo: "images/10G.mp4" },
     { name: "Wooded Tank",  gallons: 20, gid: "1561707960", photo: "images/20G.mp4" },
     { name: "55 Gallon",    gallons: 55, gid: "1334361544", photo: null },
 ];
@@ -249,6 +249,13 @@ async function fetchTank(tank) {
     return response.text();
 }
 
+function pickMostRecentWaterData(a, b) {
+    const da = a?.updated ? new Date(a.updated) : null;
+    const db = b?.updated ? new Date(b.updated) : null;
+    if (da && db) return da >= db ? a : b;
+    return a || b;
+}
+
 async function fetchWaterParams() {
     try {
         const res = await fetch('water-params.json');
@@ -384,7 +391,7 @@ function renderWaterParams(waterData, inhabitants = []) {
     </div>`;
 }
 
-function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null) {
+function renderTankCard(tank, csvText, effectiveWaterData = null) {
     const inhabitants = parseTankCSV(csvText);
 
     // Don't render cards for tanks with nothing in them yet
@@ -416,7 +423,6 @@ function renderTankCard(tank, csvText, waterData = null, sheetWaterParams = null
         </li>`;
     }).join('');
 
-    const effectiveWaterData = (tank.hasWaterParams && waterData) ? waterData : sheetWaterParams;
     const waterParamsHTML = effectiveWaterData ? renderWaterParams(effectiveWaterData, inhabitants) : '';
 
     card.innerHTML = `
@@ -460,7 +466,17 @@ async function loadTanks() {
         if (result.status === 'fulfilled') {
             try {
                 const sheetWaterParams = parseTankWaterParams(result.value);
-                card = renderTankCard(tank, result.value, waterData, sheetWaterParams);
+                const probeReading  = waterData?.readings?.[tank.name] || null;
+                const isActiveProbe = waterData?.active_tank === tank.name;
+
+                let effectiveWaterData;
+                if (isActiveProbe && probeReading) {
+                    effectiveWaterData = probeReading;
+                } else {
+                    effectiveWaterData = pickMostRecentWaterData(probeReading, sheetWaterParams);
+                }
+
+                card = renderTankCard(tank, result.value, effectiveWaterData);
             } catch (e) {
                 card = renderError(tank, e.message);
             }

@@ -1,23 +1,27 @@
 {
-  "tank": "Office Tank",
-  "updated": "2026-04-20T01:10:11Z",
-  "params": {
-    "tds": 154,
-    "temperature_f": 72.7,
-    "ph": 7.93
-  },
-  "ranges": {
-    "temperature_f": {
-      "min": 74,
-      "max": 82
-    },
-    "ph": {
-      "min": 6.8,
-      "max": 7.6
-    },
-    "tds": {
-      "min": 0,
-      "max": 300
+  "active_tank": "Office Tank",
+  "readings": {
+    "Office Tank": {
+      "updated": "2026-04-20T01:10:11Z",
+      "params": {
+        "tds": 154,
+        "temperature_f": 72.7,
+        "ph": 7.93
+      },
+      "ranges": {
+        "temperature_f": {
+          "min": 74,
+          "max": 82
+        },
+        "ph": {
+          "min": 6.8,
+          "max": 7.6
+        },
+        "tds": {
+          "min": 0,
+          "max": 300
+        }
+      }
     }
   }
 }
