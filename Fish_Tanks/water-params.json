@@ -10,12 +10,12 @@
       },
       "ranges": {
         "temperature_f": {
-          "min": 74,
-          "max": 82
+          "min": 68,
+          "max": 75
         },
         "ph": {
-          "min": 6.8,
-          "max": 7.6
+          "min": 7,
+          "max": 7.5
         },
         "tds": {
           "min": 0,

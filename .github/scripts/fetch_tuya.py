@@ -124,9 +124,9 @@ PARAM_CODES = {
 # Healthy ranges for a tropical freshwater community tank.
 # Adjust min/max to match your fish's needs.
 RANGES = {
-    "temperature_f": {"min": 74, "max": 82},
-    "ph":            {"min": 6.8, "max": 7.6},
-    "tds":           {"min": 0,   "max": 300},
+    "temperature_f": {"min": 68, "max": 75},
+    "ph":            {"min": 7,  "max": 7.5},
+    "tds":           {"min": 0,  "max": 300},
 }
 
 
