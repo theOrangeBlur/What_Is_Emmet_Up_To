@@ -2,11 +2,11 @@
   "active_tank": "Wooded Tank",
   "readings": {
     "Office Tank": {
-      "updated": "2026-04-20T01:10:11Z",
+      "updated": "2026-04-24T12:44:12Z",
       "params": {
-        "tds": 154,
-        "temperature_f": 72.7,
-        "ph": 7.93
+        "tds": 207,
+        "temperature_f": 83.7,
+        "ph": 8.11
       },
       "ranges": {
         "temperature_f": {
