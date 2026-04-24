@@ -2,11 +2,11 @@
   "active_tank": "Office Tank",
   "readings": {
     "Office Tank": {
-      "updated": "2026-04-24T03:50:52Z",
+      "updated": "2026-04-24T06:08:12Z",
       "params": {
-        "tds": 205,
-        "temperature_f": 83.8,
-        "ph": 7.99
+        "tds": 206,
+        "temperature_f": 83.7,
+        "ph": 8.05
       },
       "ranges": {
         "temperature_f": {
