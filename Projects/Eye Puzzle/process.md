@@ -10,8 +10,8 @@ thumbnail: "images/portrait.jpg"
 ## Problem
 A member of the VT Hunt team designed a creepy puzzle that required eyes with specific vein patterns!
 ## Process
-Having some experience with using silicone for a soft robotics project in college, I knew it would make some disturbingly realistic eyeballs. I modeled and printed some eye models, as well as a seperate piece for the clear lens and used them to cast molds with the aid of a small vacuum chamber I found online.
-For the puzzle mechanic to work, veins also had to modeled in readibly, which was a fun challenge.
+Having some experience with using silicone for a soft robotics project in college, I knew it would make some disturbingly realistic eyeballs. I modeled and printed some eye models, as well as a separate piece for the clear lens and used them to cast molds with the aid of a small vacuum chamber I found online.
+For the puzzle mechanic to work, veins also had to be modeled readably, which was a fun challenge.
 
 ![A trail map](images/trail.jpg)
 
@@ -25,4 +25,4 @@ Plopped them in a jar of water colored red for the solvers to have to reach in a
 ## Result
 I couldn't be happier with these eyeballs. The puzzle functioned quite well, and the eyes are so fun to play with. They feel like bouncy balls! 
 ![six colored eyes](images/lineup.jpg)
-A playable version is availble at the VT Hunt website [here](https://vthunt.com/past-hunts/haunt-2024/eyes)!
+A playable version is available at the VT Hunt website [here](https://vthunt.com/past-hunts/haunt-2024/eyes)!

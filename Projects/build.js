@@ -68,11 +68,13 @@ function parseFrontMatter(content) {
 function markdownToHtml(md, projectFolder) {
     let html = md;
 
-    // Images: ![alt](path) -> <img>
+    // Images/videos: ![alt](path) -> <img> or <video> for .mp4
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
-        // Make path relative to project folder
-        const imgPath = `${projectFolder}/${src}`;
-        return `<img src="${imgPath}" alt="${alt}" class="project-image" loading="lazy">`;
+        const mediaPath = `${projectFolder}/${src}`;
+        if (src.match(/\.mp4$/i)) {
+            return `<video src="${mediaPath}" class="project-image" controls loop muted playsinline></video>`;
+        }
+        return `<img src="${mediaPath}" alt="${alt}" class="project-image" loading="lazy">`;
     });
 
     // Links: [text](url) -> <a>

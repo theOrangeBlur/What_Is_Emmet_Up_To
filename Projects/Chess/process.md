@@ -12,7 +12,7 @@ thumbnail: "images/Final-1.jpg"
 2) Make a functional, beautiful chess set for a friend
 
 ## Process
-A middle school teacher freind of mine asked if I could print him some trophy pieces for a chess competition he sponsored at his school, which I happily obliged!
+A middle school teacher friend of mine asked if I could print him some trophy pieces for a chess competition he sponsored at his school, which I happily obliged!
 
 ![Chess pieces as trophies](images/Final-trophy.jpg)
 ![Chess pieces as trophies](images/Final-trophy-2.jpg)

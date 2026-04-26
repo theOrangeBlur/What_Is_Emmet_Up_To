@@ -8,12 +8,12 @@ thumbnail: "images/Final.jpg"
 ---
 
 ## Problem
-Make a phyisical clock that the user puts times into to solve a puzzle.
+Make a physical clock that the user puts times into to solve a puzzle.
 
 ## Process
 The idea here was to make a combination lock that looks like a clock, so that puzzle answers need to be input to solve this meta puzzle. And then the clock will open up!
 
-I built the gearbox entirely out of LEGO Technic, and printed adapters to interface with mechanical sensors. A polarized magnet was attached to the moving shaft, and a magnetometer precicely read its orientation to get the time.
+I built the gearbox entirely out of LEGO Technic, and printed adapters to interface with mechanical sensors. A polarized magnet was attached to the moving shaft, and a magnetometer precisely read its orientation to get the time.
 
 ![LEGO Gearbox](images/Gearbox-1.jpg)
 ![LEGO Gearbox](images/Gearbox-2.jpg)
@@ -21,7 +21,7 @@ I built the gearbox entirely out of LEGO Technic, and printed adapters to interf
 ![LEGO Gearbox](images/Chip_Assembly-1.jpg)
 ![LEGO Gearbox](images/Chip_Assembly-2.jpg)
 
-A few of the inputs required the device to know the actual time and date, so a timing unit was also implimented.
+A few of the inputs required the device to know the actual time and date, so a timing unit was also implemented.
 
 ![Inside housing](images/Rear-Housing.jpg)
 

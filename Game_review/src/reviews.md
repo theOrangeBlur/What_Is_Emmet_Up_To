@@ -17,7 +17,7 @@ Good music and great visuals, though at times a bit buggy. I once had to un-down
 # Rogue Prince of Persia
 
 The Rogue Prince of Persia
-Dude, what are you doing!?? You said no more logue-lites! Only games with endings!
+Dude, what are you doing!?? You said no more rogue-lites! Only games with endings!
 Well, I was pretty sure I would be able to get to the true ending of this game fairly quickly, and it looked too fun. And I was right! :D
 The game still suffered from long run-backs, though what made me keep playing was how each and every run felt viable. There were no awful weapons, only a few I didn’t like as much. My skill and knowledge determined my progress, not dumb-luck or unlocking better weapons for playing longer (looking at you, gungeon). Combat felt great, with a slick 2d wall run. The story actually progressed, as you could rescue people from the time loop back to the hub. Different gifts could stack in interesting ways. Though honestly, not that many ways haha. There are three elements that can be combined - ooze, fire, and poison. 
 
@@ -59,7 +59,7 @@ These days I find myself musing over my mortality quite often. What do I want to
 
 Split Fiction
 I played this gem with my buddy David over the course of a few days, and we had a lovely time! Gameplay was easy enough that anyone with video game literacy can sit down and have a good time, while the action sequences, story, and beautiful settings are so immersive as to engage all players. I will admit to shedding a tear over some of the more personal moments in the characters' journeys.
-Jumping between sci-fi and fantasy worlds was quite enjoyable. The side stories were perfect bite sized chucks of novelty and joy. David and I both were anticipating some craziness with mingling of the genres at the climax, and what we got even surprised us! *spoiler warning* the game until this point features a split screen where you can see what your partner is up to, which suddenly starts to warp so that characters can move between, and other quick, fun novelties like that. *spoiler over*
+Jumping between sci-fi and fantasy worlds was quite enjoyable. The side stories were perfect bite sized chunks of novelty and joy. David and I both were anticipating some craziness with mingling of the genres at the climax, and what we got even surprised us! *spoiler warning* the game until this point features a split screen where you can see what your partner is up to, which suddenly starts to warp so that characters can move between, and other quick, fun novelties like that. *spoiler over*
 I did wish for more of a challenge on the puzzle side, and being able to always see my partner’s screen kept us from having to communicate to solve puzzles often. But, I understand that the target audience here isn’t for hardened puzzlers or even long time gamers. This is a game you can pick up with anyone who is comfortable moving a character with one stick and a camera with the other, and having a grand old time.
 
 # Elden Ring

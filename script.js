@@ -39,7 +39,8 @@ const splashTexts = [
     "Dude I think this song really is about me!",
     "Voted most likely person to break a bone on this trip",
     "You can go ahead and turn Dark Reader off :)",
-    "Whatever could be baking in that 3D printer of his?"
+    "Whatever could be baking in that 3D printer of his?",
+    "Puzzler, Maker, & Puzzle Maker!"
 ];
 
 // Simple seeded random number generator
