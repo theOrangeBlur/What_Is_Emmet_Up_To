@@ -22,6 +22,28 @@
           "max": 300
         }
       }
+    },
+    "Wooded Tank": {
+      "updated": "2026-04-26T13:41:20Z",
+      "params": {
+        "tds": 215,
+        "temperature_f": 82.8,
+        "ph": 8.11
+      },
+      "ranges": {
+        "temperature_f": {
+          "min": 68,
+          "max": 75
+        },
+        "ph": {
+          "min": 7,
+          "max": 7.5
+        },
+        "tds": {
+          "min": 0,
+          "max": 300
+        }
+      }
     }
   }
 }
