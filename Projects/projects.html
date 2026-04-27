@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects | Emmet</title>
     <meta name="description" content="Emmet's projects - 3D printing, robotics, and more">
-    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
-    <link rel="manifest" href="/media/favicon/site.webmanifest">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -35,6 +31,7 @@
                     <button class="tag-filter" data-tag="Robotics">Robotics</button>
                     <button class="tag-filter" data-tag="VT Hunt">VT Hunt</button>
                     <button class="tag-filter" data-tag="Woodworking">Woodworking</button>
+                    <button class="tag-filter" data-tag="home">home</button>
                 </div>
                 <select id="sort-by">
                     <option value="date">Sort by Date</option>
@@ -43,6 +40,52 @@
             </div>
 
             <div class="project-list" id="project-list">
+
+        <article class="project-card"
+                 id="floor-ramp"
+                 data-tags="3d-printing,3d-modeling,home"
+                 data-status="finished"
+                 data-date="2026-04-27">
+            <div class="project-card__preview" onclick="toggleProject('floor-ramp')">
+                <img src="Floor_Ramp/images/every-other.jpg" alt="Floor Ramp" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Floor Ramp</h3>
+                    <div class="project-meta">
+                        <span class="date">Apr 24, 2026 - Apr 27, 2026</span>
+                        <span class="status-badge status-finished">finished</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">home</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="floor-ramp-details">
+                <h3>Problem</h3>
+The autonomous vacuum sometimes gets stuck between two rooms due to a small lip.
+<img src="Floor_Ramp/images/doorway.jpg" alt="A doorway with a small lip" class="project-image" loading="lazy">
+
+<h3>Process</h3>
+Over two years ago, I took this on as one of my first projects for my new printer. I tried to get a 3d scan of the lip using my phone, but the free apps I found to do this couldn't handle this surface instead of a free-standing object. I measured it myself and printed out these ramps, with dowels and slots to account for the slightly uneven surface.
+<img src="Floor_Ramp/images/old_ramp.jpg" alt="A 3d printed, brown ramp" class="project-image" loading="lazy">
+These ramps lasted for about a year until someone stepped on them just right and snapped a piece, as well as the fragile dowels. This cascaded until stepping on it at all would knock pieces out of place.
+
+I had a few ideas on how to make it much better! Firstly the ramps sit much more flush, reducing stress when stepped on. They also have magnets hidden in them to keep them touching without introducing fragile stress points (placed inside during the printing process!!). I added corner pieces to keep the vacuum from hitting sharp edges. Here are some drafts I printed to get the contour just right:
+<img src="Floor_Ramp/images/drafts.jpg" alt="Red, less wide draft pieces" class="project-image" loading="lazy">
+
+My favorite little touch was dipping a few pieces in very hot water before pressing them in place, to have them mold a little better to asymmetries in the flooring!
+<img src="Floor_Ramp/images/side_view.jpg" alt="Side view of a piece, with magnet holes" class="project-image" loading="lazy">
+
+I couldn't resist putting in a little pattern. Now the pieces can be arranged to form different designs!
+<img src="Floor_Ramp/images/every-other.jpg" alt="an eye-catching design" class="project-image" loading="lazy">
+<img src="Floor_Ramp/images/doubled-up.jpg" alt="A more modern take" class="project-image" loading="lazy">
+
+<h3>Result</h3>
+The ramp has functioned perfectly so far!
+Someone asked if it's a bar-code... I'll have to keep that in mind if I ever make another!
+<video src="Floor_Ramp/images/in-action.mp4" class="project-image" controls loop muted playsinline></video>
+            </div>
+        </article>
 
         <article class="project-card"
                  id="poop-clip"
@@ -429,36 +472,6 @@ I'm thinking of having a little metal ball fall over some pieces of metal to pro
         </article>
 
         <article class="project-card"
-                 id="floor-ramp"
-                 data-tags="3d-printing,3d-modeling"
-                 data-status="future"
-                 data-date="">
-            <div class="project-card__preview" onclick="toggleProject('floor-ramp')">
-                <img src="Floor_Ramp/images/doorway.jpg" alt="Floor Ramp" class="project-thumbnail" loading="lazy">
-                <div class="project-card__info">
-                    <h3>Floor Ramp</h3>
-                    <div class="project-meta">
-                        
-                        <span class="status-badge status-future">future</span>
-                    </div>
-                    <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span>
-                    </div>
-                </div>
-                <span class="expand-icon">▼</span>
-            </div>
-            <div class="project-card__details" id="floor-ramp-details">
-                <h3>Problem</h3>
-The autonomous vacuum sometimes gets stuck between two rooms due to a small lip.
-
-<h3>Process</h3>
-Design and 3D print a ramp that the vacuum can easily travel. Here is an old version I made that lasted for about a year before it broke!
-<img src="Floor_Ramp/images/old_ramp.jpg" alt="A 3d printed, brown ramp" class="project-image" loading="lazy">
-<h3>Result</h3>
-            </div>
-        </article>
-
-        <article class="project-card"
                  id="moon-map"
                  data-tags="Robotics,Home"
                  data-status="future"
@@ -491,7 +504,7 @@ I've been wanting to work on this for a while.
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-04-26</p>
+            <p>Last updated: 2026-04-27</p>
         </footer>
 
         <!-- Improvements Section -->

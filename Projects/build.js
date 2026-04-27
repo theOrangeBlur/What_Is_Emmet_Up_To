@@ -94,7 +94,7 @@ function markdownToHtml(md, projectFolder) {
         block = block.trim();
         if (!block) return '';
         // Don't wrap if already a tag
-        if (block.startsWith('<h') || block.startsWith('<img') || block.startsWith('<ul') || block.startsWith('<ol')) {
+        if (block.startsWith('<h') || block.startsWith('<img') || block.startsWith('<video') || block.startsWith('<ul') || block.startsWith('<ol')) {
             return block;
         }
         return `<p>${block.replace(/\n/g, ' ')}</p>`;
