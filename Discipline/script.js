@@ -23,7 +23,7 @@ let danceInterval = null;
 // Load and parse CSV data
 async function loadDisciplineData() {
     try {
-        const response = await fetch('./log.csv');
+        const response = await fetch(`./log.csv?v=${Date.now()}`);
         const csvText = await response.text();
         parseCsvData(csvText);
         renderCalendar();
