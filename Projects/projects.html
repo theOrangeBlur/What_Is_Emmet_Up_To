@@ -28,7 +28,9 @@
                     <button class="tag-filter" data-tag="3d-modeling">3d-modeling</button>
                     <button class="tag-filter" data-tag="3d-printing">3d-printing</button>
                     <button class="tag-filter" data-tag="Home">Home</button>
+                    <button class="tag-filter" data-tag="Puzzle">Puzzle</button>
                     <button class="tag-filter" data-tag="Robotics">Robotics</button>
+                    <button class="tag-filter" data-tag="Team">Team</button>
                     <button class="tag-filter" data-tag="VT Hunt">VT Hunt</button>
                     <button class="tag-filter" data-tag="Woodworking">Woodworking</button>
                     <button class="tag-filter" data-tag="home">home</button>
@@ -443,6 +445,89 @@ The robot follows this wire to each "zone" and mows according to a set schedule.
         </article>
 
         <article class="project-card"
+                 id="laser-harp"
+                 data-tags="Puzzle,Robotics,Team"
+                 data-status="finished"
+                 data-date="2019-04">
+            <div class="project-card__preview" onclick="toggleProject('laser-harp')">
+                <img src="Laser_Harp/images/complete.jpeg" alt="Laser Harp" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Laser Harp</h3>
+                    <div class="project-meta">
+                        <span class="date">Jan 2019 - Apr 2019</span>
+                        <span class="status-badge status-finished">finished</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Puzzle</span><span class="tag">Robotics</span><span class="tag">Team</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="laser-harp-details">
+                <h3>Problem</h3>
+Create a harp that has no strings! The user must play a sequence of notes correctly, and then be played their next puzzle prompt.
+<img src="Laser_Harp/images/hunters_1.jpg" alt="A team of VT Hunters trying to solve the puzzle" class="project-image" loading="lazy">
+
+<h3>Process</h3>
+As part of my mechatronics project, I built this alongside the "Piano Puzzle" for the VT Hunt (as a secret!). I led a team of three other engineers who swore themselves into secrecy with me.
+
+I settled on break-beam sensors as the strings fairly early, and designed the harp around this idea. Think of the sensor that you love to jump over while the garage door is closing.
+<img src="Laser_Harp/images/sensors.jpeg" alt="BREAK-BEAM SENSORS" class="project-image" loading="lazy">
+
+Once the user plays the right sequence, a solfège audio puzzle is played!
+
+The housing was milled from a few sheets of fiber board, and covered with an acrylic sheet.
+<img src="Laser_Harp/images/wiring.jpeg" alt="internals of the harp with wires" class="project-image" loading="lazy">
+
+<h3>Result</h3>
+After having to rescue the puzzle from the Frith lab runner and relocating the puzzle, as well as rewiring the thing to run on outlet power instead of devouring batteries, this thing ran like a dream!
+If given just one more day to improve the design, I would have added hollow cylinders (maybe just straws!) to the emitters to narrow the paths.
+<img src="Laser_Harp/images/hunters_2.jpeg" alt="Another team of hunters" class="project-image" loading="lazy">
+            </div>
+        </article>
+
+        <article class="project-card"
+                 id="piano-puzzle"
+                 data-tags="Puzzle,Robotics,Team"
+                 data-status="finished"
+                 data-date="2019-04">
+            <div class="project-card__preview" onclick="toggleProject('piano-puzzle')">
+                <img src="Piano_Puzzle/images/final.jpeg" alt="Logic Grid" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Logic Grid</h3>
+                    <div class="project-meta">
+                        <span class="date">Jan 2019 - Apr 2019</span>
+                        <span class="status-badge status-finished">finished</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Puzzle</span><span class="tag">Robotics</span><span class="tag">Team</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="piano-puzzle-details">
+                <h3>Problem</h3>
+Hide a logic puzzle in a public piano!
+
+
+<h3>Process</h3>
+As part of my mechatronics project, I built this alongside the "Laser Harp" for the VT Hunt (as a secret!). I led a team of three other engineers who swore themselves into secrecy with me.
+
+This puzzle was hidden in a public piano just off campus.
+
+This device had two major functions: "listen" for the right sequence of notes on the piano, then unlock the logic puzzle. Instead of actually doing very difficult audio processing tones, I simply placed switches on the back ends of the keys out of view. Once the user played the phrase "DECAF" (seemed fitting, outside the coffee shop!), the bot would switch to its next mode.
+
+<img src="Piano_Puzzle/images/buttons.jpeg" alt="buttons and lights" class="project-image" loading="lazy">
+The user then needed to figure out how to make the specific shape given on the 8x8 LED display. No instructions were given, so the user was forced to play around and find out the functions. Three buttons at the bottom set different modes: toggle, on, and off. When a button by a row or column was pressed, that whole row or column would be set according to that rule!
+
+<h3>Result</h3>
+The puzzle beguiled and interested hundreds of hunters, hooking them for the rest of the event.
+Unfortunately, shortly after the event wrapped, a drunkard destroyed the piano and its contents. :(
+<img src="Piano_Puzzle/images/seniors.jpeg" alt="A very young Emmet and Josh" class="project-image" loading="lazy">
+            </div>
+        </article>
+
+        <article class="project-card"
                  id="door-bell"
                  data-tags="Home,Robotics"
                  data-status="future"
@@ -504,7 +589,7 @@ I've been wanting to work on this for a while.
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-04-27</p>
+            <p>Last updated: 2026-04-30</p>
         </footer>
 
         <!-- Improvements Section -->
