@@ -796,6 +796,25 @@ def generate_compilation_metadata(clip_metadata: List[dict], source_is_video: Li
     }
 
 
+def configure_bucket_cors(bucket_name: str):
+    """Set CORS policy on the GCS bucket so browsers can fetch metadata via JS."""
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket(bucket_name)
+        bucket.cors = [
+            {
+                "origin": ["*"],
+                "method": ["GET", "HEAD"],
+                "responseHeader": ["Content-Type"],
+                "maxAgeSeconds": 3600
+            }
+        ]
+        bucket.patch()
+        print(f"CORS configured on bucket: {bucket_name}")
+    except Exception as e:
+        print(f"Warning: Could not configure CORS on bucket: {e}")
+
+
 def upload_to_gcs(local_file: Path, bucket_name: str, destination_blob_name: str):
     """Upload a file to Google Cloud Storage."""
     print(f"\nUploading to Google Cloud Storage...")
@@ -1161,6 +1180,7 @@ def main():
             if not bucket_name:
                 print("\n[ERROR] No GCS bucket specified!")
                 return 1
+            configure_bucket_cors(bucket_name)
             upload_to_gcs(latest_video_path, bucket_name, 'latest.mp4')
             print(f"[OK] latest.mp4 uploaded to GCS")
 
@@ -1347,6 +1367,7 @@ def main():
             print("Use --gcs-bucket or set GCS_BUCKET_NAME environment variable")
             return 1
 
+        configure_bucket_cors(bucket_name)
         try:
             upload_to_gcs(OUTPUT_VIDEO, bucket_name, args.gcs_path)
             metadata_gcs_path = args.gcs_path.replace('.mp4', '-metadata.json')
