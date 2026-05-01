@@ -20,9 +20,9 @@ const config = {
     : 'https://storage.googleapis.com/emmet-daily-snapshots/compilation.mp4',
   metadataUrl: isLocal
     ? './output/compilation-metadata.json'
-    : 'https://storage.googleapis.com/emmet-daily-snapshots/compilation-metadata.json',
+    : './compilation-metadata.json',  // committed to repo, served same-origin (no CORS needed)
   fallbackVideoUrl: './output/compilation.mp4',
-  fallbackMetadataUrl: './output/compilation-metadata.json'
+  fallbackMetadataUrl: 'https://storage.googleapis.com/emmet-daily-snapshots/compilation-metadata.json'
 };
 
 console.log('Environment:', isLocal ? 'LOCAL' : 'PRODUCTION');
