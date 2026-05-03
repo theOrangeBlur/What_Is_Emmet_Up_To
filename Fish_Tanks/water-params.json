@@ -24,11 +24,11 @@
       }
     },
     "Wooded Tank": {
-      "updated": "2026-05-03T20:26:04Z",
+      "updated": "2026-05-03T21:10:57Z",
       "params": {
         "tds": 202,
-        "temperature_f": 81.3,
-        "ph": 7.98
+        "temperature_f": 81.5,
+        "ph": 8.04
       },
       "ranges": {
         "temperature_f": {
