@@ -154,5 +154,13 @@
   "The Secret World of Arrietty|2010": {
     "poster": "https://image.tmdb.org/t/p/w300/3lSRaSjDp2nkXMQkzzjpRi3035O.jpg",
     "director": "Hiromasa Yonebayashi"
+  },
+  "The Devil Wears Prada|2006": {
+    "poster": "https://image.tmdb.org/t/p/w300/8912AsVuS7Sj915apArUFbv6F9L.jpg",
+    "director": "David Frankel"
+  },
+  "Fuze|2025": {
+    "poster": "https://image.tmdb.org/t/p/w300/oWehDe6fFR4eUdUMDy4jz6XiinO.jpg",
+    "director": "David Mackenzie"
   }
 }
