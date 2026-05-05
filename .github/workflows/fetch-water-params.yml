@@ -49,6 +49,7 @@ jobs:
           git config user.email "actions@github.com"
           git add Fish_Tanks/water-params.json
           git commit -m "Update water parameters [automated]"
+          git pull --rebase origin main
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

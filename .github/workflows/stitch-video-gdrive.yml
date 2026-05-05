@@ -25,6 +25,10 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: stitch-video
+  cancel-in-progress: false
+
 jobs:
   stitch:
     runs-on: ubuntu-latest
@@ -99,6 +103,7 @@ jobs:
           git config user.email "actions@github.com"
           git add Visual-Stitch/compilation-metadata.json
           git commit -m "Update compilation metadata [automated]" || echo "No metadata changes to commit"
+          git pull --rebase origin main
           git push
 
       - name: Clean up credentials

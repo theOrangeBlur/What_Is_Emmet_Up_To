@@ -2,8 +2,8 @@ name: Sync Game Reviews
 
 on:
   schedule:
-    # Runs every day at 1:00 AM EST (6:00 AM UTC)
-    - cron: '0 6 * * *'
+    # Runs every day at 1:10 AM EST (6:10 AM UTC)
+    - cron: '10 6 * * *'
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -60,6 +60,7 @@ jobs:
           git config user.email "actions@github.com"
           git add Game_review/src/games.csv Game_review/src/reviews.md Game_review/games.html Game_review/src/image_cache.json
           git commit -m "Update game review data [automated]"
+          git pull --rebase origin main
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
