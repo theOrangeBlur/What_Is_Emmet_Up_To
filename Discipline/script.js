@@ -501,26 +501,48 @@ async function loadWeeklyGoals() {
 
 function parseGoalsCSV(csvText) {
     const lines = csvText.trim().split('\n');
-    const tasks = [];
-    let weekDate = null;
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const cols = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-        // Row 0: date, task, status (3 columns)
-        // Rows 1+: task, status (2 columns — date column is absent, not empty)
-        if (i === 0) {
-            weekDate = cols[0] || null;
-            const task = cols[1] || '';
-            const status = cols[2] || '';
-            if (task) tasks.push({ name: task, status });
-        } else {
-            const task = cols[0] || '';
-            const status = cols[1] || '';
-            if (task) tasks.push({ name: task, status });
+    if (lines.length === 0) return { weekDate: null, tasks: [] };
+
+    // Header row: dates appear in even columns (0, 2, 4, ...), odd columns are empty
+    const headerCols = lines[0].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+    const weekColumns = [];
+    for (let col = 0; col < headerCols.length; col += 2) {
+        const dateStr = headerCols[col];
+        if (dateStr && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+            weekColumns.push({ col, weekDate: dateStr, tasks: [] });
         }
     }
-    return { weekDate, tasks };
+
+    if (weekColumns.length === 0) return { weekDate: null, tasks: [] };
+
+    // Task rows: each row has (task, status) pairs at each week's column offset
+    for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+        for (const week of weekColumns) {
+            const task = cols[week.col] || '';
+            const status = cols[week.col + 1] || '';
+            if (task) week.tasks.push({ name: task, status });
+        }
+    }
+
+    // Find the most recent week whose date is not in the future
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    let bestWeek = null;
+    let bestDate = null;
+    for (const week of weekColumns) {
+        const m = week.weekDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!m) continue;
+        const weekStart = new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]));
+        if (weekStart <= today && (!bestDate || weekStart > bestDate)) {
+            bestDate = weekStart;
+            bestWeek = week;
+        }
+    }
+
+    if (!bestWeek) bestWeek = weekColumns[0];
+    return { weekDate: bestWeek.weekDate, tasks: bestWeek.tasks };
 }
 
 function formatWeekDate(dateStr) {
