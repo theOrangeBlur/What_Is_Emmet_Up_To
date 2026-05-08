@@ -1,7 +1,7 @@
 ---
 title: "Floor Ramp"
-status: "finished"
-tags: ["3d-printing", "3d-modeling", "home"]
+status: "Completed"
+tags: ["3d-printing", "3d-modeling", "Home"]
 start_date: "2026-04-24"
 end_date: "2026-04-27"
 thumbnail: "images/every-other.jpg"

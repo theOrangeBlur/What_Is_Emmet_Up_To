@@ -83,15 +83,15 @@ def _convert_gdoc_html_to_md(html: str) -> bool:
         # Convert italic spans
         text = re.sub(r'<span[^>]*font-style:italic[^>]*>(.*?)</span>', r'*\1*', text)
         text = re.sub(r'<span[^>]*class="[^"]*c8[^"]*"[^>]*>(.*?)</span>', r'*\1*', text)
-        # Strip remaining HTML tags, preserving <br> as newlines
-        text = text.replace('<br>', '\n')
+        # Treat <br> (soft line break in Google Docs) as a paragraph break
+        text = text.replace('<br>', '\n\n')
         text = re.sub(r'<[^>]+>', '', text)
         # Decode HTML entities
         text = html_module.unescape(text)
+        # Convert non-breaking spaces before stripping so they get removed from edges
+        text = text.replace('\u00a0', ' ')
         # Normalize whitespace within each line but preserve paragraph breaks
         text = re.sub(r'[ \t]+', ' ', text).strip()
-        # Convert non-breaking spaces to regular spaces
-        text = text.replace('\u00a0', ' ')
 
         if not text:
             continue
@@ -106,7 +106,7 @@ def _convert_gdoc_html_to_md(html: str) -> bool:
         print("  Warning: No content extracted from Google Doc HTML")
         return False
 
-    md_content = '\n'.join(md_lines)
+    md_content = '\n\n'.join(md_lines)
     REVIEWS_FILE.write_text(md_content, encoding='utf-8')
     return True
 
