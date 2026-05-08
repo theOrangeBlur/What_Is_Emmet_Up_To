@@ -4,143 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="Lj0DJ3rAcuYI7ctvJwRlT-fEdRh8WeJUyh-SE8x_IPE" />
-    <title>What is Emmet up to?</title>
+    <title>The Emmet Enquirer</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
     <link rel="manifest" href="/media/favicon/site.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="top-nav">
-        <a href="Visual-Stitch/snapshots.html">📹 <span class="nav-long">Daily Snapshots</span><span class="nav-short">Video Stitch</span></a>
-        <a href="Projects/projects.html">🛠️ <span class="nav-long">Tech Projects</span><span class="nav-short">Projects</span></a>
-        <a class="reviews-solo" href="Game_review/games.html">🎮 Game Reviews</a>
-        <a class="reviews-solo" href="Movies/movies.html">🎬 Movie Reviews</a>
-        <div class="dropdown" id="dropdown-reviews">
-            <button class="dropdown-btn">⭐ Reviews ▾</button>
-            <div class="dropdown-menu">
-                <a href="Game_review/games.html">🎮 Game Reviews</a>
-                <a href="Movies/movies.html">🎬 Movie Reviews</a>
-            </div>
-        </div>
-        <a class="misc-solo" href="Discipline/discipline.html">🎯 Discipline</a>
-        <a class="misc-solo" href="Fish_Tanks/fish.html">🐟 Fish Tanks</a>
-        <a class="misc-solo" href="Puzzle/puzzle.html">🔢 Hexdoku</a>
-        <div class="dropdown" id="dropdown-misc">
-            <button class="dropdown-btn">🧩 Misc ▾</button>
-            <div class="dropdown-menu">
-                <a href="Discipline/discipline.html">🎯 Discipline</a>
-                <a href="Fish_Tanks/fish.html">🐟 Fish Tanks</a>
-                <a href="Puzzle/puzzle.html">⬢ Hexdoku</a>
-            </div>
-        </div>
-    </nav>
 
-    <div class="custom-cursor"></div>
-
-    <header>
-        <h1>What is Emmet up to?</h1>
-        <div class="splash-text" id="splashText">Loading adventures...</div>
+    <header class="masthead">
+        <div class="masthead-topbar">
+            <span class="edition-info">Vol. I &middot; Est. 2025 &middot; No.&nbsp;<span id="edition-number"></span></span>
+            <span id="splashText">Loading...</span>
+            <span class="masthead-date" id="edition-date"></span>
+        </div>
+        <h1 class="paper-name">The Emmet Enquirer</h1>
+        <div class="masthead-tagline">&mdash; The paper of record for all Emmet-related affairs &mdash;</div>
     </header>
 
-    <div class="container">
-        <section class="intro-section">
-            <div class="profile-photo"><img src="media/Poppy_Pipes.jpg" height="150"></div>
-            <div class="intro-text">
-                <h2>Emmet, here.</h2>
-                <p>Recently, the company I was working for asked me to get up and move to some cold, mountainless state... or find a new job.</p>
-                <hr/>
-                <p>I said no.</p>
-                <hr/>
-                <p>And suddenly have all of the time I could want to develop some powerful technical skills I've had my eyes on... and also just to have a whole lot of fun.</p>
-                <p>A step on that journey is making my own website -- and getting to know a good bit of web-dev in the process, I hope. I will be adding features to the site fairly often, allowing myself to publish things that are ugly... until I know how to make them pretty.</p>
-                <p>After learning a good bit of web-dev and not enjoying it overly much, I've decided to lean on my buddy Claude AI, though all of the text is mine. At the bottom of every page, I have posted what updates I want to make to improve it as I grow in my web-dev journey.</p>
-                <p>Thanks for being here!</p>
-            </div>
-        </section>
+    <nav class="directory-strip">
+        <span class="directory-label">Contents:</span>
+        <a href="Visual-Stitch/snapshots.html">Daily Snapshots &middot; Pg. A1</a>
+        <span class="dir-sep">|</span>
+        <a href="Projects/projects.html">Projects &middot; Pg. B1</a>
+        <span class="dir-sep">|</span>
+        <a href="Movies/movies.html">Picture Show &middot; Pg. C1</a>
+        <span class="dir-sep">|</span>
+        <a href="Game_review/games.html">Gaming &middot; Pg. C4</a>
+        <span class="dir-sep">|</span>
+        <a href="Discipline/discipline.html">Personal Dispatch &middot; Pg. D1</a>
+        <span class="dir-sep">|</span>
+        <a href="Fish_Tanks/fish.html">Natural History &middot; Pg. D3</a>
+        <span class="dir-sep">|</span>
+        <a href="Puzzle/puzzle.html">Puzzles &middot; Pg. E1</a>
+    </nav>
 
-        <nav class="nav-grid newspaper">
-            <a href="Visual-Stitch/snapshots.html" class="nav-card card-headline">
-                <span class="section-label">EMMET SIGHTINGS</span>
-                <h3>📹 Daily Snapshots</h3>
-                <p>What does Emmet's life look like?</p>
-                <video autoplay muted loop playsinline class="nav-card-preview"
-                       src="https://storage.googleapis.com/emmet-daily-snapshots/latest.mp4">
-                </video>
-            </a>
-            <a href="Projects/projects.html" class="nav-card card-projects">
-                <span class="section-label">EMMET SCHEMES</span>
-                <h3>🛠️ Projects</h3>
-                <p>What has Emmet been tinkering with?</p>
-                <img id="latest-project-img" class="nav-card-preview" alt="Latest project" style="display:none;">
-                <span id="latest-project-title" class="preview-subtitle"></span>
-                <span id="latest-project-date" class="preview-subtitle"></span>
-            </a>
-            <a href="Movies/movies.html" class="nav-card card-movies">
-                <span class="section-label">MOVIE COLUMN</span>
-                <h3>🎬 Movie Reviews</h3>
-                <p>What has Emmet watched recently?</p>
-                <div class="movie-preview">
-                    <img id="latest-movie-poster" class="movie-poster-preview" alt="Latest movie" style="display:none;">
-                    <div class="movie-preview-info">
-                        <span id="latest-movie-title" class="preview-subtitle"></span>
-                        <span id="latest-movie-rating" class="star-rating"></span>
-                    </div>
+    <main class="newspaper-body">
+        <div class="newspaper-columns">
+
+            <!-- Column 1: About the Correspondent -->
+            <aside class="col col-1">
+                <span class="section-label">About the Correspondent</span>
+                <div class="portrait-wrap">
+                    <img src="media/Poppy_Pipes.jpg" alt="E. C. Eckman IV, Correspondent">
+                    <div class="portrait-caption">E. C. Eckman IV, Correspondent &mdash; photographed at home.</div>
                 </div>
-                <span id="latest-movie-date" class="preview-subtitle"></span>
-            </a>
-            <a href="Game_review/games.html" class="nav-card card-games">
-                <span class="section-label">GAME CRITIC</span>
-                <h3>🎮 Game Reviews</h3>
-                <p>What has Emmet been playing?</p>
-                <div class="game-preview">
-                    <img id="latest-game-cover" class="game-cover-preview" alt="Latest game" style="display:none;">
-                    <div class="game-preview-info">
-                        <span id="latest-game-title" class="preview-subtitle"></span>
-                        <div class="game-preview-meta">
-                            <span id="latest-game-status" class="game-status-badge"></span>
-                            <span id="latest-game-hours" class="game-hours"></span>
+                <p class="article-body bio-text">Recently, the company I was working for asked me to get up and move to some cold, mountainless state&hellip; or find a new job.</p>
+                <p class="article-body">I said no.</p>
+                <p class="article-body">And suddenly I have all of the time I could want to develop some powerful technical skills I&rsquo;ve had my eyes on&mdash;and also just to have a whole lot of fun. A step on that journey is making my own website, getting to know a good bit of web-dev in the process.</p>
+                <p class="article-body">I will be adding features to the site fairly often, allowing myself to publish things that are ugly&hellip; until I know how to make them pretty. After leaning on my buddy Claude AI for design, though all of the text is mine, this is what we&rsquo;ve come up with.</p>
+                <p class="article-body">Thanks for being here!</p>
+            </aside>
+
+            <!-- Columns 2+3: Center Spread -->
+            <section class="col col-center">
+
+                <!-- Sub-article A: Daily Snapshots -->
+                <span class="section-label">Emmet Sightings</span>
+                <h2 class="article-headline">Gazette Photographer Captures Emmet in the Wild</h2>
+                <p class="article-subheadline">Correspondent&rsquo;s daily footage now available for public viewing</p>
+                <div class="byline">By Emmet Culley &nbsp;&middot;&nbsp; Visual-Stitch Correspondent</div>
+                <div class="news-video-wrap">
+                    <video autoplay muted loop playsinline
+                           src="https://storage.googleapis.com/emmet-daily-snapshots/latest.mp4">
+                    </video>
+                    <div class="media-caption">ABOVE: Still from today&rsquo;s dispatch. Footage compiled daily.</div>
+                </div>
+                <p class="article-body">Our correspondant captures a small moment of life of Emmet each day. Adventure, romance, engineering... yard work &mdash; don't miss a smidgen!
+                    Come and learn what the red haired menace has gotten himself into this time!
+                </p>
+                <a href="Visual-Stitch/snapshots.html" class="page-ref">Read more on Page A-1 &rarr;</a>
+
+                <hr class="article-divider">
+
+                <!-- Sub-article B: Projects -->
+                <span class="section-label">Emmet Schemes</span>
+                <h2 class="article-headline">Local Maker Unveils Latest Contraption</h2>
+                <p class="article-subheadline">Workshop sources report many more doohickeys to come</p>
+                <div class="byline">By Emmet E. &nbsp;&middot;&nbsp; Workshop Correspondent &nbsp;&middot;&nbsp; <span id="latest-project-date"></span></div>
+                <div class="news-img-wrap" id="project-img-wrap" style="display:none;">
+                    <img id="latest-project-img" alt="Latest project">
+                    <div class="media-caption">ABOVE: <span id="latest-project-title">Latest project from the workshop.</span></div>
+                </div>
+                <p class="article-body">Strange noises have been reported eminating from the workshop. What may pop out next? This is your source for Emmet's whimsineerical 3D printing, robotics, woodworking, and home improvement. Each project is documented with full problem statements, process notes, and results.</p>
+                <a href="Projects/projects.html" class="page-ref">Read more on Page B-1 &rarr;</a>
+
+            </section>
+
+            <!-- Column 4: Side Desk -->
+            <aside class="col col-4">
+
+                <!-- Article 4A: Movies -->
+                <div class="side-article">
+                    <span class="section-label">The Picture Show</span>
+                    <h3 class="article-headline-sm">Latest Review</h3>
+                    <div class="movie-preview">
+                        <img id="latest-movie-poster" class="movie-poster-preview" alt="Latest movie" style="display:none;">
+                        <div class="movie-preview-info">
+                            <span id="latest-movie-title" class="preview-subtitle"></span>
+                            <span id="latest-movie-rating" class="star-rating"></span>
+                            <span id="latest-movie-date" class="preview-subtitle"></span>
                         </div>
-                        <span id="latest-game-genre" class="game-genre"></span>
                     </div>
+                    <a href="Movies/movies.html" class="page-ref">Turn to Page C-1 &rarr;</a>
                 </div>
-                <span id="latest-game-date" class="preview-subtitle"></span>
-            </a>
-            <a href="Discipline/discipline.html" class="nav-card card-discipline">
-                <span class="section-label">SHAME EMMET</span>
-                <h3>🎯 Discipline</h3>
-                <p>Is Emmet working on himself?</p>
-                <div class="discipline-preview-row">
-                    <div class="discipline-dots-col">
-                        <div id="discipline-preview" class="discipline-dots"></div>
-                        <span id="discipline-date" class="preview-subtitle"></span>
+
+                <!-- Article 4B: Games -->
+                <div class="side-article">
+                    <span class="section-label">Game Critic</span>
+                    <h3 class="article-headline-sm">Now Playing</h3>
+                    <div class="game-preview">
+                        <img id="latest-game-cover" class="game-cover-preview" alt="Latest game" style="display:none;">
+                        <div class="game-preview-info">
+                            <span id="latest-game-title" class="preview-subtitle"></span>
+                            <div class="game-preview-meta">
+                                <span id="latest-game-status" class="game-status-badge"></span>
+                                <span id="latest-game-hours" class="game-hours"></span>
+                            </div>
+                            <span id="latest-game-genre" class="game-genre"></span>
+                            <span id="latest-game-date" class="preview-subtitle"></span>
+                        </div>
                     </div>
-                    <img id="discipline-emmet" class="discipline-emmet-img" alt="Emmet reaction" style="display:none;">
+                    <a href="Game_review/games.html" class="page-ref">Turn to Page C-4 &rarr;</a>
                 </div>
-            </a>
-        </nav>
-        <br>
-        <hr>
-        <br>
-        <div class="TODO">
-            <h5>Things Emmet is going to work on for this page:</h5>
-            <p>
-                <ul>
-                    <li>Revamp header</li>
-                    <li>Improve the cursor design. Maybe little picture of my face? :D</li>
-                    <li>Add new pictures that are picked randomly and change daily</li>
-                    <li>Make yellow daily text "randomness" smarter</li>
-                    <li>Add a few more pages:
-                        <ul>
-                            <li>Blog!</li>
-                            <li>Puzzles!!!</li>
-                        </ul>
-                    </li>
-                </ul>
-            </p>
+
+                <!-- Article 4C: Discipline -->
+                <div class="side-article">
+                    <span class="section-label">Shame Emmet!</span>
+                    <h3 class="article-headline-sm">Accountability Report</h3>
+                    <div class="discipline-preview-row">
+                        <div class="discipline-dots-col">
+                            <div id="discipline-preview" class="discipline-dots"></div>
+                            <span id="discipline-date" class="preview-subtitle"></span>
+                        </div>
+                        <img id="discipline-emmet" class="discipline-emmet-img" alt="Emmet reaction" style="display:none;">
+                    </div>
+                    <a href="Discipline/discipline.html" class="page-ref">Turn to Page D-1 &rarr;</a>
+                </div>
+
+            </aside>
         </div>
-    </div>
+    </main>
+
+    <!-- Below-fold strip -->
+    <section class="below-fold">
+        <div class="below-fold-inner">
+            <article class="mini-article">
+                <span class="section-label">Natural History</span>
+                <h3 class="article-headline-sm">Aquarium Correspondent Files Dispatch from the Deep</h3>
+                <p class="article-body">This correspondent maintains several active fish tanks, each a carefully managed ecosystem. Species counts, tank parameters, and livestock records are updated regularly for the discerning naturalist.</p>
+                <a href="Fish_Tanks/fish.html" class="page-ref">Turn to Page D-3 &rarr;</a>
+            </article>
+            <article class="mini-article">
+                <span class="section-label">Quandries &amp; Curiosities</span>
+                <h3 class="article-headline-sm">Hexdoku: A New Puzzle Form Enters the Public Record</h3>
+                <p class="article-body">The non-award winning Enquirer&rsquo;s puzzle desk presents Hexdoku&mdash;a hexagonal Sudoku variant offered in three difficulty levels. Readers are encouraged to test their wits at their leisure.</p>
+                <a href="Puzzle/puzzle.html" class="page-ref">Turn to Page E-1 &rarr;</a>
+            </article>
+            <article class="mini-article">
+                <span class="section-label">Editorial</span>
+                <h3 class="article-headline-sm">Blog Column Coming Soon to These Pages</h3>
+                <p class="article-body">This correspondent has long intended to put pen to paper on matters of opinion, observation, and general commentary. The blog desk is forthcoming. Watch this space with patience and good faith.</p>
+                <a href="Blog/blog.html" class="page-ref">Watch this space &rarr;</a>
+            </article>
+        </div>
+    </section>
 
     <script src="script.js"></script>
 </body>

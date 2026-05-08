@@ -67,68 +67,22 @@ function getDailySplashText() {
 const splash = document.getElementById('splashText');
 splash.textContent = getDailySplashText();
 
-// Custom cursor
-const cursor = document.querySelector('.custom-cursor');
-const trails = [];
-const maxTrails = 5;
-
-for (let i = 0; i < maxTrails; i++) {
-    const trail = document.createElement('div');
-    trail.className = 'cursor-trail';
-    document.body.appendChild(trail);
-    trails.push({
-        element: trail,
-        x: 0,
-        y: 0
+// Masthead edition info
+const _now = new Date();
+const _startOfYear = new Date(_now.getFullYear(), 0, 0);
+const _dayOfYear = Math.floor((_now - _startOfYear) / 86400000);
+const _editionDate = document.getElementById('edition-date');
+const _editionNum = document.getElementById('edition-number');
+if (_editionDate) {
+    _editionDate.textContent = _now.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 }
-
-let mouseX = 0, mouseY = 0;
-let cursorX = 0, cursorY = 0;
-
-document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
-
-function animateCursor() {
-    cursorX += (mouseX - cursorX) * 0.2;
-    cursorY += (mouseY - cursorY) * 0.2;
-
-    cursor.style.left = cursorX + 'px';
-    cursor.style.top = cursorY + 'px';
-
-    trails.forEach((trail, index) => {
-        const delay = (index + 1) * 0.05;
-        trail.x += (mouseX - trail.x) * (0.2 - delay);
-        trail.y += (mouseY - trail.y) * (0.2 - delay);
-        trail.element.style.left = trail.x + 'px';
-        trail.element.style.top = trail.y + 'px';
-        trail.element.style.opacity = 1 - (index / maxTrails);
-    });
-
-    requestAnimationFrame(animateCursor);
+if (_editionNum) {
+    _editionNum.textContent = _dayOfYear;
 }
 
-animateCursor();
-
-// Floating particles
-function createParticle() {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-    particle.style.left = Math.random() * window.innerWidth + 'px';
-    particle.style.top = Math.random() * window.innerHeight + 'px';
-    particle.style.animationDelay = Math.random() * 3 + 's';
-    particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
-    document.body.appendChild(particle);
-
-    setTimeout(() => particle.remove(), 6000);
-}
-
-setInterval(createParticle, 500);
-for (let i = 0; i < 15; i++) createParticle();
-
-// ── Cosmic Newspaper: Dynamic Preview Loading ──
+// ── Newspaper: Dynamic Preview Loading ──
 
 async function loadPreviews() {
     await Promise.allSettled([
@@ -147,12 +101,13 @@ async function loadProjectPreview() {
         const data = await resp.json();
         const img = document.getElementById('latest-project-img');
         const title = document.getElementById('latest-project-title');
+        const wrap = document.getElementById('project-img-wrap');
         if (img && data.thumbnail) {
             img.src = 'Projects/' + data.thumbnail;
-            img.style.display = 'block';
+            if (wrap) wrap.style.display = 'block';
         }
         if (title && data.title) {
-            title.textContent = 'Latest: ' + data.title;
+            title.textContent = data.title;
         }
         const projectDateEl = document.getElementById('latest-project-date');
         if (projectDateEl && data.date) {
@@ -220,10 +175,10 @@ function renderStars(rating) {
     let stars = '';
     const full = Math.floor(rating);
     const half = rating % 1 >= 0.5;
-    for (let i = 0; i < full; i++) stars += '\u2605';
-    if (half) stars += '\u00BD';
+    for (let i = 0; i < full; i++) stars += '★';
+    if (half) stars += '½';
     const empty = 5 - full - (half ? 1 : 0);
-    for (let i = 0; i < empty; i++) stars += '\u2606';
+    for (let i = 0; i < empty; i++) stars += '☆';
     return stars;
 }
 
@@ -324,11 +279,11 @@ async function loadGamePreview() {
 
 // ── Discipline Preview ──
 const DISCIPLINE_COLORS = {
-    mind: '#c4b5fd',
-    body: '#7dd3fc',
-    spirit: '#5eead4',
-    spanish: '#f472b6',
-    exceptional: '#ffd700'
+    mind: '#2a4a8b',
+    body: '#8b1a1a',
+    spirit: '#1a5c2b',
+    spanish: '#7a3550',
+    exceptional: '#6b4f12'
 };
 
 async function loadDisciplinePreview() {
@@ -440,17 +395,3 @@ function formatDateISO(date) {
 
 // Load all previews on page load
 loadPreviews();
-
-// Dropdown nav toggle
-document.querySelectorAll('.dropdown-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const dropdown = btn.closest('.dropdown');
-        const isOpen = dropdown.classList.contains('open');
-        document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
-        if (!isOpen) dropdown.classList.add('open');
-    });
-});
-document.addEventListener('click', () => {
-    document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
-});
