@@ -45,11 +45,11 @@
     {
       "month": "2026-05",
       "start": 1153.7033330000002,
-      "end": 1158.503333,
-      "clip_count": 2
+      "end": 1216.5366660000002,
+      "clip_count": 13
     }
   ],
-  "total_duration": 1158.503333,
-  "clip_count": 356,
-  "generated_at": "2026-05-11T04:02:46.175352"
+  "total_duration": 1216.5366660000002,
+  "clip_count": 367,
+  "generated_at": "2026-05-11T12:39:49.939437"
 }
