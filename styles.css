@@ -272,6 +272,20 @@ body {
     filter: sepia(35%) contrast(1.05) brightness(0.97);
 }
 
+.portrait-placeholder {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--sepia-accent);
+    font-size: 0.85rem;
+    background-color: var(--paper-dark);
+    margin-bottom: 0.4rem;
+}
+
 .portrait-caption {
     font-size: 0.65rem;
     font-style: italic;
@@ -337,6 +351,20 @@ body {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
+}
+
+.hexdoku-embed-wrap {
+    width: 100%;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.hexdoku-embed {
+    width: 100%;
+    height: 1050px;
+    border: none;
+    display: block;
 }
 
 .movie-preview {

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hexdoku Levels 1 &amp; 2</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 8px;
+      background: #f5e6c8;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .level { padding: 0; margin: 0; }
+
+    .level h2 {
+      font-family: sans-serif;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #1a3a2a;
+      margin: 0 0 8px;
+    }
+
+    .puzzle-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .grid-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .grid-wrap h3 {
+      font-family: sans-serif;
+      font-size: 0.75rem;
+      color: #1a3a2a;
+      margin: 0 0 4px;
+    }
+
+    .hex-grid {
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .check-btn {
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      font-family: sans-serif;
+      background: #2a7a5a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .check-btn:hover { background: #1a5a3a; }
+
+    .check-result {
+      font-family: sans-serif;
+      font-size: 0.8rem;
+      font-weight: bold;
+      min-height: 1.2em;
+    }
+    .check-result.correct   { color: #1a5a2a; }
+    .check-result.incorrect { color: #8a2000; }
+
+    .clear-btn {
+      position: relative;
+      overflow: hidden;
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      font-family: sans-serif;
+      background: #8a2000;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .clear-btn:hover { background: #6a1500; }
+
+    .clear-bar {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: rgba(255,255,255,0.35);
+      pointer-events: none;
+      transition: none;
+    }
+    .clear-btn.holding .clear-bar {
+      width: 100%;
+      transition: width 3s linear;
+    }
+    .clear-btn.holding { background: #c04000; }
+
+    /* SVG cell styles */
+    .hex-outline  { fill: none; stroke: #2a7a5a; stroke-width: 2; }
+    .hex-spoke    { stroke: #2a7a5a; stroke-width: 0.8; opacity: 0.5; }
+    .cell-empty   { fill: rgba(255,255,255,0.6); stroke: none; transition: fill 0.15s; }
+    .cell-empty:hover { fill: rgba(180,240,210,0.85); }
+    .cell-given   { fill: rgba(180,220,200,0.75); stroke: none; }
+    .cell-selected {
+      fill: rgba(100,200,150,0.85) !important;
+      stroke: #1a5a3a;
+      stroke-width: 1.5;
+    }
+    .tri-label, .tri-label-given {
+      font-family: sans-serif;
+      font-size: 11px;
+      pointer-events: none;
+      user-select: none;
+    }
+    .tri-label       { fill: #1a3a2a; }
+    .tri-label-given { fill: #0a2010; font-weight: bold; }
+
+    /* Level 2 direction tints */
+    .hex-tint-cw  { fill: rgba(120,190,255,0.45); stroke: none; pointer-events: none; }
+    .hex-tint-ccw { fill: rgba(255,120,120,0.45); stroke: none; pointer-events: none; }
+
+    .level-divider {
+      border: none;
+      border-top: 1px solid #2a7a5a;
+      opacity: 0.4;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+  <section class="level" id="level-1">
+    <h2>Level 1</h2>
+    <div class="puzzle-row">
+      <div class="grid-wrap">
+        <h3>Reference</h3>
+        <svg id="l1-complete" class="hex-grid"></svg>
+      </div>
+      <div class="grid-wrap">
+        <h3>Puzzle</h3>
+        <svg id="l1-puzzle" class="hex-grid"></svg>
+      </div>
+    </div>
+    <div class="check-row">
+      <button class="check-btn" id="check-btn-1">Check</button>
+      <button class="clear-btn" id="clear-btn-1"><span class="clear-bar"></span>Clear</button>
+      <div class="check-result" id="l1-result"></div>
+    </div>
+  </section>
+
+  <hr class="level-divider">
+
+  <section class="level" id="level-2">
+    <h2>Level 2</h2>
+    <div class="puzzle-row">
+      <div class="grid-wrap">
+        <h3>Reference</h3>
+        <svg id="l2-complete" class="hex-grid"></svg>
+      </div>
+      <div class="grid-wrap">
+        <h3>Puzzle</h3>
+        <svg id="l2-puzzle" class="hex-grid"></svg>
+      </div>
+    </div>
+    <div class="check-row">
+      <button class="check-btn" id="check-btn-2">Check</button>
+      <button class="clear-btn" id="clear-btn-2"><span class="clear-bar"></span>Clear</button>
+      <div class="check-result" id="l2-result"></div>
+    </div>
+  </section>
+
+  <!-- Stubs required by hexdoku.js init() — not shown -->
+  <div style="display:none">
+    <div id="mobile-numbar"></div>
+    <button id="lefty-btn"></button>
+    <svg id="l3-complete"></svg><svg id="l3-puzzle"></svg>
+    <button id="check-btn-3"></button><button id="clear-btn-3"><span class="clear-bar"></span></button><div id="l3-result"></div>
+  </div>
+
+  <script src="./hexdoku.js"></script>
+</body>
+</html>
