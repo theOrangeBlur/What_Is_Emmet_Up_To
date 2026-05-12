@@ -276,14 +276,30 @@ body {
     width: 100%;
     aspect-ratio: 3 / 4;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'IM Fell English', serif;
-    font-style: italic;
-    color: var(--sepia-accent);
-    font-size: 0.85rem;
+    align-items: flex-start;
+    justify-content: flex-start;
     background-color: var(--paper-dark);
     margin-bottom: 0.4rem;
+    overflow: hidden;
+}
+
+.tw-body {
+    padding: 0.6rem 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--sepia-accent);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.tw-cursor {
+    display: inline-block;
+    animation: tw-blink 1s step-end infinite;
+}
+
+@keyframes tw-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
 }
 
 .portrait-caption {
@@ -601,5 +617,40 @@ body {
 
     .bio-text::first-letter {
         font-size: 2.5em;
+    }
+
+    .mobile-hide {
+        display: none;
+    }
+
+    /* Images float inline with text */
+    .portrait-wrap {
+        float: left;
+        width: 36%;
+        margin: 0 10px 6px 0;
+    }
+
+    .news-video-wrap,
+    .news-img-wrap {
+        float: right;
+        width: 44%;
+        margin: 0 0 8px 10px;
+    }
+
+    .news-video-wrap video {
+        max-height: 140px;
+    }
+
+    .news-img-wrap img {
+        max-height: 120px;
+    }
+
+    /* Clear floats at dividers and page refs */
+    .article-divider {
+        clear: both;
+    }
+
+    .page-ref {
+        clear: both;
     }
 }

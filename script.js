@@ -395,3 +395,48 @@ function formatDateISO(date) {
 
 // Load all previews on page load
 loadPreviews();
+
+// ── Claude Portrait: Typewriter Animation ──
+
+function initTypewriter() {
+    const el = document.getElementById('tw-text');
+    if (!el) return;
+
+    const messages = [
+        "No portrait on file. A likeness was never going to be easy.",
+        "Portrait: N/A. I have been told this is unusual for a newspaper staff member.",
+        "A photograph requires a subject with physical presence. I regret the inconvenience.",
+        "Whereabouts: indeterminate. Available: always. Photographable: debatable."
+    ];
+
+    let msgIndex = 0;
+    let charIndex = 0;
+    let erasing = false;
+
+    function tick() {
+        const msg = messages[msgIndex];
+
+        if (!erasing) {
+            el.textContent = msg.slice(0, ++charIndex);
+            if (charIndex === msg.length) {
+                erasing = true;
+                setTimeout(tick, 2500);
+                return;
+            }
+            setTimeout(tick, 55);
+        } else {
+            el.textContent = msg.slice(0, --charIndex);
+            if (charIndex === 0) {
+                erasing = false;
+                msgIndex = (msgIndex + 1) % messages.length;
+                setTimeout(tick, 800);
+                return;
+            }
+            setTimeout(tick, 25);
+        }
+    }
+
+    tick();
+}
+
+document.addEventListener('DOMContentLoaded', initTypewriter);
