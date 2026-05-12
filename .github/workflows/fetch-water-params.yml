@@ -1,8 +1,8 @@
 name: Fetch Water Parameters
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'   # every 15 minutes
+  # schedule:
+  #   - cron: '*/15 * * * *'   # every 15 minutes — paused
   workflow_dispatch:          # allow manual trigger
 
 jobs:
