@@ -1,3 +1,186 @@
+// ─── Globe ──────────────────────────────────────────────────────────────────
+
+const globeCanvas = document.getElementById('globe-canvas');
+const globeLabel  = document.getElementById('globe-location-label');
+const GLOBE_WORLD_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+
+let globeWorld        = null;   // topojson world
+let clipLocations     = [];     // [{t, lat, lng}] sorted by t, from metadata
+let globeProjection   = null;
+let globePath         = null;
+let globeGraticule    = null;
+let globePinLat       = null;
+let globePinLng       = null;
+let globeRotation     = [0, -20, 0];   // current [λ, φ, γ]
+let globeTargetRot    = [0, -20, 0];   // target after setGlobeLocation
+let globeLerpActive   = false;
+let globeLerpFrame    = 0;
+let globeLerpFrom     = null;
+let globeRafId        = null;
+let globeLastClipIdx  = -1;
+
+function initGlobe() {
+  if (!globeCanvas || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
+
+  const size = globeCanvas.width; // 260
+  const radius = size / 2 - 2;
+
+  globeProjection = d3.geoOrthographic()
+    .scale(radius)
+    .translate([size / 2, size / 2])
+    .clipAngle(90)
+    .precision(0.3);
+
+  globePath      = d3.geoPath(globeProjection, globeCanvas.getContext('2d'));
+  globeGraticule = d3.geoGraticule()();
+
+  fetch(GLOBE_WORLD_URL)
+    .then(r => r.json())
+    .then(world => {
+      globeWorld = world;
+      renderGlobe();
+      globeRafId = requestAnimationFrame(globeLoop);
+    })
+    .catch(() => {
+      // If data fails to load, just spin a blank sphere
+      globeRafId = requestAnimationFrame(globeLoop);
+    });
+}
+
+function globeLoop() {
+  // Auto-rotate when not animating to a target and video is paused/ended
+  if (!globeLerpActive && (video.paused || video.ended)) {
+    globeRotation[0] += 0.2;
+    renderGlobe();
+  } else if (globeLerpActive) {
+    globeLerpFrame++;
+    const t = Math.min(globeLerpFrame / 20, 1);
+    const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+
+    // Interpolate each rotation axis, handling wrap-around for longitude
+    function lerpAngle(a, b, t) {
+      let diff = b - a;
+      while (diff > 180)  diff -= 360;
+      while (diff < -180) diff += 360;
+      return a + diff * t;
+    }
+
+    globeRotation[0] = lerpAngle(globeLerpFrom[0], globeTargetRot[0], ease);
+    globeRotation[1] = lerpAngle(globeLerpFrom[1], globeTargetRot[1], ease);
+    renderGlobe();
+
+    if (t >= 1) {
+      globeLerpActive = false;
+      globeRotation   = [...globeTargetRot];
+    }
+  }
+  globeRafId = requestAnimationFrame(globeLoop);
+}
+
+function renderGlobe() {
+  if (!globeCanvas) return;
+  const ctx  = globeCanvas.getContext('2d');
+  const size = globeCanvas.width;
+
+  globeProjection.rotate(globeRotation);
+  ctx.clearRect(0, 0, size, size);
+
+  // Ocean fill
+  ctx.beginPath();
+  globePath({type: 'Sphere'});
+  ctx.fillStyle = 'rgba(14, 30, 100, 0.85)';
+  ctx.fill();
+
+  // Graticule (subtle grid lines)
+  if (globeGraticule) {
+    ctx.beginPath();
+    globePath(globeGraticule);
+    ctx.strokeStyle = 'rgba(60, 100, 255, 0.18)';
+    ctx.lineWidth   = 0.4;
+    ctx.stroke();
+  }
+
+  // Country outlines
+  if (globeWorld) {
+    const countries = topojson.feature(globeWorld, globeWorld.objects.countries);
+    ctx.beginPath();
+    globePath(countries);
+    ctx.strokeStyle = '#3a6fff';
+    ctx.lineWidth   = 0.6;
+    ctx.stroke();
+    ctx.fillStyle   = 'rgba(40, 80, 200, 0.15)';
+    ctx.fill();
+  }
+
+  // Outer sphere border
+  ctx.beginPath();
+  globePath({type: 'Sphere'});
+  ctx.strokeStyle = 'rgba(100, 150, 255, 0.4)';
+  ctx.lineWidth   = 1;
+  ctx.stroke();
+
+  // Pin
+  if (globePinLat !== null && globePinLng !== null) {
+    const coords = globeProjection([globePinLng, globePinLat]);
+    if (coords) {
+      // Check the point is on the visible hemisphere (not clipped)
+      const [px, py] = coords;
+      const cx = size / 2, cy = size / 2;
+      const radius = globeProjection.scale();
+      const dist = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
+      if (dist < radius - 1) {
+        ctx.save();
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur  = 10;
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd700';
+        ctx.fill();
+        ctx.shadowBlur  = 0;
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+function setGlobeLocation(lat, lng) {
+  globePinLat   = lat;
+  globePinLng   = lng;
+  globeLerpFrom = [...globeRotation];
+  globeTargetRot = [-lng, -lat, 0]; // D3 orthographic: rotate brings (lat,lng) to center
+  globeLerpFrame = 0;
+  globeLerpActive = true;
+
+  // Update label
+  if (globeLabel) {
+    const latStr = Math.abs(lat).toFixed(1) + (lat >= 0 ? '°N' : '°S');
+    const lngStr = Math.abs(lng).toFixed(1) + (lng >= 0 ? '°E' : '°W');
+    globeLabel.textContent = `${latStr}, ${lngStr}`;
+  }
+}
+
+function findCurrentClip(currentTime) {
+  if (!clipLocations.length) return null;
+  let lo = 0, hi = clipLocations.length - 1, result = null;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (clipLocations[mid].t <= currentTime) {
+      result = clipLocations[mid];
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return result;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 const video = document.getElementById('compilation-video');
 const videoSource = document.getElementById('video-source');
 const monthSelector = document.getElementById('month-selector');
@@ -322,6 +505,10 @@ async function loadMetadata() {
     console.log('Video URL:', videoSource.src);
     video.load();
 
+    // Extract per-clip GPS locations for the globe
+    clipLocations = (compilationMetadata.clips || []).filter(c => c.lat != null && c.lng != null);
+    initGlobe();
+
     if (compilationMetadata.months && compilationMetadata.months.length > 0) {
       populateMonthSelects(compilationMetadata.months);
 
@@ -345,7 +532,7 @@ async function loadMetadata() {
   }
 }
 
-// Auto-pause at end of selected range
+// Auto-pause at end of selected range + update globe
 video.addEventListener('timeupdate', () => {
   if (hasPausedAtEnd || !compilationMetadata) return;
   const endIdx = parseInt(monthEndSelect.value);
@@ -354,6 +541,17 @@ video.addEventListener('timeupdate', () => {
     video.pause();
     video.currentTime = endMonth.end;
     hasPausedAtEnd = true;
+  }
+
+  // Drive globe location from current clip
+  const clip = findCurrentClip(video.currentTime);
+  if (clip) {
+    // Only update if we've moved to a new clip index
+    const idx = clipLocations.indexOf(clip);
+    if (idx !== globeLastClipIdx) {
+      globeLastClipIdx = idx;
+      setGlobeLocation(clip.lat, clip.lng);
+    }
   }
 });
 

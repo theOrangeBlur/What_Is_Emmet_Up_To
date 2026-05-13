@@ -32,6 +32,10 @@
     </div>
 
     <div class="month-selector loading" id="month-selector">
+      <div class="globe-container" id="globe-container">
+        <canvas id="globe-canvas" width="260" height="260"></canvas>
+        <div class="globe-location-label" id="globe-location-label">Somewhere on Earth</div>
+      </div>
       <h3>Emmet's Magical Month Selector</h3>
       <div class="month-controls">
         <div class="month-select">
@@ -72,6 +76,8 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="./snapshots.js"></script>
 </body>
 </html>

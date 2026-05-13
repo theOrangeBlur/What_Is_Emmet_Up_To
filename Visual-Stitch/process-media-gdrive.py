@@ -259,7 +259,7 @@ def get_media_from_folder(service, folder_id: str, limit: int = None, _retries: 
                 results = service.files().list(
                     q=query,
                     pageSize=100,
-                    fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, imageMediaMetadata/time, videoMediaMetadata)",
+                    fields="nextPageToken, files(id, name, mimeType, createdTime, modifiedTime, imageMediaMetadata/time, imageMediaMetadata/location, videoMediaMetadata)",
                     pageToken=page_token
                 ).execute()
 
@@ -364,6 +364,26 @@ def get_file_extension(mime_type: str, filename: str) -> str:
     return mime_to_ext.get(mime_type, '.dat')
 
 
+def get_gps_from_video(video_path: Path) -> Tuple[Optional[float], Optional[float]]:
+    """Extract GPS coordinates from video EXIF using ffprobe. Returns (lat, lng) or (None, None)."""
+    try:
+        result = subprocess.run(
+            [get_ffprobe(), '-v', 'quiet', '-print_format', 'json', '-show_format', str(video_path)],
+            capture_output=True, text=True
+        )
+        data = json.loads(result.stdout)
+        tags = data.get('format', {}).get('tags', {})
+        location = tags.get('location') or tags.get('com.apple.quicktime.location.ISO6709')
+        if location:
+            # ISO 6709 format: +40.7128-074.0060/ or ±DD.DDDD±DDD.DDDD
+            match = re.match(r'([+-]?\d+\.?\d*)([+-]\d+\.?\d*)', location)
+            if match:
+                return float(match.group(1)), float(match.group(2))
+    except Exception:
+        pass
+    return None, None
+
+
 def get_video_duration(video_path: Path) -> float:
     """Use ffprobe to get video duration in seconds."""
     try:
@@ -395,7 +415,7 @@ def has_audio_track(video_path: Path) -> bool:
         return False
 
 
-def process_folder_media(service, folder_id: str, limit: int = None) -> List[Tuple[Path, float, datetime, str, str]]:
+def process_folder_media(service, folder_id: str, limit: int = None) -> List[Tuple[Path, float, datetime, str, str, Optional[float], Optional[float]]]:
     """
     Download and catalog media from Google Drive folder.
     Returns list of (path, duration, date, file_id, filename) tuples sorted chronologically.
@@ -460,17 +480,28 @@ def process_folder_media(service, folder_id: str, limit: int = None) -> List[Tup
             else:
                 creation_time = datetime.now()
 
+        # Extract GPS location
+        lat, lng = None, None
+        if ext in IMAGE_EXTENSIONS:
+            loc = (item.get('imageMediaMetadata') or {}).get('location') or {}
+            raw_lat = loc.get('latitude')
+            raw_lng = loc.get('longitude')
+            if raw_lat is not None and raw_lng is not None:
+                lat, lng = float(raw_lat), float(raw_lng)
+        elif ext in VIDEO_EXTENSIONS:
+            lat, lng = get_gps_from_video(local_path)
+
         # Determine duration
         if ext in IMAGE_EXTENSIONS:
             # Check for duration in filename
             duration = parse_duration_from_filename(filename)
             if duration is None:
                 duration = DEFAULT_IMAGE_DURATION
-            processed_media.append((local_path, float(duration), creation_time, file_id, filename))
+            processed_media.append((local_path, float(duration), creation_time, file_id, filename, lat, lng))
 
         elif ext in VIDEO_EXTENSIONS:
             duration = get_video_duration(local_path)
-            processed_media.append((local_path, duration, creation_time, file_id, filename))
+            processed_media.append((local_path, duration, creation_time, file_id, filename, lat, lng))
 
     # Sort by creation time (chronological)
     processed_media.sort(key=lambda x: x[2])
@@ -685,7 +716,7 @@ def concatenate_videos(video_paths: List[Path], output_path: Path, source_is_vid
         raise subprocess.CalledProcessError(result.returncode, cmd)
 
 
-def load_local_media() -> List[Tuple[Path, float, datetime, str, str]]:
+def load_local_media() -> List[Tuple[Path, float, datetime, str, str, Optional[float], Optional[float]]]:
     """
     Load media files from local temp_downloads directory.
     Used with --skip-download to avoid re-downloading from Drive.
@@ -719,15 +750,16 @@ def load_local_media() -> List[Tuple[Path, float, datetime, str, str]]:
         # Parse date from filename (PXL_YYYYMMDD_HHMMSS format)
         creation_time = parse_datetime_from_filename(filename) or datetime.now()
 
-        # Determine duration
+        # Determine duration and try GPS extraction
         if ext in IMAGE_EXTENSIONS:
             duration = parse_duration_from_filename(filename)
             if duration is None:
                 duration = DEFAULT_IMAGE_DURATION
-            local_media.append((file_path, float(duration), creation_time, '', filename))
+            local_media.append((file_path, float(duration), creation_time, '', filename, None, None))
         elif ext in VIDEO_EXTENSIONS:
             duration = get_video_duration(file_path)
-            local_media.append((file_path, duration, creation_time, '', filename))
+            lat, lng = get_gps_from_video(file_path)
+            local_media.append((file_path, duration, creation_time, '', filename, lat, lng))
 
     # Sort by creation time (parsed from filename)
     local_media.sort(key=lambda x: x[2])
@@ -742,7 +774,7 @@ def generate_compilation_metadata(clip_metadata: List[dict], source_is_video: Li
     Returns dict with months array containing start/end timestamps.
     """
     if not clip_metadata:
-        return {'months': [], 'total_duration': 0, 'clip_count': 0}
+        return {'months': [], 'clips': [], 'total_duration': 0, 'clip_count': 0}
 
     # Calculate timestamps for each clip, accounting for crossfade overlaps
     clip_timestamps = []
@@ -766,7 +798,9 @@ def generate_compilation_metadata(clip_metadata: List[dict], source_is_video: Li
             'month': clip['month'],
             'start': clip_start,
             'duration': clip_duration,
-            'filename': clip['filename']
+            'filename': clip['filename'],
+            'lat': clip.get('lat'),
+            'lng': clip.get('lng')
         })
 
         cumulative_time += max(effective_duration, 0.1)  # Ensure positive progress
@@ -788,8 +822,16 @@ def generate_compilation_metadata(clip_metadata: List[dict], source_is_video: Li
     # Convert to sorted list
     months_list = sorted(months_data.values(), key=lambda x: x['month'])
 
+    # Collect per-clip GPS data with absolute timestamps
+    all_clips = [
+        {'t': round(c['start'], 3), 'lat': c['lat'], 'lng': c['lng']}
+        for c in clip_timestamps
+        if c.get('lat') is not None and c.get('lng') is not None
+    ]
+
     return {
         'months': months_list,
+        'clips': all_clips,
         'total_duration': cumulative_time,
         'clip_count': len(clip_metadata),
         'generated_at': datetime.now().isoformat()
@@ -891,8 +933,9 @@ def build_month_video(service, month_name: str, month_folder_id: str,
     processed_clips = []
     source_is_video = []
     filenames = []
+    clip_gps = []  # (lat, lng) per processed clip
 
-    for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
+    for idx, (media_path, duration, creation_time, file_id, filename, lat, lng) in enumerate(media_files):
         ext = media_path.suffix.lower()
         output_clip = TEMP_DIR / f"month_{month_name}_clip_{idx:04d}.mp4"
 
@@ -906,6 +949,7 @@ def build_month_video(service, month_name: str, month_folder_id: str,
 
             processed_clips.append(output_clip)
             filenames.append(filename)
+            clip_gps.append((lat, lng))
         except subprocess.CalledProcessError as e:
             print(f"  ERROR processing {media_path.name}: {e}")
             continue
@@ -919,6 +963,25 @@ def build_month_video(service, month_name: str, month_folder_id: str,
     # Get actual duration of the month video
     month_duration = get_video_duration(output_path)
 
+    # Compute per-clip relative start timestamps (accounting for crossfade overlaps)
+    actual_durations = [get_video_duration(p) for p in processed_clips]
+    clips_data = []
+    cumulative = 0.0
+    for i, (filename, (lat, lng)) in enumerate(zip(filenames, clip_gps)):
+        clips_data.append({
+            'filename': filename,
+            'relative_start': cumulative,
+            'lat': lat,
+            'lng': lng
+        })
+        if i < len(processed_clips) - 1:
+            apply_crossfade = source_is_video[i] and not source_is_video[i + 1]
+            trans = CROSSFADE_DURATION if apply_crossfade else 0.1
+            effective = actual_durations[i] - trans
+        else:
+            effective = actual_durations[i]
+        cumulative += max(effective, 0.1)
+
     # Clean up individual clips
     for clip in processed_clips:
         try:
@@ -931,7 +994,8 @@ def build_month_video(service, month_name: str, month_folder_id: str,
         'files': sorted(filenames),
         'duration': month_duration,
         'clip_count': len(processed_clips),
-        'built_at': datetime.now().isoformat()
+        'built_at': datetime.now().isoformat(),
+        'clips': clips_data
     }
 
 
@@ -975,6 +1039,7 @@ def concat_month_videos(month_video_paths: List[Path], output_path: Path):
 def generate_metadata_from_months(month_manifests: List[dict]) -> dict:
     """Generate compilation metadata from per-month manifest data."""
     months_data = []
+    all_clips = []
     cumulative_time = 0.0
     total_clips = 0
 
@@ -989,11 +1054,21 @@ def generate_metadata_from_months(month_manifests: List[dict]) -> dict:
             'clip_count': manifest['clip_count']
         })
 
+        # Compile per-clip GPS locations with absolute timestamps
+        for clip in manifest.get('clips', []):
+            if clip.get('lat') is not None and clip.get('lng') is not None:
+                all_clips.append({
+                    't': round(month_start + clip['relative_start'], 3),
+                    'lat': clip['lat'],
+                    'lng': clip['lng']
+                })
+
         cumulative_time += month_duration
         total_clips += manifest['clip_count']
 
     return {
         'months': months_data,
+        'clips': all_clips,
         'total_duration': cumulative_time,
         'clip_count': total_clips,
         'generated_at': datetime.now().isoformat()
@@ -1198,7 +1273,7 @@ def main():
         source_is_video = []
         clip_metadata = []
 
-        for idx, (media_path, duration, creation_time, file_id, filename) in enumerate(media_files):
+        for idx, (media_path, duration, creation_time, file_id, filename, lat, lng) in enumerate(media_files):
             ext = media_path.suffix.lower()
             output_clip = TEMP_DIR / f"clip_{idx:04d}.mp4"
             clip_month = get_month_from_datetime(creation_time)
@@ -1212,7 +1287,7 @@ def main():
                     source_is_video.append(True)
 
                 processed_clips.append(output_clip)
-                clip_metadata.append({'month': clip_month, 'duration': duration, 'filename': filename})
+                clip_metadata.append({'month': clip_month, 'duration': duration, 'filename': filename, 'lat': lat, 'lng': lng})
             except subprocess.CalledProcessError as e:
                 print(f"  ERROR processing {media_path.name}: {e}")
                 continue
