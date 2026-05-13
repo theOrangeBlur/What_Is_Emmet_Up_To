@@ -19,12 +19,23 @@ let globeLerpFrom     = null;
 let globeRafId        = null;
 let globeLastClipIdx  = -1;
 let globeLastMonthKey = null;
+let globeCurrentScale = null;
+let globeTargetScale  = null;
+let globeScaleFrom    = null;
+let GLOBE_BASE_SCALE  = null;
+let GLOBE_ZOOM_SCALE  = null;
 
 function initGlobe() {
   if (!globeCanvas || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
 
   const size = globeCanvas.width; // 260
   const radius = size / 2 - 2;
+
+  GLOBE_BASE_SCALE  = radius;
+  GLOBE_ZOOM_SCALE  = radius * 1.8;
+  globeCurrentScale = GLOBE_BASE_SCALE;
+  globeTargetScale  = GLOBE_BASE_SCALE;
+  globeScaleFrom    = GLOBE_BASE_SCALE;
 
   globeProjection = d3.geoOrthographic()
     .scale(radius)
@@ -52,11 +63,16 @@ function globeLoop() {
   // Auto-rotate when not animating to a target and video is paused/ended
   if (!globeLerpActive && (video.paused || video.ended)) {
     globeRotation[0] += 0.2;
+    if (globeCurrentScale !== null && Math.abs(globeCurrentScale - GLOBE_BASE_SCALE) > 0.5) {
+      globeCurrentScale += (GLOBE_BASE_SCALE - globeCurrentScale) * 0.04;
+      globeProjection.scale(globeCurrentScale);
+    }
     renderGlobe();
   } else if (globeLerpActive) {
     globeLerpFrame++;
-    const t = Math.min(globeLerpFrame / 20, 1);
-    const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+    const t      = Math.min(globeLerpFrame / 35, 1);
+    const ease   = 1 - Math.pow(1 - t, 3); // cubic ease-out (rotation)
+    const tScale = t;
 
     // Interpolate each rotation axis, handling wrap-around for longitude
     function lerpAngle(a, b, t) {
@@ -68,11 +84,27 @@ function globeLoop() {
 
     globeRotation[0] = lerpAngle(globeLerpFrom[0], globeTargetRot[0], ease);
     globeRotation[1] = lerpAngle(globeLerpFrom[1], globeTargetRot[1], ease);
+
+    // Two-phase scale: zoom out (t<0.5) then zoom in (t>=0.5)
+    if (globeCurrentScale !== null) {
+      let newScale;
+      if (tScale < 0.5) {
+        const u = tScale * 2;
+        newScale = globeScaleFrom + (GLOBE_BASE_SCALE - globeScaleFrom) * (u * u);
+      } else {
+        const u = (tScale - 0.5) * 2;
+        newScale = GLOBE_BASE_SCALE + (globeTargetScale - GLOBE_BASE_SCALE) * (1 - Math.pow(1 - u, 2));
+      }
+      globeCurrentScale = newScale;
+      globeProjection.scale(globeCurrentScale);
+    }
+
     renderGlobe();
 
     if (t >= 1) {
-      globeLerpActive = false;
-      globeRotation   = [...globeTargetRot];
+      globeLerpActive   = false;
+      globeRotation     = [...globeTargetRot];
+      globeCurrentScale = globeTargetScale;
     }
   }
   globeRafId = requestAnimationFrame(globeLoop);
@@ -150,9 +182,11 @@ function renderGlobe() {
 }
 
 function setGlobeLocation(lat, lng, name) {
-  globePinLat   = lat;
-  globePinLng   = lng;
-  globeLerpFrom = [...globeRotation];
+  globePinLat    = lat;
+  globePinLng    = lng;
+  globeScaleFrom = globeCurrentScale ?? GLOBE_BASE_SCALE;
+  globeTargetScale = GLOBE_ZOOM_SCALE;
+  globeLerpFrom  = [...globeRotation];
   globeTargetRot = [-lng, -lat, 0]; // D3 orthographic: rotate brings (lat,lng) to center
   globeLerpFrame = 0;
   globeLerpActive = true;
