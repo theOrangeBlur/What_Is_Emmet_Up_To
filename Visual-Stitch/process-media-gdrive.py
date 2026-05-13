@@ -916,6 +916,8 @@ def month_needs_rebuild(drive_filenames: List[str], manifest: Optional[dict]) ->
     """Check if month needs rebuilding by comparing sorted file lists."""
     if manifest is None:
         return True
+    if 'clips' not in manifest:  # old manifest format, missing GPS data
+        return True
     return sorted(drive_filenames) != sorted(manifest.get('files', []))
 
 
