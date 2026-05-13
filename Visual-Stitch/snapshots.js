@@ -18,6 +18,7 @@ let globeLerpFrame    = 0;
 let globeLerpFrom     = null;
 let globeRafId        = null;
 let globeLastClipIdx  = -1;
+let globeLastMonthKey = null;
 
 function initGlobe() {
   if (!globeCanvas || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
@@ -148,7 +149,7 @@ function renderGlobe() {
   }
 }
 
-function setGlobeLocation(lat, lng) {
+function setGlobeLocation(lat, lng, name) {
   globePinLat   = lat;
   globePinLng   = lng;
   globeLerpFrom = [...globeRotation];
@@ -156,11 +157,15 @@ function setGlobeLocation(lat, lng) {
   globeLerpFrame = 0;
   globeLerpActive = true;
 
-  // Update label
+  // Update label: prefer a place name, fall back to coordinates
   if (globeLabel) {
-    const latStr = Math.abs(lat).toFixed(1) + (lat >= 0 ? '°N' : '°S');
-    const lngStr = Math.abs(lng).toFixed(1) + (lng >= 0 ? '°E' : '°W');
-    globeLabel.textContent = `${latStr}, ${lngStr}`;
+    if (name) {
+      globeLabel.textContent = name;
+    } else {
+      const latStr = Math.abs(lat).toFixed(1) + (lat >= 0 ? '°N' : '°S');
+      const lngStr = Math.abs(lng).toFixed(1) + (lng >= 0 ? '°E' : '°W');
+      globeLabel.textContent = `${latStr}, ${lngStr}`;
+    }
   }
 }
 
@@ -543,14 +548,22 @@ video.addEventListener('timeupdate', () => {
     hasPausedAtEnd = true;
   }
 
-  // Drive globe location from current clip
+  // Drive globe: per-clip GPS first, then fall back to per-month location
   const clip = findCurrentClip(video.currentTime);
   if (clip) {
-    // Only update if we've moved to a new clip index
     const idx = clipLocations.indexOf(clip);
     if (idx !== globeLastClipIdx) {
       globeLastClipIdx = idx;
       setGlobeLocation(clip.lat, clip.lng);
+    }
+  } else {
+    const month = compilationMetadata.months.findLast(m => video.currentTime >= m.start);
+    if (month && month.location && month.location.lat != null) {
+      const key = month.month;
+      if (key !== globeLastMonthKey) {
+        globeLastMonthKey = key;
+        setGlobeLocation(month.location.lat, month.location.lng, month.location.name);
+      }
     }
   }
 });

@@ -30,10 +30,8 @@
                     <button class="tag-filter" data-tag="Home">Home</button>
                     <button class="tag-filter" data-tag="Puzzle">Puzzle</button>
                     <button class="tag-filter" data-tag="Robotics">Robotics</button>
-                    <button class="tag-filter" data-tag="Team">Team</button>
                     <button class="tag-filter" data-tag="VT Hunt">VT Hunt</button>
                     <button class="tag-filter" data-tag="Woodworking">Woodworking</button>
-                    <button class="tag-filter" data-tag="home">home</button>
                 </div>
                 <select id="sort-by">
                     <option value="date">Sort by Date</option>
@@ -45,8 +43,8 @@
 
         <article class="project-card"
                  id="floor-ramp"
-                 data-tags="3d-printing,3d-modeling,home"
-                 data-status="finished"
+                 data-tags="3d-printing,3d-modeling,Home"
+                 data-status="Completed"
                  data-date="2026-04-27">
             <div class="project-card__preview" onclick="toggleProject('floor-ramp')">
                 <img src="Floor_Ramp/images/every-other.jpg" alt="Floor Ramp" class="project-thumbnail" loading="lazy">
@@ -54,10 +52,10 @@
                     <h3>Floor Ramp</h3>
                     <div class="project-meta">
                         <span class="date">Apr 24, 2026 - Apr 27, 2026</span>
-                        <span class="status-badge status-finished">finished</span>
+                        <span class="status-badge status-completed">Completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">home</span>
+                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">Home</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -528,6 +526,35 @@ Unfortunately, shortly after the event wrapped, a drunkard destroyed the piano a
         </article>
 
         <article class="project-card"
+                 id="digital-sundial"
+                 data-tags="Home,Robotics"
+                 data-status="future"
+                 data-date="">
+            <div class="project-card__preview" onclick="toggleProject('digital-sundial')">
+                <img src="Digital_Sundial/images/not_my_sundial.png" alt="Digital Sundial" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Digital Sundial</h3>
+                    <div class="project-meta">
+                        
+                        <span class="status-badge status-future">future</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Home</span><span class="tag">Robotics</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="digital-sundial-details">
+                <h3>Problem</h3>
+I've been casually interested in sundials for a while. They take a lot of math to figure out how to make work specifically where you are, and requires adding and subtracting hours manually.
+
+<h3>Process</h3>
+Using electronics, I could make a sundial that is more accurate! I could use light sensors and rotate the sundial based on the clock time so it's always accurate! Well, during the day at least.
+<h3>Result</h3>
+            </div>
+        </article>
+
+        <article class="project-card"
                  id="door-bell"
                  data-tags="Home,Robotics"
                  data-status="future"
@@ -581,7 +608,12 @@ Have a moving representation of where the moon is directly overhead on the Earth
 I've been wanting to work on this for a while.
 
 <h3>Process</h3>
-
+Idea 1:
+2 axis gimble that holds the moon in the center
+Idea 2: 
+1 axis standard gimble (worm gear?), height controlled by a winch.
+This can be fixed up to look like a hand dangling the moon by a string!
+Will the changing radius of the winch make it hard to control height precicely?  --Consider using a "capstan winch!"
 <h3>Result</h3>
             </div>
         </article>
@@ -589,7 +621,7 @@ I've been wanting to work on this for a while.
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-04-30</p>
+            <p>Last updated: 2026-05-13</p>
         </footer>
 
         <!-- Improvements Section -->

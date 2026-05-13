@@ -170,7 +170,8 @@ function generateTagFilters(projects) {
         tags.forEach(t => allTags.add(t));
     }
 
-    const sortedTags = Array.from(allTags).sort();
+    const HIDDEN_FILTER_TAGS = new Set(['Team']);
+    const sortedTags = Array.from(allTags).sort().filter(t => !HIDDEN_FILTER_TAGS.has(t));
     return sortedTags.map(tag =>
         `<button class="tag-filter" data-tag="${tag}">${tag}</button>`
     ).join('\n                    ');
