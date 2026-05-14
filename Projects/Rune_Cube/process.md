@@ -8,7 +8,8 @@ thumbnail: "images/step_0.jpg"
 ---
 
 ## Problem
-Create a puzzle that requires the solver to create a cube that acts as a marble maze. Also, for stupid meta-puzzle reasons I cannot control, the answer word must be [REDACTED].
+While I was almost completely uninvolved in the VT Hunt this year, I still helped test and hosted the team for the hellish week leading up to the event. One puzzle was in a rough way, and I had an idea to completely reimagine it. I wanted to:
+Create a puzzle that requires the solver to create a cube that acts as a marble maze. Also, for stupid meta-puzzle reasons I could not control, the answer word must have been [REDACTED].
 
 ## Process
 I planned for runes to be inscribed on each tunnel opening. These runes would correspond to a row and column on a scroll, which explained lore of the item as a Shakespearean sonnet (the VT Hunt theme was of a magic school).
@@ -49,4 +50,5 @@ And finally, here is how the cube can be constructed!
 ## Result
 ![Ball dropped in puzzle runs all the way through!](images/marble_run.mp4)
 
-I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun!
+I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun! Maybe a version where the whole cube must be picked up and rotated! Hiding magnets in the pieces to make them snap together would also be hugely satisfying. 
+
