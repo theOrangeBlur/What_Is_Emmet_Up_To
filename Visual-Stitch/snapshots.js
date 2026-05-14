@@ -35,7 +35,8 @@ let globePrevPinAlpha = 0.0;
 let globeTravelMode   = false;
 let globeZoomOutScale = null;
 let globeMidRot       = null;
-let globeLerpDuration = 35;
+let globeLerpDuration = 17;
+let videoLastPausedAt  = -Infinity; // timestamp (ms) when video last stopped playing
 
 // Drag / zoom interaction state
 let globeDragging            = false;
@@ -189,7 +190,8 @@ function initGlobe() {
 
 function globeLoop() {
   // Auto-rotate when not animating and the user isn't touching the globe
-  if (!globeLerpActive && !globeUserInteracting && (video.paused || video.ended)) {
+  const videoIdleMs = (video.paused || video.ended) ? Date.now() - videoLastPausedAt : 0;
+  if (!globeLerpActive && !globeUserInteracting && videoIdleMs >= 10000) {
     globeRotation[0] += 0.2;
     if (globeCurrentScale !== null && Math.abs(globeCurrentScale - GLOBE_BASE_SCALE) > 0.5) {
       globeCurrentScale += (GLOBE_BASE_SCALE - globeCurrentScale) * 0.04;
@@ -381,13 +383,13 @@ function setGlobeLocation(lat, lng, name) {
       const idealZoomOut   = canvasRadius * 0.75 / Math.sin(halfAngle);
       globeZoomOutScale    = Math.max(GLOBE_BASE_SCALE, Math.min(GLOBE_ZOOM_SCALE * 0.5, idealZoomOut));
 
-      globeLerpDuration = 70;
+      globeLerpDuration = 35;
     } else {
       globePrevPinLat   = null;
       globePrevPinLng   = null;
       globePrevPinAlpha = 0.0;
       globePinAlpha     = 1.0;
-      globeLerpDuration = 25;
+      globeLerpDuration = 12;
     }
   } else {
     // First location: zoom straight in
@@ -396,7 +398,7 @@ function setGlobeLocation(lat, lng, name) {
     globePrevPinLng   = null;
     globePrevPinAlpha = 0.0;
     globePinAlpha     = 0.0;
-    globeLerpDuration = 35;
+    globeLerpDuration = 17;
   }
 
   globePinLat      = lat;
@@ -873,6 +875,10 @@ video.addEventListener('loadedmetadata', function() {
   console.log('Video duration:', Math.floor(video.duration), 'seconds');
   buildTimeline();
 });
+
+video.addEventListener('pause', () => { videoLastPausedAt = Date.now(); });
+video.addEventListener('ended', () => { videoLastPausedAt = Date.now(); });
+video.addEventListener('play',  () => { videoLastPausedAt = Infinity; });
 
 // Rebuild on resize (segments use percentages, but just in case)
 window.addEventListener('resize', buildTimeline);
