@@ -69,8 +69,6 @@ splash.textContent = getDailySplashText();
 
 // Masthead edition info
 const _now = new Date();
-const _startOfYear = new Date(_now.getFullYear(), 0, 0);
-const _dayOfYear = Math.floor((_now - _startOfYear) / 86400000);
 const _editionDate = document.getElementById('edition-date');
 const _editionNum = document.getElementById('edition-number');
 if (_editionDate) {
@@ -79,7 +77,21 @@ if (_editionDate) {
     });
 }
 if (_editionNum) {
-    _editionNum.textContent = _dayOfYear;
+    const _hashLink = document.createElement('a');
+    _hashLink.href = 'https://github.com/theOrangeBlur/What_Is_Emmet_Up_To';
+    _hashLink.target = '_blank';
+    _hashLink.rel = 'noopener';
+    const _tooltip = document.createElement('span');
+    _tooltip.className = 'edition-hash-tooltip';
+    _tooltip.textContent = "that's the commit hash on my repo! Wanna see it?";
+    _editionNum.style.position = 'relative';
+    _editionNum.appendChild(_hashLink);
+    _editionNum.appendChild(_tooltip);
+
+    fetch('https://api.github.com/repos/theOrangeBlur/What_Is_Emmet_Up_To/commits/main')
+        .then(r => r.json())
+        .then(data => { _hashLink.textContent = data.sha.slice(0, 7); })
+        .catch(() => { _hashLink.textContent = '???????'; });
 }
 
 // ── Newspaper: Dynamic Preview Loading ──
