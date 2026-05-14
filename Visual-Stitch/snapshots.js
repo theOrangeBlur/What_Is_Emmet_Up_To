@@ -3,8 +3,10 @@
 const globeCanvas = document.getElementById('globe-canvas');
 const globeLabel  = document.getElementById('globe-location-label');
 const GLOBE_WORLD_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+const GLOBE_US_URL    = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 
 let globeWorld        = null;   // topojson world
+let globeUsStates     = null;   // topojson US states (for state lines when zoomed)
 let clipLocations     = [];     // [{t, lat, lng}] sorted by t, from metadata
 let globeProjection   = null;
 let globePath         = null;
@@ -32,7 +34,7 @@ function initGlobe() {
   const radius = size / 2 - 2;
 
   GLOBE_BASE_SCALE  = radius;
-  GLOBE_ZOOM_SCALE  = radius * 1.8;
+  GLOBE_ZOOM_SCALE  = radius * 3.0;
   globeCurrentScale = GLOBE_BASE_SCALE;
   globeTargetScale  = GLOBE_BASE_SCALE;
   globeScaleFrom    = GLOBE_BASE_SCALE;
@@ -57,6 +59,11 @@ function initGlobe() {
       // If data fails to load, just spin a blank sphere
       globeRafId = requestAnimationFrame(globeLoop);
     });
+
+  fetch(GLOBE_US_URL)
+    .then(r => r.json())
+    .then(us => { globeUsStates = us; })
+    .catch(() => {});
 }
 
 function globeLoop() {
@@ -143,6 +150,17 @@ function renderGlobe() {
     ctx.stroke();
     ctx.fillStyle   = 'rgba(40, 80, 200, 0.15)';
     ctx.fill();
+  }
+
+  // US state lines (fade in when zoomed)
+  if (globeUsStates && globeCurrentScale > GLOBE_BASE_SCALE * 1.5) {
+    const zoomFraction = Math.min(1, (globeCurrentScale - GLOBE_BASE_SCALE * 1.5) / (GLOBE_BASE_SCALE * 1.0));
+    const stateMesh = topojson.mesh(globeUsStates, globeUsStates.objects.states, (a, b) => a !== b);
+    ctx.beginPath();
+    globePath(stateMesh);
+    ctx.strokeStyle = `rgba(120, 200, 255, ${0.55 * zoomFraction})`;
+    ctx.lineWidth   = 0.5;
+    ctx.stroke();
   }
 
   // Outer sphere border
