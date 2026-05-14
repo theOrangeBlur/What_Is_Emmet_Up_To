@@ -2,11 +2,13 @@
 
 const globeCanvas = document.getElementById('globe-canvas');
 const globeLabel  = document.getElementById('globe-location-label');
-const GLOBE_WORLD_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
-const GLOBE_US_URL    = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+const GLOBE_WORLD_URL    = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+const GLOBE_US_URL       = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+const GLOBE_COUNTY_URL   = 'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json';
 
 let globeWorld        = null;   // topojson world
 let globeUsStates     = null;   // topojson US states (for state lines when zoomed)
+let globeUsCounties   = null;   // topojson US counties (for county lines at high zoom)
 let clipLocations     = [];     // [{t, lat, lng}] sorted by t, from metadata
 let globeProjection   = null;
 let globePath         = null;
@@ -26,6 +28,72 @@ let globeTargetScale  = null;
 let globeScaleFrom    = null;
 let GLOBE_BASE_SCALE  = null;
 let GLOBE_ZOOM_SCALE  = null;
+let globePrevPinLat   = null;
+let globePrevPinLng   = null;
+let globePinAlpha     = 1.0;
+let globePrevPinAlpha = 0.0;
+let globeTravelMode   = false;
+let globeZoomOutScale = null;
+let globeMidRot       = null;
+let globeLerpDuration = 35;
+
+// Drag / zoom interaction state
+let globeDragging            = false;
+let globeDragLastX           = 0;
+let globeDragLastY           = 0;
+let globeUserInteracting     = false;
+let globeUserInteractTimeout = null;
+
+function globeAngularDist(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const dLat  = toRad(lat2 - lat1);
+  const dLng  = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2
+          + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * Math.asin(Math.sqrt(Math.min(1, a))); // radians
+}
+
+function markGlobeInteracting() {
+  globeUserInteracting = true;
+  clearTimeout(globeUserInteractTimeout);
+  globeUserInteractTimeout = setTimeout(() => { globeUserInteracting = false; }, 2000);
+}
+
+function startGlobeDrag(x, y) {
+  globeDragging    = true;
+  globeDragLastX   = x;
+  globeDragLastY   = y;
+  globeLerpActive  = false;
+  markGlobeInteracting();
+}
+
+function moveGlobeDrag(x, y) {
+  if (!globeDragging) return;
+  const dx = x - globeDragLastX;
+  const dy = y - globeDragLastY;
+  globeDragLastX = x;
+  globeDragLastY = y;
+  const sensitivity = 0.4;
+  globeRotation[0] += dx * sensitivity;
+  globeRotation[1]  = Math.max(-85, Math.min(85, globeRotation[1] - dy * sensitivity));
+  renderGlobe();
+  markGlobeInteracting();
+}
+
+function endGlobeDrag() {
+  globeDragging = false;
+}
+
+function zoomGlobe(delta) {
+  const factor   = delta > 0 ? 0.92 : 1.08;
+  const minScale = GLOBE_BASE_SCALE * 0.9;
+  const maxScale = GLOBE_BASE_SCALE * 15;
+  globeCurrentScale = Math.max(minScale, Math.min(maxScale, globeCurrentScale * factor));
+  globeTargetScale  = globeCurrentScale;
+  globeProjection.scale(globeCurrentScale);
+  renderGlobe();
+  markGlobeInteracting();
+}
 
 function initGlobe() {
   if (!globeCanvas || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
@@ -48,6 +116,54 @@ function initGlobe() {
   globePath      = d3.geoPath(globeProjection, globeCanvas.getContext('2d'));
   globeGraticule = d3.geoGraticule()();
 
+  // ── Mouse drag ──────────────────────────────────────────────────────────
+  globeCanvas.addEventListener('mousedown', e => {
+    e.preventDefault();
+    startGlobeDrag(e.clientX, e.clientY);
+  });
+  globeCanvas.addEventListener('mousemove', e => moveGlobeDrag(e.clientX, e.clientY));
+  globeCanvas.addEventListener('mouseup',    () => endGlobeDrag());
+  globeCanvas.addEventListener('mouseleave', () => endGlobeDrag());
+
+  // ── Touch drag + pinch-zoom ──────────────────────────────────────────────
+  let touchPinchDist = null;
+  globeCanvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      startGlobeDrag(e.touches[0].clientX, e.touches[0].clientY);
+      touchPinchDist = null;
+    } else if (e.touches.length === 2) {
+      globeDragging  = false;
+      touchPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  }, { passive: false });
+  globeCanvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && touchPinchDist === null) {
+      moveGlobeDrag(e.touches[0].clientX, e.touches[0].clientY);
+    } else if (e.touches.length === 2 && touchPinchDist !== null) {
+      const d = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      zoomGlobe(touchPinchDist - d);
+      touchPinchDist = d;
+    }
+  }, { passive: false });
+  globeCanvas.addEventListener('touchend', () => {
+    endGlobeDrag();
+    touchPinchDist = null;
+  });
+
+  // ── Scroll / wheel zoom ─────────────────────────────────────────────────
+  globeCanvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomGlobe(e.deltaY);
+  }, { passive: false });
+
   fetch(GLOBE_WORLD_URL)
     .then(r => r.json())
     .then(world => {
@@ -64,11 +180,16 @@ function initGlobe() {
     .then(r => r.json())
     .then(us => { globeUsStates = us; })
     .catch(() => {});
+
+  fetch(GLOBE_COUNTY_URL)
+    .then(r => r.json())
+    .then(counties => { globeUsCounties = counties; })
+    .catch(() => {});
 }
 
 function globeLoop() {
-  // Auto-rotate when not animating to a target and video is paused/ended
-  if (!globeLerpActive && (video.paused || video.ended)) {
+  // Auto-rotate when not animating and the user isn't touching the globe
+  if (!globeLerpActive && !globeUserInteracting && (video.paused || video.ended)) {
     globeRotation[0] += 0.2;
     if (globeCurrentScale !== null && Math.abs(globeCurrentScale - GLOBE_BASE_SCALE) > 0.5) {
       globeCurrentScale += (GLOBE_BASE_SCALE - globeCurrentScale) * 0.04;
@@ -77,41 +198,56 @@ function globeLoop() {
     renderGlobe();
   } else if (globeLerpActive) {
     globeLerpFrame++;
-    const t      = Math.min(globeLerpFrame / 35, 1);
-    const ease   = 1 - Math.pow(1 - t, 3); // cubic ease-out (rotation)
-    const tScale = t;
+    const t = Math.min(globeLerpFrame / globeLerpDuration, 1);
 
-    // Interpolate each rotation axis, handling wrap-around for longitude
-    function lerpAngle(a, b, t) {
+    function lerpAngle(a, b, e) {
       let diff = b - a;
       while (diff > 180)  diff -= 360;
       while (diff < -180) diff += 360;
-      return a + diff * t;
+      return a + diff * e;
     }
 
-    globeRotation[0] = lerpAngle(globeLerpFrom[0], globeTargetRot[0], ease);
-    globeRotation[1] = lerpAngle(globeLerpFrom[1], globeTargetRot[1], ease);
+    let newScale = globeCurrentScale;
 
-    // Two-phase scale: zoom out (t<0.5) then zoom in (t>=0.5)
-    if (globeCurrentScale !== null) {
-      let newScale;
-      if (tScale < 0.5) {
-        const u = tScale * 2;
-        newScale = globeScaleFrom + (GLOBE_BASE_SCALE - globeScaleFrom) * (u * u);
+    if (globeTravelMode) {
+      // Phase 1 (t 0→0.5): rotate to midpoint, zoom out, fade old pin out
+      // Phase 2 (t 0.5→1): rotate to target, zoom in, fade new pin in
+      if (t < 0.5) {
+        const u    = t * 2;
+        const ease = 1 - Math.pow(1 - u, 3);
+        globeRotation[0] = lerpAngle(globeLerpFrom[0], globeMidRot[0], ease);
+        globeRotation[1] = lerpAngle(globeLerpFrom[1], globeMidRot[1], ease);
+        newScale          = globeScaleFrom + (globeZoomOutScale - globeScaleFrom) * (u * u);
+        globePrevPinAlpha = 1 - u * u;
+        globePinAlpha     = 0;
       } else {
-        const u = (tScale - 0.5) * 2;
-        newScale = GLOBE_BASE_SCALE + (globeTargetScale - GLOBE_BASE_SCALE) * (1 - Math.pow(1 - u, 2));
+        const u    = (t - 0.5) * 2;
+        const ease = 1 - Math.pow(1 - u, 3);
+        globeRotation[0] = lerpAngle(globeMidRot[0], globeTargetRot[0], ease);
+        globeRotation[1] = lerpAngle(globeMidRot[1], globeTargetRot[1], ease);
+        newScale          = globeZoomOutScale + (globeTargetScale - globeZoomOutScale) * (1 - Math.pow(1 - u, 2));
+        globePrevPinAlpha = 0;
+        globePinAlpha     = 1 - Math.pow(1 - u, 2);
       }
-      globeCurrentScale = newScale;
-      globeProjection.scale(globeCurrentScale);
+    } else {
+      // Short hop or first location: just pan + zoom in, no zoom-out
+      const ease = 1 - Math.pow(1 - t, 3);
+      globeRotation[0] = lerpAngle(globeLerpFrom[0], globeTargetRot[0], ease);
+      globeRotation[1] = lerpAngle(globeLerpFrom[1], globeTargetRot[1], ease);
+      newScale          = globeScaleFrom + (globeTargetScale - globeScaleFrom) * (1 - Math.pow(1 - t, 2));
+      globePinAlpha     = Math.min(1, t * 3);
     }
 
+    globeCurrentScale = newScale;
+    globeProjection.scale(globeCurrentScale);
     renderGlobe();
 
     if (t >= 1) {
       globeLerpActive   = false;
       globeRotation     = [...globeTargetRot];
       globeCurrentScale = globeTargetScale;
+      globePrevPinAlpha = 0;
+      globePinAlpha     = 1;
     }
   }
   globeRafId = requestAnimationFrame(globeLoop);
@@ -163,6 +299,17 @@ function renderGlobe() {
     ctx.stroke();
   }
 
+  // US county lines (fade in at higher zoom)
+  if (globeUsCounties && globeCurrentScale > GLOBE_BASE_SCALE * 5) {
+    const zoomFraction = Math.min(1, (globeCurrentScale - GLOBE_BASE_SCALE * 5) / (GLOBE_BASE_SCALE * 2));
+    const countyMesh = topojson.mesh(globeUsCounties, globeUsCounties.objects.counties, (a, b) => a !== b);
+    ctx.beginPath();
+    globePath(countyMesh);
+    ctx.strokeStyle = `rgba(100, 180, 255, ${0.38 * zoomFraction})`;
+    ctx.lineWidth   = 0.3;
+    ctx.stroke();
+  }
+
   // Outer sphere border
   ctx.beginPath();
   globePath({type: 'Sphere'});
@@ -170,46 +317,97 @@ function renderGlobe() {
   ctx.lineWidth   = 1;
   ctx.stroke();
 
-  // Pin
-  if (globePinLat !== null && globePinLng !== null) {
-    const coords = globeProjection([globePinLng, globePinLat]);
-    if (coords) {
-      // Check the point is on the visible hemisphere (not clipped)
-      const [px, py] = coords;
-      const cx = size / 2, cy = size / 2;
-      const radius = globeProjection.scale();
-      const dist = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
-      if (dist < radius - 1) {
-        ctx.save();
-        ctx.shadowColor = '#ffd700';
-        ctx.shadowBlur  = 10;
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffd700';
-        ctx.fill();
-        ctx.shadowBlur  = 0;
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth   = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
+  // Helper: draw a pin at [lng, lat] with given alpha
+  function drawPin(lat, lng, alpha) {
+    if (alpha <= 0) return;
+    const coords = globeProjection([lng, lat]);
+    if (!coords) return;
+    const [px, py] = coords;
+    const cx = size / 2, cy = size / 2;
+    const pr = globeProjection.scale();
+    if (Math.sqrt((px - cx) ** 2 + (py - cy) ** 2) >= pr - 1) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur  = 10;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.restore();
   }
+
+  if (globePrevPinLat !== null && globePrevPinLng !== null)
+    drawPin(globePrevPinLat, globePrevPinLng, globePrevPinAlpha);
+  if (globePinLat !== null && globePinLng !== null)
+    drawPin(globePinLat, globePinLng, globePinAlpha);
 }
 
 function setGlobeLocation(lat, lng, name) {
-  globePinLat    = lat;
-  globePinLng    = lng;
-  globeScaleFrom = globeCurrentScale ?? GLOBE_BASE_SCALE;
-  globeTargetScale = GLOBE_ZOOM_SCALE;
-  globeLerpFrom  = [...globeRotation];
-  globeTargetRot = [-lng, -lat, 0]; // D3 orthographic: rotate brings (lat,lng) to center
-  globeLerpFrame = 0;
-  globeLerpActive = true;
+  const TRAVEL_THRESHOLD_RAD = 5 * Math.PI / 180; // ~555 km
 
-  // Update label: prefer a place name, fall back to coordinates
+  function midAngle(a, b) {
+    let diff = b - a;
+    while (diff > 180)  diff -= 360;
+    while (diff < -180) diff += 360;
+    return a + diff * 0.5;
+  }
+
+  const prevLat = globePinLat;
+  const prevLng = globePinLng;
+
+  if (prevLat !== null && prevLng !== null) {
+    const angDist = globeAngularDist(prevLat, prevLng, lat, lng);
+    globeTravelMode = angDist >= TRAVEL_THRESHOLD_RAD;
+
+    if (globeTravelMode) {
+      globePrevPinLat   = prevLat;
+      globePrevPinLng   = prevLng;
+      globePrevPinAlpha = 1.0;
+      globePinAlpha     = 0.0;
+
+      // Midpoint rotation between old and new target rotations
+      globeMidRot = [midAngle(-prevLng, -lng), midAngle(-prevLat, -lat), 0];
+
+      // Zoom out just enough to show both locations (capped at base scale)
+      const halfAngle      = angDist / 2;
+      const canvasRadius   = globeCanvas.width / 2;
+      const idealZoomOut   = canvasRadius * 0.75 / Math.sin(halfAngle);
+      globeZoomOutScale    = Math.max(GLOBE_BASE_SCALE, Math.min(GLOBE_ZOOM_SCALE * 0.5, idealZoomOut));
+
+      globeLerpDuration = 70;
+    } else {
+      globePrevPinLat   = null;
+      globePrevPinLng   = null;
+      globePrevPinAlpha = 0.0;
+      globePinAlpha     = 1.0;
+      globeLerpDuration = 25;
+    }
+  } else {
+    // First location: zoom straight in
+    globeTravelMode   = false;
+    globePrevPinLat   = null;
+    globePrevPinLng   = null;
+    globePrevPinAlpha = 0.0;
+    globePinAlpha     = 0.0;
+    globeLerpDuration = 35;
+  }
+
+  globePinLat      = lat;
+  globePinLng      = lng;
+  globeScaleFrom   = globeCurrentScale ?? GLOBE_BASE_SCALE;
+  globeTargetScale = GLOBE_ZOOM_SCALE;
+  globeLerpFrom    = [...globeRotation];
+  globeTargetRot   = [-lng, -lat, 0];
+  globeLerpFrame   = 0;
+  globeLerpActive  = true;
+
   if (globeLabel) {
     if (name) {
       globeLabel.textContent = name;
