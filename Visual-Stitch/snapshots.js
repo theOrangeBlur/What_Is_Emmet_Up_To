@@ -102,7 +102,7 @@ function initGlobe() {
   const radius = size / 2 - 2;
 
   GLOBE_BASE_SCALE  = radius;
-  GLOBE_ZOOM_SCALE  = radius * 3.0;
+  GLOBE_ZOOM_SCALE  = radius * 15;
   globeCurrentScale = GLOBE_BASE_SCALE;
   globeTargetScale  = GLOBE_BASE_SCALE;
   globeScaleFrom    = GLOBE_BASE_SCALE;
