@@ -1,7 +1,7 @@
 ---
 title: "Chess Pieces"
 status: "completed"
-tags: ["3d-printing", "3d-modeling"]
+tags: ["3D Print", "3D Modeling"]
 start_date: "2025-05"
 end_date: "2025-09"
 thumbnail: "images/Final-1.jpg"

@@ -25,8 +25,8 @@
             <div class="controls">
                 <div class="tag-filters">
                     <button class="tag-filter active" data-tag="all">All</button>
-                    <button class="tag-filter" data-tag="3d-modeling">3d-modeling</button>
-                    <button class="tag-filter" data-tag="3d-printing">3d-printing</button>
+                    <button class="tag-filter" data-tag="3D Modeling">3D Modeling</button>
+                    <button class="tag-filter" data-tag="3D Print">3D Print</button>
                     <button class="tag-filter" data-tag="Home">Home</button>
                     <button class="tag-filter" data-tag="Puzzle">Puzzle</button>
                     <button class="tag-filter" data-tag="Robotics">Robotics</button>
@@ -43,7 +43,7 @@
 
         <article class="project-card"
                  id="floor-ramp"
-                 data-tags="3d-printing,3d-modeling,Home"
+                 data-tags="3D Print,3D Modeling,Home"
                  data-status="Completed"
                  data-date="2026-04-27">
             <div class="project-card__preview" onclick="toggleProject('floor-ramp')">
@@ -55,7 +55,7 @@
                         <span class="status-badge status-completed">Completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">Home</span>
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span><span class="tag">Home</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -88,8 +88,66 @@ Someone asked if it's a bar-code... I'll have to keep that in mind if I ever mak
         </article>
 
         <article class="project-card"
+                 id="rune-cube"
+                 data-tags="Puzzle,3D Modeling,3D Print,VT Hunt"
+                 data-status="completed"
+                 data-date="2026-04-03">
+            <div class="project-card__preview" onclick="toggleProject('rune-cube')">
+                <img src="Rune_Cube/images/step_0.jpg" alt="Rune Cube" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Rune Cube</h3>
+                    <div class="project-meta">
+                        <span class="date">Mar 31, 2026 - Apr 3, 2026</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">Puzzle</span><span class="tag">3D Modeling</span><span class="tag">3D Print</span><span class="tag">VT Hunt</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="rune-cube-details">
+                <h3>Problem</h3>
+Create a puzzle that requires the solver to create a cube that acts as a marble maze. Also, for stupid meta-puzzle reasons I cannot control, the answer word must be [REDACTED].
+<h3>Process</h3>
+I planned for runes to be inscribed on each tunnel opening. These runes would correspond to a row and column on a scroll, which explained lore of the item as a Shakespearean sonnet (the VT Hunt theme was of a magic school).
+<img src="Rune_Cube/images/scroll.jpg" alt="A magical scroll with runes" class="project-image" loading="lazy">
+<p>I mocked up what I wanted the cube to look like using LEGO. I considered what pieces would be fun to arrange and be the right challenge when assembling a cube, as well as what features would be fun to have in a marble course. <img src="Rune_Cube/images/lego.jpg" alt="A cube made of lego bricks assembled into pieces" class="project-image" loading="lazy"></p>
+<p>After making this LEGO mock, I chose the path for the marble run and drafted the pieces in Fusion360. I printed out a version much smaller than the original to test with; I was curious how difficult assembling the cube would be with holes that must be lined up. I wondered if adding false marble paths would be necessary... but I found through testing that assembling the cube was the right amount of difficult.</p>
+<p>I then wrote out the poem, developed the symbols, and decided to add some fun ciphers. This trick would deter players from deducing which marble paths could be connected by knowing which letters could follow another. I decided on "CAESAR_13_NGONFU_JMUYVZEU". Performing a caesar shift cipher on the text right of the 13 would yield another cipher, "atbash." Performing an atbash cipher on the remaining text would finally reveal the answer... "disornis."</p>
+<p>CAESAR_13_NGONFU_JMUYVZEU    -> CAESAR_13_ATBASH_WZHLIMRH    -> CAESAR_13_ATBASH_DISORNIS</p>
+<p>Finally, I applied the runes to the pieces in Fusion360 and began to print.</p>
+<img src="Rune_Cube/images/blue_runes.jpg" alt="Runes on a blue piece" class="project-image" loading="lazy">
+<img src="Rune_Cube/images/teal_runes.jpg" alt="Runes on a teal piece" class="project-image" loading="lazy">
+<p>This purple rune is a little special. It is meant to notate the value 13 instead of a row and column! <img src="Rune_Cube/images/purple_runes.jpg" alt="Runes on a purple piece" class="project-image" loading="lazy"></p>
+<p>And finally, here is how the cube can be constructed!</p>
+<div class="step-stepper">
+    <div class="step-stepper__stage">
+        <img src="Rune_Cube/images/step_0.jpg" alt="Unsolved cube in pieces" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_1.jpg" alt="Unsolved puzzle at step 1" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_2.jpg" alt="Unsolved puzzle at step 2" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_3.jpg" alt="Unsolved puzzle at step 3" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_4.jpg" alt="Unsolved puzzle at step 4" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_5.jpg" alt="Unsolved puzzle at step 5" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_6.jpg" alt="Unsolved puzzle at step 6" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_7.jpg" alt="Unsolved puzzle at step 7" class="project-image step-stepper__img" loading="lazy">
+        <img src="Rune_Cube/images/step_8.jpg" alt="Solved puzzle at step 8" class="project-image step-stepper__img" loading="lazy">
+        <div class="step-stepper__hint-overlay">→</div>
+    </div>
+    <div class="step-stepper__controls">
+        <span class="step-stepper__counter">Step 1 / 9</span>
+        <span class="step-stepper__hint">click to advance</span>
+    </div>
+</div>
+<h3>Result</h3>
+<video src="Rune_Cube/images/marble_run.mp4" class="project-image" controls loop muted playsinline></video>
+<p>I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun!</p>
+            </div>
+        </article>
+
+        <article class="project-card"
                  id="poop-clip"
-                 data-tags="3d-printing,3d-modeling"
+                 data-tags="3D Print,3D Modeling"
                  data-status="completed"
                  data-date="2026-04">
             <div class="project-card__preview" onclick="toggleProject('poop-clip')">
@@ -101,7 +159,7 @@ Someone asked if it's a bar-code... I'll have to keep that in mind if I ever mak
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -121,7 +179,7 @@ The final version holds that bag no problem! Cypher even had a record breaking t
 
         <article class="project-card"
                  id="liquer-cabinet"
-                 data-tags="3d-printing,Home,3d-modeling"
+                 data-tags="3D Print,Home,3D Modeling"
                  data-status="completed"
                  data-date="2026-02-12">
             <div class="project-card__preview" onclick="toggleProject('liquer-cabinet')">
@@ -133,7 +191,7 @@ The final version holds that bag no problem! Cypher even had a record breaking t
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">Home</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3D Print</span><span class="tag">Home</span><span class="tag">3D Modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -169,7 +227,7 @@ I love the painted copper art Julia brought back from New Zealand as well.
 
         <article class="project-card"
                  id="qr-code"
-                 data-tags="3d-printing,3d-modeling,Home"
+                 data-tags="3D Print,3D Modeling,Home"
                  data-status="completed"
                  data-date="2026-02-02">
             <div class="project-card__preview" onclick="toggleProject('qr-code')">
@@ -181,7 +239,7 @@ I love the painted copper art Julia brought back from New Zealand as well.
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">Home</span>
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span><span class="tag">Home</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -207,7 +265,7 @@ She scans beautifully, and now lives on our fridge!
 
         <article class="project-card"
                  id="oven-skirt"
-                 data-tags="3d-printing,Home,3d-modeling"
+                 data-tags="3D Print,Home,3D Modeling"
                  data-status="completed"
                  data-date="2026-01-29">
             <div class="project-card__preview" onclick="toggleProject('oven-skirt')">
@@ -219,7 +277,7 @@ She scans beautifully, and now lives on our fridge!
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">Home</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3D Print</span><span class="tag">Home</span><span class="tag">3D Modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -253,7 +311,7 @@ She had the wonderful idea of putting magnets in them so they snap together (whi
 
         <article class="project-card"
                  id="chess"
-                 data-tags="3d-printing,3d-modeling"
+                 data-tags="3D Print,3D Modeling"
                  data-status="completed"
                  data-date="2025-09">
             <div class="project-card__preview" onclick="toggleProject('chess')">
@@ -265,7 +323,7 @@ She had the wonderful idea of putting magnets in them so they snap together (whi
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span>
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -298,7 +356,7 @@ Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters i
 
         <article class="project-card"
                  id="clock-lock"
-                 data-tags="3d-printing,Robotics,3d-modeling,VT Hunt"
+                 data-tags="3D Print,Robotics,3D Modeling,VT Hunt"
                  data-status="completed"
                  data-date="2025-04">
             <div class="project-card__preview" onclick="toggleProject('clock-lock')">
@@ -310,7 +368,7 @@ Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters i
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">Robotics</span><span class="tag">3d-modeling</span><span class="tag">VT Hunt</span>
+                        <span class="tag">3D Print</span><span class="tag">Robotics</span><span class="tag">3D Modeling</span><span class="tag">VT Hunt</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -343,7 +401,7 @@ I ended up not putting this out for the Hunt, as I knew people would simply brea
 
         <article class="project-card"
                  id="eye-puzzle"
-                 data-tags="3d-printing,3d-modeling,VT Hunt"
+                 data-tags="3D Print,3D Modeling,VT Hunt"
                  data-status="completed"
                  data-date="2024-10">
             <div class="project-card__preview" onclick="toggleProject('eye-puzzle')">
@@ -355,7 +413,7 @@ I ended up not putting this out for the Hunt, as I knew people would simply brea
                         <span class="status-badge status-completed">completed</span>
                     </div>
                     <div class="project-tags">
-                        <span class="tag">3d-printing</span><span class="tag">3d-modeling</span><span class="tag">VT Hunt</span>
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span><span class="tag">VT Hunt</span>
                     </div>
                 </div>
                 <span class="expand-icon">▼</span>
@@ -621,7 +679,7 @@ Will the changing radius of the winch make it hard to control height precicely? 
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-05-13</p>
+            <p>Last updated: 2026-05-14</p>
         </footer>
 
         <!-- Improvements Section -->

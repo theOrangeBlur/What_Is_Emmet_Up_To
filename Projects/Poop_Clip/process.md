@@ -1,7 +1,7 @@
 ---
 title: "Poop Clip"
 status: "completed"
-tags: ["3d-printing", "3d-modeling"]
+tags: ["3D Print", "3D Modeling"]
 start_date: "2026-03"
 end_date: "2026-04"
 thumbnail: "images/prototypes.jpg"

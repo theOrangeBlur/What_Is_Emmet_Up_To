@@ -88,13 +88,23 @@ function markdownToHtml(md, projectFolder) {
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
+    // Wrap consecutive step_N images in a clickable stepper widget
+    html = html.replace(/((?:<img [^>]*src="[^"]*step_\d+[^"]*"[^>]*>\n?)+)/g, (match) => {
+        const imgs = match.match(/<img [^>]+>/g) || [];
+        if (imgs.length < 2) return match;
+        const steppedImgs = imgs.map(img =>
+            img.replace('class="project-image"', 'class="project-image step-stepper__img"')
+        ).join('\n        ');
+        return `<div class="step-stepper">\n    <div class="step-stepper__stage">\n        ${steppedImgs}\n        <div class="step-stepper__hint-overlay">→</div>\n    </div>\n    <div class="step-stepper__controls">\n        <span class="step-stepper__counter">Step 1 / ${imgs.length}</span>\n        <span class="step-stepper__hint">click to advance</span>\n    </div>\n</div>`;
+    });
+
     // Paragraphs - split by double newlines
     const blocks = html.split(/\n\n+/);
     html = blocks.map(block => {
         block = block.trim();
         if (!block) return '';
         // Don't wrap if already a tag
-        if (block.startsWith('<h') || block.startsWith('<img') || block.startsWith('<video') || block.startsWith('<ul') || block.startsWith('<ol')) {
+        if (block.startsWith('<h') || block.startsWith('<img') || block.startsWith('<video') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<div')) {
             return block;
         }
         return `<p>${block.replace(/\n/g, ' ')}</p>`;

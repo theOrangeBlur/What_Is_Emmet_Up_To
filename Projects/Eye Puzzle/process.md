@@ -1,7 +1,7 @@
 ---
 title: "Realistic Eyes!"
 status: "completed"
-tags: ["3d-printing", "3d-modeling", "VT Hunt"]
+tags: ["3D Print", "3D Modeling", "VT Hunt"]
 start_date: "2024-09"
 end_date: "2024-10"
 thumbnail: "images/portrait.jpg"

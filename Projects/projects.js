@@ -17,7 +17,35 @@ function toggleProject(slug) {
     }
 }
 
+function initSteppers() {
+    document.querySelectorAll('.step-stepper').forEach(stepper => {
+        const stage = stepper.querySelector('.step-stepper__stage');
+        const imgs = stepper.querySelectorAll('.step-stepper__img');
+        const counter = stepper.querySelector('.step-stepper__counter');
+        const hint = stepper.querySelector('.step-stepper__hint');
+        let current = 0;
+
+        imgs[0].classList.add('active');
+
+        // Preload all step images immediately so first-run is smooth
+        imgs.forEach(img => { img.loading = 'eager'; });
+
+        function updateUI() {
+            counter.textContent = `Step ${current + 1} / ${imgs.length}`;
+            hint.textContent = current === imgs.length - 1 ? 'click to restart' : 'click to advance';
+        }
+
+        stage.addEventListener('click', () => {
+            imgs[current].classList.remove('active');
+            current = (current + 1) % imgs.length;
+            imgs[current].classList.add('active');
+            updateUI();
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    initSteppers();
     const projectList = document.getElementById('project-list');
     const sortSelect = document.getElementById('sort-by');
     const tagFilters = document.querySelectorAll('.tag-filter');

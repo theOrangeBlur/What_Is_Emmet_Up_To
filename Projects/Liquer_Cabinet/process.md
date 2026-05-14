@@ -1,7 +1,7 @@
 ---
 title: "Liquor Cabinet Support"
 status: "completed"
-tags: ["3d-printing", "Home", "3d-modeling"]
+tags: ["3D Print", "Home", "3D Modeling"]
 start_date: "2026-02-11"
 end_date: "2026-02-12"
 thumbnail: "images/final.jpg"
