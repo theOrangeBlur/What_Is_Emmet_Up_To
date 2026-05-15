@@ -300,7 +300,7 @@ const DISCIPLINE_COLORS = {
 
 async function loadDisciplinePreview() {
     try {
-        const resp = await fetch('Discipline/log.csv');
+        const resp = await fetch(`Discipline/log.csv?v=${Date.now()}`);
         if (!resp.ok) return;
         const csvText = await resp.text();
         const lines = csvText.trim().split('\n');
