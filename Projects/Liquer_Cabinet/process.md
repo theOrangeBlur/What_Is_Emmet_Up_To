@@ -22,9 +22,10 @@ Frustratingly, the cabinet was not designed so that the shelves could be removed
 I got the shelves cut up and repainted them with the extremely expired paint, pulling usable goop out of the bottom. I hope that doesn't come back to bite me.
 ![Shelves drying on porch](images/drying.jpg)
 
-Being able to whip up some brackets out of thin air using my printer felt like actual magic. I love this thing. 
+Being able to whip up some brackets out of thin air using my printer felt like actual magic. I love this thing!
 ![View from slicer](images/bambu.png)
 Designed and installed three different types of brackets to make the shelf sturdy.
+
 ![brackets!](images/brackets.jpg)
 ![empty shelf](images/done_empty.jpg)
 

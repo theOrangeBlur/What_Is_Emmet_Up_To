@@ -30,9 +30,10 @@ Finally, I applied the runes to the pieces in Fusion360 and began to print.
 
 ![Runes on a blue piece](images/blue_runes.jpg)
 ![Runes on a teal piece](images/teal_runes.jpg)
+![Runes on a purple piece](images/purple_runes.jpg)
 
 This purple rune is a little special. It is meant to notate the value 13 instead of a row and column!
-![Runes on a purple piece](images/purple_runes.jpg)
+
 
 And finally, here is how the cube can be constructed!
 

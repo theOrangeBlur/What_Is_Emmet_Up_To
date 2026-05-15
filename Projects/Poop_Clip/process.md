@@ -19,3 +19,8 @@ It was trickier than I thought it would be to make a good channel for the poop b
 The final version holds that bag no problem! Cypher even had a record breaking three poop walk recently, which the holder handled with no drops. Hooray!
 
 ![final Cypher poop clip on leash](images/on_leash.jpg)
+
+I've also made one for my mom and her dog! If you want me to make one of your dog... let me know!
+
+![Mom's dog, Blaise](images/Blaise.jpg)
+![Blaise poop bag clip](images/Blaise_Clip.jpg)

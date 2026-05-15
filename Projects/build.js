@@ -103,8 +103,8 @@ function markdownToHtml(md, projectFolder) {
     html = blocks.map(block => {
         block = block.trim();
         if (!block) return '';
-        // Don't wrap if already a tag
-        if (block.startsWith('<h') || block.startsWith('<img') || block.startsWith('<video') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<div')) {
+        // Don't wrap structural tags; do wrap img/video so side-by-side CSS applies
+        if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<div')) {
             return block;
         }
         return `<p>${block.replace(/\n/g, ' ')}</p>`;
@@ -168,6 +168,7 @@ function generateProjectCard(project) {
             </div>
             <div class="project-card__details" id="${slug}-details">
                 ${bodyHtml}
+                <button class="collapse-btn" onclick="toggleProject('${slug}')">▲ Collapse</button>
             </div>
         </article>`;
 }
@@ -303,7 +304,7 @@ function build() {
 
     for (const pf of projectFiles) {
         console.log(`  Processing: ${pf.folder}`);
-        const content = fs.readFileSync(pf.mdPath, 'utf-8');
+        const content = fs.readFileSync(pf.mdPath, 'utf-8').replace(/\r\n/g, '\n');
         const { meta, body } = parseFrontMatter(content);
         const bodyHtml = markdownToHtml(body, pf.folder);
 

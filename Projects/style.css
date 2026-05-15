@@ -302,6 +302,24 @@ body {
     color: #ffd700;
 }
 
+.collapse-btn {
+    display: block;
+    margin: 25px 0 0 auto;
+    padding: 8px 24px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.collapse-btn:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+}
+
 /* Project Images */
 .project-image {
     max-width: 100%;

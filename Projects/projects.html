@@ -64,26 +64,18 @@
                 <h3>Problem</h3>
 The autonomous vacuum sometimes gets stuck between two rooms due to a small lip.
 <img src="Floor_Ramp/images/doorway.jpg" alt="A doorway with a small lip" class="project-image" loading="lazy">
-
 <h3>Process</h3>
 Over two years ago, I took this on as one of my first projects for my new printer. I tried to get a 3d scan of the lip using my phone, but the free apps I found to do this couldn't handle this surface instead of a free-standing object. I measured it myself and printed out these ramps, with dowels and slots to account for the slightly uneven surface.
 <img src="Floor_Ramp/images/old_ramp.jpg" alt="A 3d printed, brown ramp" class="project-image" loading="lazy">
 These ramps lasted for about a year until someone stepped on them just right and snapped a piece, as well as the fragile dowels. This cascaded until stepping on it at all would knock pieces out of place.
-
-I had a few ideas on how to make it much better! Firstly the ramps sit much more flush, reducing stress when stepped on. They also have magnets hidden in them to keep them touching without introducing fragile stress points (placed inside during the printing process!!). I added corner pieces to keep the vacuum from hitting sharp edges. Here are some drafts I printed to get the contour just right:
-<img src="Floor_Ramp/images/drafts.jpg" alt="Red, less wide draft pieces" class="project-image" loading="lazy">
-
-My favorite little touch was dipping a few pieces in very hot water before pressing them in place, to have them mold a little better to asymmetries in the flooring!
-<img src="Floor_Ramp/images/side_view.jpg" alt="Side view of a piece, with magnet holes" class="project-image" loading="lazy">
-
-I couldn't resist putting in a little pattern. Now the pieces can be arranged to form different designs!
-<img src="Floor_Ramp/images/every-other.jpg" alt="an eye-catching design" class="project-image" loading="lazy">
-<img src="Floor_Ramp/images/doubled-up.jpg" alt="A more modern take" class="project-image" loading="lazy">
-
+<p>I had a few ideas on how to make it much better! Firstly the ramps sit much more flush, reducing stress when stepped on. They also have magnets hidden in them to keep them touching without introducing fragile stress points (placed inside during the printing process!!). I added corner pieces to keep the vacuum from hitting sharp edges. Here are some drafts I printed to get the contour just right: <img src="Floor_Ramp/images/drafts.jpg" alt="Red, less wide draft pieces" class="project-image" loading="lazy"></p>
+<p>My favorite little touch was dipping a few pieces in very hot water before pressing them in place, to have them mold a little better to asymmetries in the flooring! <img src="Floor_Ramp/images/side_view.jpg" alt="Side view of a piece, with magnet holes" class="project-image" loading="lazy"></p>
+<p>I couldn't resist putting in a little pattern. Now the pieces can be arranged to form different designs! <img src="Floor_Ramp/images/every-other.jpg" alt="an eye-catching design" class="project-image" loading="lazy"> <img src="Floor_Ramp/images/doubled-up.jpg" alt="A more modern take" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 The ramp has functioned perfectly so far!
 Someone asked if it's a bar-code... I'll have to keep that in mind if I ever make another!
 <video src="Floor_Ramp/images/in-action.mp4" class="project-image" controls loop muted playsinline></video>
+                <button class="collapse-btn" onclick="toggleProject('floor-ramp')">▲ Collapse</button>
             </div>
         </article>
 
@@ -108,7 +100,8 @@ Someone asked if it's a bar-code... I'll have to keep that in mind if I ever mak
             </div>
             <div class="project-card__details" id="rune-cube-details">
                 <h3>Problem</h3>
-Create a puzzle that requires the solver to create a cube that acts as a marble maze. Also, for stupid meta-puzzle reasons I cannot control, the answer word must be [REDACTED].
+While I was almost completely uninvolved in the VT Hunt this year, I still helped test and hosted the team for the hellish week leading up to the event. One puzzle was in a rough way, and I had an idea to completely reimagine it. I wanted to:
+Create a puzzle that requires the solver to create a cube that acts as a marble maze. Also, for stupid meta-puzzle reasons I could not control, the answer word must have been [REDACTED].
 <h3>Process</h3>
 I planned for runes to be inscribed on each tunnel opening. These runes would correspond to a row and column on a scroll, which explained lore of the item as a Shakespearean sonnet (the VT Hunt theme was of a magic school).
 <img src="Rune_Cube/images/scroll.jpg" alt="A magical scroll with runes" class="project-image" loading="lazy">
@@ -117,9 +110,8 @@ I planned for runes to be inscribed on each tunnel opening. These runes would co
 <p>I then wrote out the poem, developed the symbols, and decided to add some fun ciphers. This trick would deter players from deducing which marble paths could be connected by knowing which letters could follow another. I decided on "CAESAR_13_NGONFU_JMUYVZEU". Performing a caesar shift cipher on the text right of the 13 would yield another cipher, "atbash." Performing an atbash cipher on the remaining text would finally reveal the answer... "disornis."</p>
 <p>CAESAR_13_NGONFU_JMUYVZEU    -> CAESAR_13_ATBASH_WZHLIMRH    -> CAESAR_13_ATBASH_DISORNIS</p>
 <p>Finally, I applied the runes to the pieces in Fusion360 and began to print.</p>
-<img src="Rune_Cube/images/blue_runes.jpg" alt="Runes on a blue piece" class="project-image" loading="lazy">
-<img src="Rune_Cube/images/teal_runes.jpg" alt="Runes on a teal piece" class="project-image" loading="lazy">
-<p>This purple rune is a little special. It is meant to notate the value 13 instead of a row and column! <img src="Rune_Cube/images/purple_runes.jpg" alt="Runes on a purple piece" class="project-image" loading="lazy"></p>
+<p><img src="Rune_Cube/images/blue_runes.jpg" alt="Runes on a blue piece" class="project-image" loading="lazy"> <img src="Rune_Cube/images/teal_runes.jpg" alt="Runes on a teal piece" class="project-image" loading="lazy"> <img src="Rune_Cube/images/purple_runes.jpg" alt="Runes on a purple piece" class="project-image" loading="lazy"></p>
+<p>This purple rune is a little special. It is meant to notate the value 13 instead of a row and column!</p>
 <p>And finally, here is how the cube can be constructed!</p>
 <div class="step-stepper">
     <div class="step-stepper__stage">
@@ -140,8 +132,10 @@ I planned for runes to be inscribed on each tunnel opening. These runes would co
     </div>
 </div>
 <h3>Result</h3>
-<video src="Rune_Cube/images/marble_run.mp4" class="project-image" controls loop playsinline></video>
-<p>I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun!</p>
+<video src="Rune_Cube/images/marble_run.mp4" class="project-image" controls loop muted playsinline></video>
+<p>I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun! Maybe a version where the whole cube must be picked up and rotated! Hiding magnets in the pieces to make them snap together would also be hugely satisfying.</p>
+
+                <button class="collapse-btn" onclick="toggleProject('rune-cube')">▲ Collapse</button>
             </div>
         </article>
 
@@ -170,10 +164,13 @@ I broke the old dog poop bag holder! Now I have to carry a stinky poop bag!
 <h3>Process</h3>
 I modeled Cypher's face after looking at a lot of line art of dog faces online. 
 It was trickier than I thought it would be to make a good channel for the poop bag not to slip out of, so it took a few tries. I ended up testing with a bag I filled with some gravel.
-<img src="Poop_Clip/images/prototypes.jpg" alt="V1 Draft Right" class="project-image" loading="lazy">
+<p><img src="Poop_Clip/images/prototypes.jpg" alt="V1 Draft Right" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 The final version holds that bag no problem! Cypher even had a record breaking three poop walk recently, which the holder handled with no drops. Hooray!
-<img src="Poop_Clip/images/on_leash.jpg" alt="final Cypher poop clip on leash" class="project-image" loading="lazy">
+<p><img src="Poop_Clip/images/on_leash.jpg" alt="final Cypher poop clip on leash" class="project-image" loading="lazy"></p>
+<p>I've also made one for my mom and her dog! If you want me to make one of your dog... let me know!</p>
+<p><img src="Poop_Clip/images/Blaise.jpg" alt="Mom's dog, Blaise" class="project-image" loading="lazy"> <img src="Poop_Clip/images/Blaise_Clip.jpg" alt="Blaise poop bag clip" class="project-image" loading="lazy"></p>
+                <button class="collapse-btn" onclick="toggleProject('poop-clip')">▲ Collapse</button>
             </div>
         </article>
 
@@ -199,29 +196,22 @@ The final version holds that bag no problem! Cypher even had a record breaking t
             <div class="project-card__details" id="liquer-cabinet-details">
                 <h3>Problem</h3>
 The shelves in the liquor cabinet bow in the middle, and may possibly collapse!
-
+HEYEYEYEYEY
 <h3>Process</h3>
 Let's knock another task off the HoneyDo list and fix up the liquor cabinet! 
 If I find a picture of how the shelves looked before, I'll add it here.
 The shelves noticeably bowed in the middle, because they're only supported from the left and right edges. The back of the cabinet feels like thin plywood, so we can't trust that for support.
 I grabbed some scrap wood from the garage, my handy jigsaw, some incredibly old paint from the basement from the previous owner, and got to work!
 <img src="Liquer_Cabinet/images/empty.jpg" alt="Table full of liquor" class="project-image" loading="lazy">
-
-Frustratingly, the cabinet was not designed so that the shelves could be removed without having to disassemble the whole darn thing! So I just cut them in half right where they were and pulled them out. 
-
-I got the shelves cut up and repainted them with the extremely expired paint, pulling usable goop out of the bottom. I hope that doesn't come back to bite me.
-<img src="Liquer_Cabinet/images/drying.jpg" alt="Shelves drying on porch" class="project-image" loading="lazy">
-
-Being able to whip up some brackets out of thin air using my printer felt like actual magic. I love this thing. 
-<img src="Liquer_Cabinet/images/bambu.png" alt="View from slicer" class="project-image" loading="lazy">
-Designed and installed three different types of brackets to make the shelf sturdy.
-<img src="Liquer_Cabinet/images/brackets.jpg" alt="brackets!" class="project-image" loading="lazy">
-<img src="Liquer_Cabinet/images/done_empty.jpg" alt="empty shelf" class="project-image" loading="lazy">
-
+<p>Frustratingly, the cabinet was not designed so that the shelves could be removed without having to disassemble the whole darn thing! So I just cut them in half right where they were and pulled them out.</p>
+<p>I got the shelves cut up and repainted them with the extremely expired paint, pulling usable goop out of the bottom. I hope that doesn't come back to bite me. <img src="Liquer_Cabinet/images/drying.jpg" alt="Shelves drying on porch" class="project-image" loading="lazy"></p>
+<p>Being able to whip up some brackets out of thin air using my printer felt like actual magic. I love this thing! <img src="Liquer_Cabinet/images/bambu.png" alt="View from slicer" class="project-image" loading="lazy"> Designed and installed three different types of brackets to make the shelf sturdy.</p>
+<p><img src="Liquer_Cabinet/images/brackets.jpg" alt="brackets!" class="project-image" loading="lazy"> <img src="Liquer_Cabinet/images/done_empty.jpg" alt="empty shelf" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 Final test was to restock the cabinet, and the shelves feel nice and sturdy!
 I love the painted copper art Julia brought back from New Zealand as well.
 <img src="Liquer_Cabinet/images/final.jpg" alt="finished cabinet full of booze!" class="project-image" loading="lazy">
+                <button class="collapse-btn" onclick="toggleProject('liquer-cabinet')">▲ Collapse</button>
             </div>
         </article>
 
@@ -247,19 +237,14 @@ I love the painted copper art Julia brought back from New Zealand as well.
             <div class="project-card__details" id="qr-code-details">
                 <h3>Problem</h3>
 Communicating our home wifi name and password is slow! People should just be able to hop on!
-
 <h3>Process</h3>
 At a friend's house recently, I saw that they had printed (on paper) a qr code for the home wifi. I wanted to emulate that in beautiful, 3D form!
-
-<img src="QR_Code/images/qr_code_with_symbol.jpg" alt="V1" class="project-image" loading="lazy">
-
-My original version above was pretty, but wouldn't scan very easily. I let go of the central image and made a thicker border.
-
-
+<p><img src="QR_Code/images/qr_code_with_symbol.jpg" alt="V1" class="project-image" loading="lazy"></p>
+<p>My original version above was pretty, but wouldn't scan very easily. I let go of the central image and made a thicker border.</p>
 <h3>Result</h3>
 <img src="QR_Code/images/final.jpg" alt="A pretty qr code" class="project-image" loading="lazy">
-
-She scans beautifully, and now lives on our fridge!
+<p>She scans beautifully, and now lives on our fridge!</p>
+                <button class="collapse-btn" onclick="toggleProject('qr-code')">▲ Collapse</button>
             </div>
         </article>
 
@@ -285,27 +270,18 @@ She scans beautifully, and now lives on our fridge!
             <div class="project-card__details" id="oven-skirt-details">
                 <h3>Problem</h3>
 Food bits fall between the cracks on each side of the oven and are very difficult to remove.
-
 <h3>Process</h3>
 Plan is to print spacers to fit in the cracks - they need to handle warmth from the oven.
-
-<img src="Oven_Skirt/images/V1-Right.jpg" alt="V1 Draft Right" class="project-image" loading="lazy">
-<img src="Oven_Skirt/images/V1-Left.jpg" alt="V1 Draft Left" class="project-image" loading="lazy">
-
-The counter is at a different height on the left side, so I needed slightly different parts. V1 worked well on the right, so I tweaked it for the left.
-
-V2 worked well, but Julia requested the pieces not slide left/right. V3 has a larger, tapered shim.
-
-<img src="Oven_Skirt/images/All-Versions.jpg" alt="A few versions" class="project-image" loading="lazy">
-
+<p><img src="Oven_Skirt/images/V1-Right.jpg" alt="V1 Draft Right" class="project-image" loading="lazy"> <img src="Oven_Skirt/images/V1-Left.jpg" alt="V1 Draft Left" class="project-image" loading="lazy"></p>
+<p>The counter is at a different height on the left side, so I needed slightly different parts. V1 worked well on the right, so I tweaked it for the left.</p>
+<p>V2 worked well, but Julia requested the pieces not slide left/right. V3 has a larger, tapered shim.</p>
+<p><img src="Oven_Skirt/images/All-Versions.jpg" alt="A few versions" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 <img src="Oven_Skirt/images/Final-Side.jpg" alt="Finished product side" class="project-image" loading="lazy">
 <img src="Oven_Skirt/images/Final-Top.jpg" alt="Finished product top" class="project-image" loading="lazy">
-
-Rapid prototyping made this project a cinch! Printed with <a href="https://us.store.bambulab.com/products/pla-marble" target="_blank">marble PLA</a> to look nice in the kitchen. Total length: 550mm (5x 100mm blocks + 50mm cap). Bagged it up as a birthday gift for Julia - will sticky tape it down after she opens it up in a few days!
-
-She likes them! ...mostly.
-She had the wonderful idea of putting magnets in them so they snap together (which I don't think is really necessary, but does sound fun!) And since I need to reprint them all anyway to do that, I might as well make them black and white and have them say something in morse...
+<p>Rapid prototyping made this project a cinch! Printed with <a href="https://us.store.bambulab.com/products/pla-marble" target="_blank">marble PLA</a> to look nice in the kitchen. Total length: 550mm (5x 100mm blocks + 50mm cap). Bagged it up as a birthday gift for Julia - will sticky tape it down after she opens it up in a few days!</p>
+<p>She likes them! ...mostly. She had the wonderful idea of putting magnets in them so they snap together (which I don't think is really necessary, but does sound fun!) And since I need to reprint them all anyway to do that, I might as well make them black and white and have them say something in morse...</p>
+                <button class="collapse-btn" onclick="toggleProject('oven-skirt')">▲ Collapse</button>
             </div>
         </article>
 
@@ -332,25 +308,15 @@ She had the wonderful idea of putting magnets in them so they snap together (whi
                 <h3>Problem</h3>
 1) Make chess pieces as trophies for middle school chess tournament.
 2) Make a functional, beautiful chess set for a friend
-
 <h3>Process</h3>
 A middle school teacher friend of mine asked if I could print him some trophy pieces for a chess competition he sponsored at his school, which I happily obliged!
-
-<img src="Chess/images/Final-trophy.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy">
-<img src="Chess/images/Final-trophy-2.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy">
-<img src="Chess/images/Bottom-1-3.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy">
-<img src="Chess/images/Bottom-2.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy">
-
-
-After seeing these beautiful pieces, another friend asked if I would make him a whole set! I wanted to make the pieces just as beautiful, but also add a satisfying tactile weight to the pieces. To accomplish this, I nested coins inside the bases.
-
-<img src="Chess/images/Coin_Bottom.jpg" alt="A coin inside a chess piece" class="project-image" loading="lazy">
-<img src="Chess/images/Final-2.jpg" alt="A beautiful chess set" class="project-image" loading="lazy">
-
+<p><img src="Chess/images/Final-trophy.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy"> <img src="Chess/images/Final-trophy-2.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy"> <img src="Chess/images/Bottom-1-3.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy"> <img src="Chess/images/Bottom-2.jpg" alt="Chess pieces as trophies" class="project-image" loading="lazy"></p>
+<p>After seeing these beautiful pieces, another friend asked if I would make him a whole set! I wanted to make the pieces just as beautiful, but also add a satisfying tactile weight to the pieces. To accomplish this, I nested coins inside the bases.</p>
+<p><img src="Chess/images/Coin_Bottom.jpg" alt="A coin inside a chess piece" class="project-image" loading="lazy"> <img src="Chess/images/Final-2.jpg" alt="A beautiful chess set" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 <img src="Chess/images/Final-1.jpg" alt="A beautiful chess set" class="project-image" loading="lazy">
-
-Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters in the kings and queens! The set turned out gorgeous, with fantastic variable layer height. I learned a lot from this project!
+<p>Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters in the kings and queens! The set turned out gorgeous, with fantastic variable layer height. I learned a lot from this project!</p>
+                <button class="collapse-btn" onclick="toggleProject('chess')">▲ Collapse</button>
             </div>
         </article>
 
@@ -376,26 +342,16 @@ Pennies in the pawns, nickels in the rooks, knights, and bishops, and quarters i
             <div class="project-card__details" id="clock-lock-details">
                 <h3>Problem</h3>
 Make a physical clock that the user puts times into to solve a puzzle.
-
 <h3>Process</h3>
 The idea here was to make a combination lock that looks like a clock, so that puzzle answers need to be input to solve this meta puzzle. And then the clock will open up!
-
-I built the gearbox entirely out of LEGO Technic, and printed adapters to interface with mechanical sensors. A polarized magnet was attached to the moving shaft, and a magnetometer precisely read its orientation to get the time.
-
-<img src="Clock_Lock/images/Gearbox-1.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy">
-<img src="Clock_Lock/images/Gearbox-2.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy">
-<img src="Clock_Lock/images/Gearbox-3.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy">
-<img src="Clock_Lock/images/Chip_Assembly-1.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy">
-<img src="Clock_Lock/images/Chip_Assembly-2.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy">
-
-A few of the inputs required the device to know the actual time and date, so a timing unit was also implemented.
-
-<img src="Clock_Lock/images/Rear-Housing.jpg" alt="Inside housing" class="project-image" loading="lazy">
-
+<p>I built the gearbox entirely out of LEGO Technic, and printed adapters to interface with mechanical sensors. A polarized magnet was attached to the moving shaft, and a magnetometer precisely read its orientation to get the time.</p>
+<p><img src="Clock_Lock/images/Gearbox-1.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy"> <img src="Clock_Lock/images/Gearbox-2.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy"> <img src="Clock_Lock/images/Gearbox-3.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy"> <img src="Clock_Lock/images/Chip_Assembly-1.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy"> <img src="Clock_Lock/images/Chip_Assembly-2.jpg" alt="LEGO Gearbox" class="project-image" loading="lazy"></p>
+<p>A few of the inputs required the device to know the actual time and date, so a timing unit was also implemented.</p>
+<p><img src="Clock_Lock/images/Rear-Housing.jpg" alt="Inside housing" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 <img src="Clock_Lock/images/Final.jpg" alt="Finished product face" class="project-image" loading="lazy">
-
-I ended up not putting this out for the Hunt, as I knew people would simply break it. However it was fully functional, and many people got to play with and enjoy it!
+<p>I ended up not putting this out for the Hunt, as I knew people would simply break it. However it was fully functional, and many people got to play with and enjoy it!</p>
+                <button class="collapse-btn" onclick="toggleProject('clock-lock')">▲ Collapse</button>
             </div>
         </article>
 
@@ -424,15 +380,54 @@ A member of the VT Hunt team designed a creepy puzzle that required eyes with sp
 <h3>Process</h3>
 Having some experience with using silicone for a soft robotics project in college, I knew it would make some disturbingly realistic eyeballs. I modeled and printed some eye models, as well as a separate piece for the clear lens and used them to cast molds with the aid of a small vacuum chamber I found online.
 For the puzzle mechanic to work, veins also had to be modeled readably, which was a fun challenge.
-<img src="Eye Puzzle/images/trail.jpg" alt="A trail map" class="project-image" loading="lazy">
+<p><img src="Eye Puzzle/images/trail.jpg" alt="A trail map" class="project-image" loading="lazy"></p>
 <p>For each of the six eyes, I had to print a piece, cast a mold of the eye, paint the eye, also cast and make a clear lens piece, and dry it all together with more silicone.</p>
-<img src="Eye Puzzle/images/lineup.jpg" alt="six colored eyes" class="project-image" loading="lazy">
-<img src="Eye Puzzle/images/jar.jpg" alt="eyes in a jar of red colored water" class="project-image" loading="lazy">
-Plopped them in a jar of water colored red for the solvers to have to reach in and get for an added layer of disgust!
+<p><img src="Eye Puzzle/images/lineup.jpg" alt="six colored eyes" class="project-image" loading="lazy"></p>
+<p><img src="Eye Puzzle/images/jar.jpg" alt="eyes in a jar of red colored water" class="project-image" loading="lazy"> Plopped them in a jar of water colored red for the solvers to have to reach in and get for an added layer of disgust!</p>
 <h3>Result</h3>
 I couldn't be happier with these eyeballs. The puzzle functioned quite well, and the eyes are so fun to play with. They feel like bouncy balls! 
 <img src="Eye Puzzle/images/lineup.jpg" alt="six colored eyes" class="project-image" loading="lazy">
 A playable version is available at the VT Hunt website <a href="https://vthunt.com/past-hunts/haunt-2024/eyes" target="_blank">here</a>!
+                <button class="collapse-btn" onclick="toggleProject('eye-puzzle')">▲ Collapse</button>
+            </div>
+        </article>
+
+        <article class="project-card"
+                 id="scent-puzzle"
+                 data-tags="VT Hunt,Puzzle"
+                 data-status="completed"
+                 data-date="2024-04">
+            <div class="project-card__preview" onclick="toggleProject('scent-puzzle')">
+                <img src="Scent_Puzzle/images/closed.jpg" alt="Scent Puzzle" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Scent Puzzle</h3>
+                    <div class="project-meta">
+                        <span class="date">Jan 2024 - Apr 2024</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">VT Hunt</span><span class="tag">Puzzle</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="scent-puzzle-details">
+                <h3>Problem</h3>
+I challenged myself to make a puzzle using scents hidden around campus!
+<h3>Process</h3>
+After doing some research and trial and error, I found that I could melt essential oils into nonscented soap, and make my own very fragrant soaps!
+<p><img src="Scent_Puzzle/images/soap.jpg" alt="Block of unscented soap" class="project-image" loading="lazy"> <img src="Scent_Puzzle/images/scents.jpg" alt="Assortment of essential oils" class="project-image" loading="lazy"></p>
+<p>I found that leaving the soaps in an open container together caused all of the scents to mix. I considered small mason jars, and a friend recommended that baby food containers would be a perfect size! I challenged the poor VT Hunt team to help me consume 17 truly horrible baby foods - no food waste in my home!</p>
+<p>By gluing the lids of the containers down inside boxes, the solver can unscrew the bottles, take a sniff, and reseal. They still have strong, distinct scents over two years later!</p>
+<p>The puzzle functioned with two boxes as a metaphorical lock and key. The large box with eleven scents has a letter associated with each scent, while the smaller box with red soaps had numerical values for each soap. Hunters quickly realized they needed to match scents from one box to another - if soap M matched the scent of soap 3, then the third letter of the solution word was an M!</p>
+<p><img src="Scent_Puzzle/images/more_open.jpg" alt="Boxes with soaps" class="project-image" loading="lazy"></p>
+<p>A few more considerations were made. The boxes were affixed at opposite ends of the tallest stairwell on campus - a gruelling six story climb. This would ensure teams had to coordinate, with two groups of sniffers communicating over what scents they could determine. One can only run up and down those stairs so many times in an afternoon! This location was also ideal for its immediate proximity to a coffee shop, where solvers could pop in to refresh their scent buds. Finally - and diabolically - all of the scents were lovely essential oils... except for one visually indistinguishable fart scented bomb!</p>
+<h3>Result</h3>
+The process for crafting this puzzle was a blast. Learning the best way to make distinguishable scents, hiding slight color variations by dying a set, learning exactly how long to heat the soap to infuse it (and add a paper letter!)... creating physical challenges has become by far my favorite form of puzzle making.
+<p>This puzzle frustrated many of the hunters who preferred classical puzzle mechanics, and it delighted those who wanted to see something new. Having made many puzzle hunts now, I find the VT Hunt is strongest when there is a good mix of classic puzzles and physical challenges like this one.</p>
+<p>I still have this one squirreled away if you want to try it!</p>
+<p><img src="Scent_Puzzle/images/open.jpg" alt="Boxes with soaps" class="project-image" loading="lazy"></p>
+                <button class="collapse-btn" onclick="toggleProject('scent-puzzle')">▲ Collapse</button>
             </div>
         </article>
 
@@ -459,12 +454,12 @@ A playable version is available at the VT Hunt website <a href="https://vthunt.c
                 <h3>Problem</h3>
 We want a dog! :D
 We need a fence with a beautiful gate so he can be let outside and not be on a leash.
-
 <h3>Process</h3>
 The design is inspired by the Septagram Society, and made for a pretty piece!
 I also had to dig out a flat area for the door to be able to swing open, and set stones at the right angle so the autonomous mower can climb it.
 <h3>Result</h3>
 I think the result is eye-catching, and the gate works perfectly!
+                <button class="collapse-btn" onclick="toggleProject('septagram-gate')">▲ Collapse</button>
             </div>
         </article>
 
@@ -490,13 +485,13 @@ I think the result is eye-catching, and the gate works perfectly!
             <div class="project-card__details" id="autonomous-mower-details">
                 <h3>Problem</h3>
 The lawn(s) are at a size where mowing with a push mower would take hours every week, while getting a riding mower would feel ridiculous and be quite expensive... I wonder if a robot could do it!
-
 <h3>Process</h3>
 After doing much research, I landed on the Worx Landroid. I placed a "boundary wire" around the perimeter of the lawns, snugly held in place with plastic spikes.
 <img src="Autonomous_Mower/images/boundary_wire.jpg" alt="Black boundary wire" class="project-image" loading="lazy">
 The robot follows this wire to each "zone" and mows according to a set schedule. Most of the time, the robot mows in a straight line until it senses the wire, and then it picks a new heading randomly and goes in that direction! It's not that smart of an algorithm but it hits all of the spots eventually and makes a great looking yard.
 <h3>Result</h3>
 <video src="Autonomous_Mower/images/mower_vid.mp4" class="project-image" controls loop muted playsinline></video>
+                <button class="collapse-btn" onclick="toggleProject('autonomous-mower')">▲ Collapse</button>
             </div>
         </article>
 
@@ -523,22 +518,16 @@ The robot follows this wire to each "zone" and mows according to a set schedule.
                 <h3>Problem</h3>
 Create a harp that has no strings! The user must play a sequence of notes correctly, and then be played their next puzzle prompt.
 <img src="Laser_Harp/images/hunters_1.jpg" alt="A team of VT Hunters trying to solve the puzzle" class="project-image" loading="lazy">
-
 <h3>Process</h3>
 As part of my mechatronics project, I built this alongside the "Piano Puzzle" for the VT Hunt (as a secret!). I led a team of three other engineers who swore themselves into secrecy with me.
-
-I settled on break-beam sensors as the strings fairly early, and designed the harp around this idea. Think of the sensor that you love to jump over while the garage door is closing.
-<img src="Laser_Harp/images/sensors.jpeg" alt="BREAK-BEAM SENSORS" class="project-image" loading="lazy">
-
-Once the user plays the right sequence, a solfège audio puzzle is played!
-
-The housing was milled from a few sheets of fiber board, and covered with an acrylic sheet.
-<img src="Laser_Harp/images/wiring.jpeg" alt="internals of the harp with wires" class="project-image" loading="lazy">
-
+<p>I settled on break-beam sensors as the strings fairly early, and designed the harp around this idea. Think of the sensor that you love to jump over while the garage door is closing. <img src="Laser_Harp/images/sensors.jpeg" alt="BREAK-BEAM SENSORS" class="project-image" loading="lazy"></p>
+<p>Once the user plays the right sequence, a solfège audio puzzle is played!</p>
+<p>The housing was milled from a few sheets of fiber board, and covered with an acrylic sheet. <img src="Laser_Harp/images/wiring.jpeg" alt="internals of the harp with wires" class="project-image" loading="lazy"></p>
 <h3>Result</h3>
 After having to rescue the puzzle from the Frith lab runner and relocating the puzzle, as well as rewiring the thing to run on outlet power instead of devouring batteries, this thing ran like a dream!
 If given just one more day to improve the design, I would have added hollow cylinders (maybe just straws!) to the emitters to narrow the paths.
 <img src="Laser_Harp/images/hunters_2.jpeg" alt="Another team of hunters" class="project-image" loading="lazy">
+                <button class="collapse-btn" onclick="toggleProject('laser-harp')">▲ Collapse</button>
             </div>
         </article>
 
@@ -564,22 +553,16 @@ If given just one more day to improve the design, I would have added hollow cyli
             <div class="project-card__details" id="piano-puzzle-details">
                 <h3>Problem</h3>
 Hide a logic puzzle in a public piano!
-
-
 <h3>Process</h3>
 As part of my mechatronics project, I built this alongside the "Laser Harp" for the VT Hunt (as a secret!). I led a team of three other engineers who swore themselves into secrecy with me.
-
-This puzzle was hidden in a public piano just off campus.
-
-This device had two major functions: "listen" for the right sequence of notes on the piano, then unlock the logic puzzle. Instead of actually doing very difficult audio processing tones, I simply placed switches on the back ends of the keys out of view. Once the user played the phrase "DECAF" (seemed fitting, outside the coffee shop!), the bot would switch to its next mode.
-
-<img src="Piano_Puzzle/images/buttons.jpeg" alt="buttons and lights" class="project-image" loading="lazy">
-The user then needed to figure out how to make the specific shape given on the 8x8 LED display. No instructions were given, so the user was forced to play around and find out the functions. Three buttons at the bottom set different modes: toggle, on, and off. When a button by a row or column was pressed, that whole row or column would be set according to that rule!
-
+<p>This puzzle was hidden in a public piano just off campus.</p>
+<p>This device had two major functions: "listen" for the right sequence of notes on the piano, then unlock the logic puzzle. Instead of actually doing very difficult audio processing tones, I simply placed switches on the back ends of the keys out of view. Once the user played the phrase "DECAF" (seemed fitting, outside the coffee shop!), the bot would switch to its next mode.</p>
+<p><img src="Piano_Puzzle/images/buttons.jpeg" alt="buttons and lights" class="project-image" loading="lazy"> The user then needed to figure out how to make the specific shape given on the 8x8 LED display. No instructions were given, so the user was forced to play around and find out the functions. Three buttons at the bottom set different modes: toggle, on, and off. When a button by a row or column was pressed, that whole row or column would be set according to that rule!</p>
 <h3>Result</h3>
 The puzzle beguiled and interested hundreds of hunters, hooking them for the rest of the event.
 Unfortunately, shortly after the event wrapped, a drunkard destroyed the piano and its contents. :(
 <img src="Piano_Puzzle/images/seniors.jpeg" alt="A very young Emmet and Josh" class="project-image" loading="lazy">
+                <button class="collapse-btn" onclick="toggleProject('piano-puzzle')">▲ Collapse</button>
             </div>
         </article>
 
@@ -605,10 +588,10 @@ Unfortunately, shortly after the event wrapped, a drunkard destroyed the piano a
             <div class="project-card__details" id="digital-sundial-details">
                 <h3>Problem</h3>
 I've been casually interested in sundials for a while. They take a lot of math to figure out how to make work specifically where you are, and requires adding and subtracting hours manually.
-
 <h3>Process</h3>
 Using electronics, I could make a sundial that is more accurate! I could use light sensors and rotate the sundial based on the clock time so it's always accurate! Well, during the day at least.
 <h3>Result</h3>
+                <button class="collapse-btn" onclick="toggleProject('digital-sundial')">▲ Collapse</button>
             </div>
         </article>
 
@@ -634,10 +617,10 @@ Using electronics, I could make a sundial that is more accurate! I could use lig
             <div class="project-card__details" id="door-bell-details">
                 <h3>Problem</h3>
 There is no functioning doorbell at the main door for the house! I want to build a beautiful, musical chime that plays when the bell is rung.
-
 <h3>Process</h3>
 I'm thinking of having a little metal ball fall over some pieces of metal to produce a musical phrase.
 <h3>Result</h3>
+                <button class="collapse-btn" onclick="toggleProject('door-bell')">▲ Collapse</button>
             </div>
         </article>
 
@@ -664,7 +647,6 @@ I'm thinking of having a little metal ball fall over some pieces of metal to pro
                 <h3>Problem</h3>
 Have a moving representation of where the moon is directly overhead on the Earth's surface in real time!
 I've been wanting to work on this for a while.
-
 <h3>Process</h3>
 Idea 1:
 2 axis gimble that holds the moon in the center
@@ -673,13 +655,14 @@ Idea 2:
 This can be fixed up to look like a hand dangling the moon by a string!
 Will the changing radius of the winch make it hard to control height precicely?  --Consider using a "capstan winch!"
 <h3>Result</h3>
+                <button class="collapse-btn" onclick="toggleProject('moon-map')">▲ Collapse</button>
             </div>
         </article>
             </div>
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-05-14</p>
+            <p>Last updated: 2026-05-15</p>
         </footer>
 
         <!-- Improvements Section -->
