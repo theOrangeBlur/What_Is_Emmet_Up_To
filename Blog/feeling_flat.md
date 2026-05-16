@@ -5,7 +5,7 @@ date: "2026-05-15"
 
 ## I blew my first tire today.
 
-I felt some shame with this right of passage. My car started shaking a bit as I passed some road debris -- a burst tire freshly shed from a downstream semi; a drowning maniac taking down another with it. 
+I felt some shame with this rite of passage. My car started shaking a bit as I passed some road debris -- a burst tire freshly shed from a downstream semi; a drowning maniac taking down another with it. 
 
 ![flat tire on the side of the road](media/side_of_road_flat_thumb.jpg)
 I gently guided my sickly machine to the shoulder. I have imagined this scenario many times, wondering how well my car would handle - and how well *I* in turn would handle it. In this case I could feel the tire squelching around as I slowed, but traffic was kind to me and I got off the road easily. A flat grassland adjoined the shoulder, affording me greater distance from the highway. 
