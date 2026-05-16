@@ -1,23 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Video game page</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
-  <link rel="manifest" href="/media/favicon/site.webmanifest">
-  <link rel="stylesheet" href="./style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | Emmet</title>
+    <meta name="description" content="What's on Emmet's mind">
+    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/media/favicon/site.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <nav class="top-nav">
-    <a href="../index.html">Take me home, please!</a>
-  </nav>
-  <h1>What's on Emmet's mind?</h1>
-  <hr/>
-  <h2>(Coming soon!)</h2>
+    <nav class="top-nav">
+        <a href="../index.html">Take me home, please!</a>
+    </nav>
 
+    <header class="page-header">
+        <h1>What's on Emmet's mind?</h1>
+    </header>
+
+    <main class="container">
+            <article class="blog-post" id="flatman-larry">
+        <header class="post-header">
+            <h2 class="post-title">Flatman Larry</h2>
+            <time class="post-date">May 15, 2026</time>
+        </header>
+        <div class="post-body">
+            <h3>I blew my first tire today.</h3>
+<p>I felt some shame with this right of passage. My car started shaking a bit as I passed some road debris -- a burst tire freshly shed from a downstream semi; a drowning maniac taking down another with it.</p>
+<div class="photo-frame"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><img src="media/side_of_road_flat_thumb.jpg" alt="flat tire on the side of the road" class="post-image" loading="lazy"></div>
+I gently guided my sickly machine to the shoulder. I have imagined this scenario many times, wondering how well my car would handle - and how well <em>I</em> in turn would handle it. In this case I could feel the tire squelching around as I slowed, but traffic was kind to me and I got off the road easily. A flat grassland adjoined the shoulder, affording me greater distance from the highway.
+<p>I took a deep breath, assuring myself that I could probably figure this out. I haven't ever replaced a tire before. In fact I can't even remember watching someone replace a tire! But I dismissed the thought saying <em>you may not be able to do this</em> as unhelpful, and got to work pulling the spare tire out of my trunk. I found the jack - <em>oh yes, I'll need that!</em> - and began to root around for a socket wrench. In that moment, I truly had no idea where it was, if I even had one.</p>
+<p>I had been pulled over for perhaps three minutes when I suddenly realized a truck with flashing lights had pulled up behind me. The words <strong>NCDOT INCIDENT MANAGEMENT</strong> accompanied a familiar, friendly, anthropomorphic gecko. <em>Oh great, I'm getting a ticket. Well at least I'll get some help.</em> A man pops out with a smile and offers a greeting.</p>
+<p>It would be completely feasible to me that Larry were an angel - but I don't think angels are the sort to leave me a card so I can write him a review. He inflated my spare tire (though was impressed that I carry my own inflator). As he jacked up my tiny Prius and pulled out a powerful impact wrench, I looked down at my sad little tools. An small but undeniable (and masochistic?) part of me lamented that these tools would remain unused; that I still have not replaced a tire.</p>
+<p>The feeling passed as Larry finished in five minutes what would have most assuredly taken me the better part of an hour and grinned at me.</p>
+<p>I offered him a lollipop. He declines and hands me his card. <em>No ticket!!</em> I shake his manly hand.</p>
+<p>He reminds me that I should drive no more than fifty mph, and no more than fifty miles, and that of course there are good tire shops in my direction. To set my hazards, and that no officers will pull me over for impeding traffic. He has clearly helped people in my place an uncountable number of times.</p>
+<p>I once nagged my father for not teaching me much about how to fix a car. I meant only to tease a bit, I didn't really mind. With a smirk, he replied that he had <em>'taught me how to make enough money to pay someone to do that.'</em></p>
+<p>Well Dad, as my new pamphlet says, '<em>IMAP service is free of charge and patrol drivers are not allowed to accept tips.'</em></p>
+<p>So that's why he didn't take my lollipop.</p>
+<div class="photo-frame"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><img src="media/destroyed_tire_thumb.jpg" alt="A very destroyed tire in the back of a sad Prius" class="post-image" loading="lazy"></div>
+        </div>
+    </article>
+    </main>
+
+    <footer class="page-footer">
+        <p>Last updated: 2026-05-16</p>
+    </footer>
+    <script>
+        window.addEventListener('load', function () {
+            var lh = 36;
+            document.querySelectorAll('.photo-frame').forEach(function (frame) {
+                frame.style.paddingBottom = '';
+                var cs = getComputedStyle(frame);
+                var totalH = frame.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom);
+                var rem = totalH % lh;
+                if (rem !== 0) {
+                    frame.style.paddingBottom = (parseFloat(cs.paddingBottom) + lh - rem) + 'px';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
