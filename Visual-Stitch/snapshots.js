@@ -191,7 +191,7 @@ function initGlobe() {
 function globeLoop() {
   // Auto-rotate when not animating and the user isn't touching the globe
   const videoIdleMs = (video.paused || video.ended) ? Date.now() - videoLastPausedAt : 0;
-  if (!globeLerpActive && !globeUserInteracting && videoIdleMs >= 10000) {
+  if (!globeLerpActive && !globeUserInteracting && videoIdleMs >= 5000) {
     globeRotation[0] += 0.2;
     if (globeCurrentScale !== null && Math.abs(globeCurrentScale - GLOBE_BASE_SCALE) > 0.5) {
       globeCurrentScale += (GLOBE_BASE_SCALE - globeCurrentScale) * 0.04;
