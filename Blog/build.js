@@ -11,6 +11,38 @@ const path = require('path');
 const BLOG_DIR = __dirname;
 const OUTPUT_FILE = path.join(BLOG_DIR, 'blog.html');
 
+function parseFunFacts() {
+    const candidates = ['fun_facts.txt', 'fun_facts.md'];
+    let content = null;
+    for (const name of candidates) {
+        const p = path.join(BLOG_DIR, name);
+        if (fs.existsSync(p)) { content = fs.readFileSync(p, 'utf-8'); break; }
+    }
+    if (!content) return [];
+    const items = [];
+    let current = null;
+    for (const raw of content.split(/\r?\n/)) {
+        const line = raw.trim();
+        if (line.startsWith('Fact:')) {
+            if (current) items.push(current);
+            current = { text: line.slice(5).trim(), source: null };
+        } else if (line.startsWith('Source:') && current) {
+            current.source = line.slice(7).trim();
+        }
+    }
+    if (current) items.push(current);
+    return items;
+}
+
+function parseShowerThoughts() {
+    const p = path.join(BLOG_DIR, 'shower_thoughts.txt');
+    if (!fs.existsSync(p)) return [];
+    return fs.readFileSync(p, 'utf-8')
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('#'));
+}
+
 function findPostFiles() {
     return fs.readdirSync(BLOG_DIR)
         .filter(f => f.endsWith('.md') && f !== 'template.md')
@@ -104,6 +136,7 @@ function generatePage(posts) {
     const sorted = posts.sort((a, b) => (b.meta.date || '').localeCompare(a.meta.date || ''));
     const postHtmls = sorted.map(generatePostHtml).join('\n\n    <hr class="post-divider">\n\n');
     const today = new Date().toISOString().split('T')[0];
+    const marginData = JSON.stringify({ facts: parseFunFacts(), thoughts: parseShowerThoughts() });
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -137,6 +170,8 @@ function generatePage(posts) {
     <footer class="page-footer">
         <p>Last updated: ${today}</p>
     </footer>
+    <script>window.MARGIN_DATA = ${marginData};</script>
+    <script src="./margin_notes.js"></script>
     <script>
         window.addEventListener('load', function () {
             var lh = 36;

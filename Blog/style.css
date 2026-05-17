@@ -223,3 +223,59 @@ h2 {
     font-size: 0.8em;
     color: #2c1f0e;
 }
+
+/* Margin notes */
+.margin-note {
+    position: fixed;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    font-size: 0.72em;
+    line-height: 1.5;
+    color: #2d4a8a;
+    opacity: 0.82;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.margin-note.left {
+    left: 12px;
+    right: calc(50vw + 406px);
+    top: 28vh;
+    transform: rotate(-1.2deg);
+}
+
+.margin-note.right {
+    left: calc(50vw + 406px);
+    right: 12px;
+    top: 52vh;
+    transform: rotate(1deg);
+}
+
+.note-label {
+    display: block;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+    margin-bottom: 4px;
+}
+
+.note-text {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.note-source {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85em;
+    opacity: 0.6;
+    color: #2d4a8a;
+    text-decoration: underline;
+    pointer-events: auto;
+}
+
+@media (max-width: 1099px) {
+    .margin-note {
+        display: none;
+    }
+}
