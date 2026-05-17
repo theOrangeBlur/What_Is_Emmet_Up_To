@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+  <canvas id="tri-bg"></canvas>
   <nav class="top-nav">
     <a href="../index.html">Take me home, please!</a>
   </nav>
@@ -85,6 +86,52 @@
   </section>
 
   <script src="./hexdoku.js"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById('tri-bg');
+      const ctx = canvas.getContext('2d');
+      const sqrt3 = Math.sqrt(3);
+
+      function draw() {
+        const W = canvas.width = window.innerWidth;
+        const H = canvas.height = window.innerHeight;
+        const s = 42;
+        const h = s * sqrt3 / 2;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(0, 80, 40, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        // Vertical lines: x = k*h
+        for (let k = -1; k * h <= W + h; k++) {
+          ctx.moveTo(k * h, 0);
+          ctx.lineTo(k * h, H);
+        }
+
+        // 30° lines (down-right): x = 2*k*h + sqrt3*y
+        const bMin = Math.ceil(-H / s) - 1;
+        const bMax = Math.floor(W / (s * sqrt3)) + 1;
+        for (let k = bMin; k <= bMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h + sqrt3 * H, H);
+        }
+
+        // 150° lines (down-left): x = 2*k*h - sqrt3*y
+        const cMin = -1;
+        const cMax = Math.ceil((W + sqrt3 * H) / (2 * h)) + 1;
+        for (let k = cMin; k <= cMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h - sqrt3 * H, H);
+        }
+
+        ctx.stroke();
+      }
+
+      draw();
+      window.addEventListener('resize', draw);
+    })();
+  </script>
   <div id="mobile-numbar" aria-label="Number input" role="toolbar">
     <button class="numbar-btn" data-value="1">
       <svg viewBox="0 0 20 30" xmlns="http://www.w3.org/2000/svg">
