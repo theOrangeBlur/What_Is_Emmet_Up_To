@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>River Crossing | Emmet</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/media/favicon/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="./boat.css">
+</head>
+<body>
+
+  <canvas id="tri-bg"></canvas>
+
+  <nav class="top-nav">
+    <a href="../../index.html">Take me home, please!</a>
+    <button id="restart-btn">Restart</button>
+  </nav>
+
+  <h1>River Crossing</h1>
+
+  <div class="instructions-box">
+    <p>
+      Get all 6 people across the river. The boat holds <strong>1 or 2</strong>.<br>
+      If <span class="red-word">cannibals</span> ever outnumber
+      <span class="blue-word">travelers</span> on either bank, it's over.<br>
+      <em>Drag or tap people into the boat, then click the boat to row.</em>
+    </p>
+  </div>
+
+  <div id="scene">
+
+    <div class="bank" id="left-bank">
+      <div class="bank-label">Left Bank</div>
+      <div class="people-area" id="left-people"></div>
+    </div>
+
+    <div id="river">
+      <div id="boat-track">
+        <div id="boat">
+          <div id="boat-hull">
+            <div id="boat-content">
+              <div class="boat-label">Boat</div>
+              <div class="people-area" id="boat-people"></div>
+              <span class="boat-hint hidden">Tap to row!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bank" id="right-bank">
+      <div class="bank-label">Right Bank</div>
+      <div class="people-area" id="right-people"></div>
+    </div>
+
+  </div>
+
+  <div id="overlay-loss" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">Cannibal Attack!</div>
+      <p>The cannibals struck. Everyone is lost.</p>
+      <button class="overlay-restart">Try Again</button>
+    </div>
+  </div>
+
+  <div id="overlay-win" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">Safe Passage!</div>
+      <p>Everyone made it across safely.</p>
+      <button class="overlay-restart">Play Again</button>
+    </div>
+  </div>
+
+  <script src="./boat.js"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById('tri-bg');
+      const ctx = canvas.getContext('2d');
+      const sqrt3 = Math.sqrt(3);
+
+      function draw() {
+        const W = canvas.width = window.innerWidth;
+        const H = canvas.height = window.innerHeight;
+        const s = 42;
+        const h = s * sqrt3 / 2;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(10, 60, 10, 0.13)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        for (let k = -1; k * h <= W + h; k++) {
+          ctx.moveTo(k * h, 0);
+          ctx.lineTo(k * h, H);
+        }
+
+        const bMin = Math.ceil(-H / s) - 1;
+        const bMax = Math.floor(W / (s * sqrt3)) + 1;
+        for (let k = bMin; k <= bMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h + sqrt3 * H, H);
+        }
+
+        const cMin = -1;
+        const cMax = Math.ceil((W + sqrt3 * H) / (2 * h)) + 1;
+        for (let k = cMin; k <= cMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h - sqrt3 * H, H);
+        }
+
+        ctx.stroke();
+      }
+
+      draw();
+      window.addEventListener('resize', draw);
+    })();
+  </script>
+
+</body>
+</html>
