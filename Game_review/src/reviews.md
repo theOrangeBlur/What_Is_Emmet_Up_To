@@ -90,11 +90,11 @@ Time Flies
 
 These days I find myself musing over my mortality quite often. What do I want to achieve before I die? What will I do with the gift of today that I have been blessed with? These questions are frightening to face, and I find people are doing it less and less thanks to how easily we can distract ourselves in the modern age. 
 
- *Time Flies *does not impose these or any ideas of mortality, but rather invites us to ask ourselves these questions by shortening our lifespan from years to seconds (literally! You choose a country and it converts WHO lifespan data from years to seconds for your run). You are then challenged to achieve the things on your bucket list in those short few precious seconds. You fill them with meaning by helping a friend, making someone laugh, listening to music, exploring sexuality, and many other wholesome and worthwhile endeavors. Or, you know, you could just run into a lightbulb. 
+ Time Flies does not impose these or any ideas of mortality, but rather invites us to ask ourselves these questions by shortening our lifespan from years to seconds (literally! You choose a country and it converts WHO lifespan data from years to seconds for your run). You are then challenged to achieve the things on your bucket list in those short few precious seconds. You fill them with meaning by helping a friend, making someone laugh, listening to music, exploring sexuality, and many other wholesome and worthwhile endeavors. Or, you know, you could just run into a lightbulb. 
 
  This metaphor perhaps isn’t perfect, as in game you start again immediately as a new fly - but with the memories of the last. Or maybe this is commentary on how we must stand on the shoulders of those who came before us to achieve something great? 
 
- These ponderings and many more - plus an enormous dose of whimsy and cleverness - make *Time Flies* a delicious and impactful two hour treat. Check it out!
+ These ponderings and many more - plus an enormous dose of whimsy and cleverness - make Time Flies a delicious and impactful two hour treat. Check it out!
 
 
 # Split Fiction
