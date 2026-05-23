@@ -25,9 +25,9 @@
 
   <div class="instructions-box">
     <p>
-      Get all 6 people across the river. The boat holds <strong>1 or 2</strong>.<br>
+      Your goal is to get all 6 people across the river. The boat can carry up to two people, and someone must pilot it.<br>
       If <span class="red-word">cannibals</span> ever outnumber
-      <span class="blue-word">travelers</span> on either bank, it's over.<br>
+      <span class="blue-word">travelers</span> on either bank, the travelers will be eaten!<br>
       <em>Drag or tap people into the boat, then click the boat to row.</em>
     </p>
   </div>
@@ -63,7 +63,7 @@
   <div id="overlay-loss" class="overlay hidden">
     <div class="overlay-box">
       <div class="overlay-title">Cannibal Attack!</div>
-      <p>The cannibals struck. Everyone is lost.</p>
+      <p>You have played into the cannibals' hands! You lose!</p>
       <button class="overlay-restart">Try Again</button>
     </div>
   </div>
@@ -74,6 +74,12 @@
       <p>Everyone made it across safely.</p>
       <button class="overlay-restart">Play Again</button>
     </div>
+  </div>
+
+  <div class="instructions-box">
+    <p>
+      This puzzle is the classic "cannibals and missionaries" problem. <a href="https://en.wikipedia.org/wiki/Missionaries_and_cannibals_problem">Check it out</a> once you've solved it here!
+    </p>
   </div>
 
   <script src="./boat.js"></script>

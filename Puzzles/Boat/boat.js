@@ -231,9 +231,9 @@ document.getElementById('boat').addEventListener('click', e => {
         // Flip boat to face back into the river from whichever shore it's on
         document.getElementById('boat-hull').classList.toggle('flipped', destination === 'right');
 
+        render();
         checkConstraints();
         checkWin();
-        render();
     });
 });
 
@@ -244,10 +244,192 @@ function isSafe(bank) {
 }
 
 function checkConstraints() {
-    if (!isSafe(state.left) || !isSafe(state.right)) {
-        state.gameOver = true;
-        document.getElementById('overlay-loss').classList.remove('hidden');
+    if (!isSafe(state.left)) {
+        playAttackAnimation('left');
+    } else if (!isSafe(state.right)) {
+        playAttackAnimation('right');
     }
+}
+
+function showLossOverlay() {
+    state.gameOver = true;
+    document.getElementById('overlay-loss').classList.remove('hidden');
+}
+
+function playAttackAnimation(bankSide) {
+    state.animating = true;
+    render(); // lock banks before animation starts
+
+    const bankEl     = document.getElementById(bankSide + '-bank');
+    const peopleArea = document.getElementById(bankSide + '-people');
+    const bankRect   = bankEl.getBoundingClientRect();
+
+    const travelerEls = Array.from(peopleArea.querySelectorAll('.traveler'));
+    const cannibalEls = Array.from(peopleArea.querySelectorAll('.cannibal'));
+
+    if (travelerEls.length === 0 || cannibalEls.length === 0) {
+        showLossOverlay();
+        return;
+    }
+
+    const layer = document.createElement('div');
+    layer.id = 'attack-layer';
+    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1500;';
+    document.body.appendChild(layer);
+
+    function makeActor(el, type) {
+        const rect = el.getBoundingClientRect();
+        const r    = rect.width / 2;
+        const cx   = rect.left + r;
+        const cy   = rect.top  + r;
+        const div  = document.createElement('div');
+        div.className = `person ${type}`;
+        div.innerHTML = el.innerHTML;
+        div.style.cssText = `position:fixed;width:${rect.width}px;height:${rect.height}px;` +
+            `left:${cx - r}px;top:${cy - r}px;pointer-events:none;margin:0;transform-origin:center;`;
+        layer.appendChild(div);
+        el.style.visibility = 'hidden';
+        return { el: div, x: cx, y: cy, r, vx: 0, vy: 0 };
+    }
+
+    const travelers = travelerEls.map(el => makeActor(el, 'traveler'));
+    const cannibals = cannibalEls.map(el => makeActor(el, 'cannibal'));
+    travelers.forEach(t => { t.consumed = false; t.ramHits = 0; });
+    cannibals.forEach(c => { c.ramCooldown = 0; });
+
+    const CANNIBAL_SPEED = 2.8;
+    const TRAVELER_SPEED = 2.0;
+    const TOUCH_DIST     = 52;  // 26px radius × 2
+    const RAM_COOLDOWN   = 38;  // frames between registered hits
+    const HITS_TO_KILL   = 3;
+    const PAD            = 14;  // boundary padding inside bank
+
+    let phase = 'panic', startTime = null;
+
+    function setPos(a) {
+        a.el.style.left = (a.x - a.r) + 'px';
+        a.el.style.top  = (a.y - a.r) + 'px';
+    }
+
+    function frame(now) {
+        if (!startTime) startTime = now;
+        const elapsed = now - startTime;
+
+        // ── PANIC PHASE: travelers shake, cannibals pulse ─────────────────
+        if (phase === 'panic') {
+            travelers.forEach((t, i) => {
+                const s = Math.sin(now * 0.025 + i * 1.3) * 5;
+                t.el.style.transform = `translateX(${s}px) rotate(${s * 1.5}deg)`;
+            });
+            cannibals.forEach((c, i) => {
+                const p = 1 + Math.sin(now * 0.04 + i) * 0.12;
+                c.el.style.transform = `scale(${p})`;
+            });
+            if (elapsed >= 700) {
+                phase = 'chase';
+                travelers.forEach(t => { t.el.style.transform = ''; });
+                cannibals.forEach(c => { c.el.style.transform = ''; });
+            }
+            requestAnimationFrame(frame);
+            return;
+        }
+
+        // ── CHASE PHASE ───────────────────────────────────────────────────
+        const liveT = travelers.filter(t => !t.consumed);
+
+        if (liveT.length === 0) {
+            setTimeout(() => { layer.remove(); showLossOverlay(); }, 600);
+            return;
+        }
+
+        // Travelers flee from the nearest cannibal
+        liveT.forEach(t => {
+            let fx = 0, fy = 0;
+            cannibals.forEach(c => {
+                const dx = t.x - c.x, dy = t.y - c.y;
+                const d  = Math.sqrt(dx * dx + dy * dy) || 1;
+                fx += dx / d;
+                fy += dy / d;
+            });
+            const fm = Math.sqrt(fx * fx + fy * fy) || 1;
+            t.vx += (fx / fm) * 0.9;
+            t.vy += (fy / fm) * 0.9;
+            const sp = Math.sqrt(t.vx * t.vx + t.vy * t.vy);
+            if (sp > TRAVELER_SPEED) { t.vx = t.vx / sp * TRAVELER_SPEED; t.vy = t.vy / sp * TRAVELER_SPEED; }
+            t.x += t.vx;
+            t.y += t.vy;
+            // Bounce within bank bounds
+            if (t.x < bankRect.left   + t.r + PAD) { t.x = bankRect.left   + t.r + PAD; t.vx =  Math.abs(t.vx); }
+            if (t.x > bankRect.right  - t.r - PAD) { t.x = bankRect.right  - t.r - PAD; t.vx = -Math.abs(t.vx); }
+            if (t.y < bankRect.top    + t.r + PAD) { t.y = bankRect.top    + t.r + PAD; t.vy =  Math.abs(t.vy); }
+            if (t.y > bankRect.bottom - t.r - PAD) { t.y = bankRect.bottom - t.r - PAD; t.vy = -Math.abs(t.vy); }
+            t.vx *= 0.88;
+            t.vy *= 0.88;
+            setPos(t);
+        });
+
+        // Cannibals chase and ram their nearest live traveler
+        cannibals.forEach(c => {
+            let nearest = null, nearestD = Infinity;
+            liveT.forEach(t => {
+                const dx = t.x - c.x, dy = t.y - c.y;
+                const d  = Math.sqrt(dx * dx + dy * dy);
+                if (d < nearestD) { nearestD = d; nearest = t; }
+            });
+            if (!nearest) return;
+            if (c.ramCooldown > 0) c.ramCooldown--;
+
+            const dx = nearest.x - c.x, dy = nearest.y - c.y;
+
+            if (nearestD <= TOUCH_DIST && c.ramCooldown === 0 && !nearest.consumed) {
+                // ── RAM ──
+                nearest.ramHits++;
+                c.ramCooldown = RAM_COOLDOWN;
+                // Knock the traveler away
+                nearest.vx += (dx / nearestD) * 8;
+                nearest.vy += (dy / nearestD) * 8;
+                // Cannibal recoil
+                c.vx -= (dx / nearestD) * 5;
+                c.vy -= (dy / nearestD) * 5;
+                // Flash effects
+                const victim = nearest;
+                victim.el.style.filter  = 'brightness(3) saturate(0)';
+                c.el.style.transform = 'scale(1.35)';
+                setTimeout(() => {
+                    if (!victim.consumed) victim.el.style.filter = '';
+                    c.el.style.transform = '';
+                }, 130);
+                // Consume after enough hits
+                if (nearest.ramHits >= HITS_TO_KILL) {
+                    nearest.consumed = true;
+                    nearest.el.style.transition = 'transform 0.5s ease-in, opacity 0.5s ease-in';
+                    nearest.el.style.transform  = 'scale(0) rotate(720deg)';
+                    nearest.el.style.opacity    = '0';
+                }
+            } else if (nearestD > TOUCH_DIST) {
+                // ── CHASE ──
+                c.vx += (dx / nearestD) * 1.2;
+                c.vy += (dy / nearestD) * 1.2;
+                const sp = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+                if (sp > CANNIBAL_SPEED) { c.vx = c.vx / sp * CANNIBAL_SPEED; c.vy = c.vy / sp * CANNIBAL_SPEED; }
+            }
+
+            c.x += c.vx;
+            c.y += c.vy;
+            // Keep cannibals within bank too
+            if (c.x < bankRect.left   + c.r + PAD) { c.x = bankRect.left   + c.r + PAD; c.vx =  Math.abs(c.vx); }
+            if (c.x > bankRect.right  - c.r - PAD) { c.x = bankRect.right  - c.r - PAD; c.vx = -Math.abs(c.vx); }
+            if (c.y < bankRect.top    + c.r + PAD) { c.y = bankRect.top    + c.r + PAD; c.vy =  Math.abs(c.vy); }
+            if (c.y > bankRect.bottom - c.r - PAD) { c.y = bankRect.bottom - c.r - PAD; c.vy = -Math.abs(c.vy); }
+            c.vx *= 0.9;
+            c.vy *= 0.9;
+            setPos(c);
+        });
+
+        requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
 }
 
 function checkWin() {
@@ -261,6 +443,9 @@ function checkWin() {
 // ── RESTART ─────────────────────────────────────────────────────────────────
 
 function restart() {
+    const attackLayer = document.getElementById('attack-layer');
+    if (attackLayer) attackLayer.remove();
+
     document.getElementById('overlay-loss').classList.add('hidden');
     document.getElementById('overlay-win').classList.add('hidden');
 
