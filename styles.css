@@ -227,9 +227,9 @@ body {
     visibility: hidden;
     opacity: 0;
     position: absolute;
-    top: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
     background: rgba(30, 20, 10, 0.92);
     color: rgba(245, 230, 200, 0.95);
     font-family: 'IM Fell English', serif;
@@ -243,7 +243,63 @@ body {
     z-index: 1002;
 }
 
+.nav-dropdown-item-disabled::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    bottom: -8px;
+    right: -12px;
+    width: 12px;
+}
+
 .nav-dropdown-item-disabled:hover .coming-soon-tooltip {
+    visibility: visible;
+    opacity: 0.93;
+}
+
+.nav-dropdown-item-link {
+    display: block;
+    position: relative;
+}
+
+.nav-dropdown-item-link::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    bottom: -8px;
+    right: -12px;
+    width: 12px;
+}
+
+.collab-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    background: rgba(30, 20, 10, 0.92);
+    color: rgba(245, 230, 200, 0.95);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border: 1px solid rgba(245, 230, 200, 0.3);
+    pointer-events: auto;
+    transition: opacity 0.15s ease;
+    z-index: 1002;
+}
+
+
+.collab-tooltip a {
+    color: inherit;
+    text-decoration: underline;
+    display: inline;
+    padding: 0;
+}
+
+.nav-dropdown-item-link:hover .collab-tooltip {
     visibility: visible;
     opacity: 0.93;
 }
