@@ -81,7 +81,7 @@ h1 {
     text-align: center;
     margin-top: 64px;
     font-family: 'Press Start 2P', monospace;
-    font-size: 2.6rem;
+    font-size: clamp(1rem, 5vw, 2.6rem);
     letter-spacing: 3px;
     text-transform: uppercase;
     color: #fdf6e3;
@@ -123,7 +123,7 @@ h1 {
     display: flex;
     align-items: stretch;
     max-width: 860px;
-    min-width: 560px;
+    min-width: min(560px, 100%);
     margin: 0 auto 60px;
     min-height: 300px;
     /* overflow: visible lets the boat slide onto the banks */
@@ -134,7 +134,7 @@ h1 {
 /* ── BANKS ─────────────────────────────────────────────────────────── */
 
 .bank {
-    flex: 0 0 200px;
+    flex: 0 0 min(200px, 26vw);
     background: linear-gradient(160deg, #4e8c2a 0%, #3d7020 100%);
     display: flex;
     flex-direction: column;
@@ -230,9 +230,9 @@ h1 {
     );
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55))
             drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
-    width: 220px;
-    min-height: 112px;
-    padding: 10px 50px 10px 12px;  /* extra right padding: bow area isn't usable */
+    width: min(220px, 32vw);
+    min-height: min(112px, 16vw);
+    padding: 10px min(50px, 7.5vw) 10px 12px;  /* extra right padding: bow area isn't usable */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -316,16 +316,16 @@ h1 {
 }
 
 #boat-people {
-    min-height: 52px;
-    min-width: 112px;
+    min-height: min(52px, 8.5vw);
+    min-width: min(112px, 20vw);
     flex-wrap: nowrap;
 }
 
 /* ── PERSON TOKENS ─────────────────────────────────────────────────── */
 
 .person {
-    width: 52px;
-    height: 52px;
+    width: min(52px, 7vw);
+    height: min(52px, 7vw);
     border-radius: 50%;
     cursor: grab;
     user-select: none;
@@ -420,3 +420,34 @@ h1 {
 }
 
 .overlay-restart:hover { background: #5a3400; }
+
+/* ── RESPONSIVE SCALING ─────────────────────────────────────────────── */
+
+/* Scale SVG icons proportionally with the person token (container: min(52px, 9vw)) */
+.person svg {
+    width: min(26px, 3.5vw);
+    height: min(38px, 5.2vw);
+}
+
+/* Text/padding tweaks only needed at very small sizes */
+@media (max-width: 560px) {
+    h1 { margin-top: 16px; }
+
+    .instructions-box {
+        margin: 12px 8px 16px;
+        font-size: 0.8rem;
+        padding: 10px 12px;
+    }
+
+    .bank {
+        padding: 10px 2vw;
+        gap: 6px;
+    }
+
+    .bank-label { font-size: 0.55rem; }
+
+    .people-area {
+        gap: 4px;
+        padding: 4px;
+    }
+}

@@ -3,7 +3,7 @@
 const TRAVELERS = 3;
 const CANNIBALS = 3;
 
-const HUMANOID_SVG = `<svg viewBox="0 0 24 36" width="26" height="38" fill="white" aria-hidden="true">
+const HUMANOID_SVG = `<svg viewBox="0 0 24 36" fill="white" aria-hidden="true">
   <circle cx="12" cy="8" r="6"/>
   <path d="M4,19 Q12,13 20,19 L18,34 H14 L12,28 L10,34 H6 Z"/>
 </svg>`;

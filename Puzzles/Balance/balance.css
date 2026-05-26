@@ -1,0 +1,676 @@
+/* ── RESET & BASE ──────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    background-color: #6aaa50;
+}
+
+body {
+    min-height: 100vh;
+    font-family: sans-serif;
+}
+
+/* ── CANVAS BACKGROUND ─────────────────────────────────────────────── */
+
+#tri-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ── TOP NAV ───────────────────────────────────────────────────────── */
+
+.top-nav {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.top-nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.9em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    border: 1px solid transparent;
+    display: inline-block;
+}
+
+.top-nav a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+
+#restart-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+#restart-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+
+@media (max-width: 1024px) {
+    .top-nav {
+        position: static;
+        padding: 12px 0 0 12px;
+    }
+}
+
+/* ── HEADING ───────────────────────────────────────────────────────── */
+
+h1 {
+    text-align: center;
+    margin-top: 64px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(1rem, 5vw, 2.6rem);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #fdf6e3;
+    -webkit-text-stroke: 2px #2a5000;
+    paint-order: stroke fill;
+    text-shadow:
+        2px  2px 0 #8bc34a,
+        3px  3px 0 #7cb342,
+        4px  4px 0 #6da030,
+        5px  5px 0 #5e8d1e,
+        6px  6px 0 #4f7a0c,
+        7px  7px 0 #406700,
+        8px  8px 0 #315400,
+        9px  9px 0 #224100,
+        10px 10px 20px rgba(0,0,0,0.5);
+}
+
+/* ── INSTRUCTIONS ──────────────────────────────────────────────────── */
+
+.instructions-box {
+    max-width: 680px;
+    margin: 24px auto 28px;
+    padding: 14px 22px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid #3a6b00;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    color: #1a2d00;
+}
+
+.instructions-box a {
+    color: #2e5e00;
+    font-weight: bold;
+}
+
+/* ── SCENE ─────────────────────────────────────────────────────────── */
+
+#scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto 60px;
+    padding: 0 16px;
+    gap: 24px;
+}
+
+/* ── MAIN AREA (scale + organizer side by side) ────────────────────── */
+
+#main-area {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+/* ── WEIGHINGS DISPLAY ─────────────────────────────────────────────── */
+
+#weighings-display {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.6rem, 2.2vw, 0.9rem);
+    color: #d4edaa;
+    text-shadow: 1px 1px 0 #2a5000;
+    letter-spacing: 2px;
+    transition: color 0.3s;
+}
+
+#weighings-display.at-limit {
+    color: #ff9494;
+    text-shadow: 1px 1px 0 #7a0000;
+}
+
+/* ── SCALE WRAPPER ─────────────────────────────────────────────────── */
+
+#scale-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+/* ── ORGANIZER ─────────────────────────────────────────────────────── */
+
+#organizer {
+    flex: 1;
+    min-width: 160px;
+    max-width: 260px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(2, auto);
+    gap: 8px;
+    background: linear-gradient(160deg, #5a3a20 0%, #3d2510 100%);
+    border-radius: 14px;
+    padding: 10px;
+    border: 3px solid #2a1800;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.5);
+    align-self: stretch;
+}
+
+.org-zone {
+    min-height: 52px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    align-content: flex-start;
+    cursor: default;
+    transition: background 0.15s, outline 0.15s;
+}
+
+#scene.has-selection .org-zone {
+    cursor: pointer;
+}
+
+#scene.has-selection .org-zone:hover {
+    background: rgba(255, 215, 0, 0.2);
+    outline: 2px dashed rgba(255, 215, 0, 0.7);
+}
+
+#scene.accuse-mode .org-zone {
+    cursor: crosshair;
+}
+
+#scale-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* ── BEAM ROW (rotates for tilt) ───────────────────────────────────── */
+
+#beam-row {
+    display: flex;
+    align-items: flex-start;
+    width: min(460px, 90vw);
+    transform-origin: center 7px;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── ARM (half of beam + chain + pan) ──────────────────────────────── */
+
+.arm {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.arm-beam {
+    width: 100%;
+    height: 14px;
+    background: linear-gradient(180deg, #c08040 0%, #7a4e20 100%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+#left-arm  .arm-beam { border-radius: 5px 0 0 5px; }
+#right-arm .arm-beam { border-radius: 0 5px 5px 0; }
+
+/* ── FULCRUM ───────────────────────────────────────────────────────── */
+
+#fulcrum {
+    width: 22px;
+    height: 22px;
+    background: radial-gradient(circle at 35% 35%, #d09050, #5c3810);
+    border-radius: 50%;
+    border: 3px solid #3a2000;
+    margin-top: -4px;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ── CHAIN ─────────────────────────────────────────────────────────── */
+
+.chain {
+    width: 3px;
+    height: min(72px, 12vw);
+    background: linear-gradient(180deg, rgba(130,85,30,0.95), rgba(90,60,20,0.7));
+    border-radius: 2px;
+}
+
+/* ── PAN DISH ──────────────────────────────────────────────────────── */
+
+.pan-dish {
+    width: min(130px, 22vw);
+    min-height: min(54px, 9vw);
+    background: linear-gradient(160deg, #a06830 0%, #7a4e20 60%, #5c3810 100%);
+    border-radius: 0 0 55% 55% / 0 0 42% 42%;
+    border: 2px solid #3a2000;
+    border-top: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 6px 4px 10px;
+    transform-origin: top center;
+    transition: background 0.15s, outline 0.15s,
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* zone hover when coins are selected */
+#scene.has-selection .pan-dish {
+    cursor: pointer;
+}
+
+#scene.has-selection .pan-dish:hover {
+    background: rgba(255, 215, 0, 0.28);
+    outline: 2px dashed #ffd700;
+}
+
+/* ── SCALE POST ────────────────────────────────────────────────────── */
+
+#scale-post {
+    width: 16px;
+    height: min(64px, 11vw);
+    background: linear-gradient(180deg, #9a6030, #7a4e20);
+    border: 2px solid #3a2000;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+}
+
+/* ── SCALE BASE ────────────────────────────────────────────────────── */
+
+#scale-base {
+    width: min(120px, 22vw);
+    height: 16px;
+    background: linear-gradient(180deg, #8a5a28, #5c3810);
+    border-radius: 8px;
+    border: 2px solid #3a2000;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+}
+
+/* ── TILT STATES ───────────────────────────────────────────────────── */
+
+#scale-wrapper.tilt-left  #beam-row  { transform: rotate(-11deg); }
+#scale-wrapper.tilt-left  #left-pan  { transform: rotate(11deg); }
+#scale-wrapper.tilt-left  #right-pan { transform: rotate(11deg); }
+
+#scale-wrapper.tilt-right #beam-row  { transform: rotate(11deg); }
+#scale-wrapper.tilt-right #left-pan  { transform: rotate(-11deg); }
+#scale-wrapper.tilt-right #right-pan { transform: rotate(-11deg); }
+
+#scale-wrapper.balanced #fulcrum {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 14px rgba(255, 215, 0, 0.55);
+}
+
+/* ── SCALE BUTTONS ─────────────────────────────────────────────────── */
+
+#scale-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#weigh-btn,
+#accuse-btn {
+    padding: 12px 28px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.5rem, 1.8vw, 0.75rem);
+    letter-spacing: 2px;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-transform: uppercase;
+}
+
+#weigh-btn {
+    color: #ffd700;
+    border: 2px solid #ffd700;
+}
+
+#weigh-btn:hover {
+    background: rgba(255, 215, 0, 0.18);
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
+}
+
+#accuse-btn {
+    color: #ff9494;
+    border: 2px solid #ff9494;
+}
+
+#accuse-btn:hover {
+    background: rgba(255, 100, 100, 0.18);
+    box-shadow: 0 0 14px rgba(255, 80, 80, 0.4);
+}
+
+#accuse-btn.active {
+    background: rgba(200, 40, 40, 0.35);
+    color: #fff;
+    border-color: #ff5555;
+    box-shadow: 0 0 14px rgba(255, 80, 80, 0.5);
+}
+
+#weigh-btn:active,
+#accuse-btn:active {
+    transform: scale(0.95);
+}
+
+
+/* ── COIN TOKENS ───────────────────────────────────────────────────── */
+
+.coin {
+    width: min(48px, 9vw);
+    height: min(48px, 9vw);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f8e070, #c8960c);
+    border: 2px solid #a07010;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 3px rgba(255,240,120,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: min(9px, 1.8vw);
+    color: #5c3810;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+.coin:hover {
+    transform: scale(1.13) translateY(-2px);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.45);
+}
+
+.coin.selected {
+    filter: brightness(0.68);
+    border-color: #ffd700;
+    box-shadow: 0 0 0 3px #ffd700, 0 3px 10px rgba(0,0,0,0.5);
+    transform: scale(1.08) translateY(-1px);
+}
+
+/* ── DYED COIN COLORS ──────────────────────────────────────────────── */
+
+.coin.dyed-red    { background: radial-gradient(circle at 35% 30%, #ff8080, #c01818); border-color: #901010; }
+.coin.dyed-blue   { background: radial-gradient(circle at 35% 30%, #7090ff, #1840d0); border-color: #0c2898; }
+.coin.dyed-green  { background: radial-gradient(circle at 35% 30%, #70d060, #18901a); border-color: #0c6010; }
+.coin.dyed-purple { background: radial-gradient(circle at 35% 30%, #c070ff, #6018c0); border-color: #420890; }
+.coin.dyed-orange { background: radial-gradient(circle at 35% 30%, #ffaa50, #d05010); border-color: #a03408; }
+
+.coin.accuse-target {
+    cursor: crosshair;
+}
+
+.coin.accuse-target:hover {
+    box-shadow: 0 0 0 2px #ff5555, 0 0 14px rgba(255, 80, 80, 0.65);
+    border-color: #ff5555;
+}
+
+/* in accuse mode, non-targeted coins use a crosshair too */
+#scene.accuse-mode .coin {
+    cursor: crosshair;
+}
+
+/* ── PALETTE (artist's wooden palette) ────────────────────────────── */
+
+#palette-area {
+    position: relative;
+    width: 260px;
+    height: 190px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+#palette-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.55))
+            drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+/* Paint blob swatches — absolutely positioned over palette SVG */
+.swatch {
+    position: absolute;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), inset 0 1px 4px rgba(255, 255, 255, 0.35);
+}
+
+.swatch[data-color="red"] {
+    width: 36px; height: 30px;
+    top: 10px; left: 100px;
+    border-radius: 58% 42% 48% 52% / 62% 38% 54% 46%;
+    background: radial-gradient(circle at 35% 30%, #ff8080, #c01818);
+}
+.swatch[data-color="orange"] {
+    width: 32px; height: 28px;
+    top: 8px; left: 156px;
+    border-radius: 44% 56% 62% 38% / 50% 44% 56% 50%;
+    background: radial-gradient(circle at 35% 30%, #ffaa50, #d05010);
+}
+.swatch[data-color="gold"] {
+    width: 34px; height: 28px;
+    top: 34px; left: 202px;
+    border-radius: 52% 48% 38% 62% / 46% 54% 48% 52%;
+    background: radial-gradient(circle at 35% 30%, #f8e070, #c8960c);
+}
+.swatch[data-color="green"] {
+    width: 30px; height: 32px;
+    top: 88px; left: 214px;
+    border-radius: 60% 40% 52% 48% / 38% 62% 46% 54%;
+    background: radial-gradient(circle at 35% 30%, #70d060, #18901a);
+}
+.swatch[data-color="blue"] {
+    width: 34px; height: 30px;
+    top: 150px; left: 180px;
+    border-radius: 46% 54% 44% 56% / 56% 44% 60% 40%;
+    background: radial-gradient(circle at 35% 30%, #7090ff, #1840d0);
+}
+.swatch[data-color="purple"] {
+    width: 36px; height: 28px;
+    top: 155px; left: 112px;
+    border-radius: 50% 50% 58% 42% / 44% 56% 42% 58%;
+    background: radial-gradient(circle at 35% 30%, #c070ff, #6018c0);
+}
+
+.swatch:hover {
+    transform: scale(1.28);
+    box-shadow: 0 5px 16px rgba(0, 0, 0, 0.6), inset 0 1px 4px rgba(255, 255, 255, 0.4);
+}
+
+#scene.has-selection .swatch:hover {
+    transform: scale(1.36);
+}
+
+/* ── OVERLAYS ──────────────────────────────────────────────────────── */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.68);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.overlay.hidden { display: none; }
+
+.overlay-box {
+    background: #fdf6e3;
+    border: 4px solid #2a2000;
+    border-radius: 18px;
+    padding: 40px 48px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.55);
+}
+
+.overlay-box p {
+    font-size: 1rem;
+    color: #3a2800;
+    margin: 8px 0 0;
+    line-height: 1.5;
+}
+
+.overlay-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+#overlay-loss .overlay-title,
+#accusation-modal .overlay-title {
+    color: #c62828;
+    text-shadow: 2px 2px 0 #7a0000;
+}
+
+#overlay-win .overlay-title {
+    color: #2e7d32;
+    text-shadow: 2px 2px 0 #005000;
+}
+
+.overlay-restart {
+    margin-top: 24px;
+    padding: 12px 36px;
+    background: #3a2000;
+    color: #fdf6e3;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.overlay-restart:hover { background: #5a3400; }
+
+/* ── ACCUSATION MODAL ──────────────────────────────────────────────── */
+
+.accuse-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.accuse-btn {
+    padding: 10px 28px;
+    font-size: 1rem;
+    font-family: inherit;
+    border-radius: 8px;
+    border: 2px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+
+#accuse-heavier {
+    background: #c62828;
+    color: #fff;
+    border-color: #7a0000;
+}
+
+#accuse-heavier:hover { background: #b71c1c; }
+
+#accuse-lighter {
+    background: #1565c0;
+    color: #fff;
+    border-color: #003c8f;
+}
+
+#accuse-lighter:hover { background: #0d47a1; }
+
+.cancel-btn {
+    display: block;
+    margin: 14px auto 0;
+    padding: 8px 20px;
+    background: transparent;
+    color: #3a2800;
+    border: 1px solid #3a2800;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+    background: rgba(0,0,0,0.08);
+}
+
+/* ── RESPONSIVE ────────────────────────────────────────────────────── */
+
+@media (max-width: 680px) {
+    #main-area {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #organizer {
+        max-width: 100%;
+        width: 100%;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    h1 { margin-top: 16px; }
+
+    .instructions-box {
+        margin: 12px 8px 16px;
+        font-size: 0.8rem;
+        padding: 10px 12px;
+    }
+
+    #scene { gap: 16px; }
+
+    .overlay-box { padding: 28px 24px; }
+
+    .accuse-buttons { flex-direction: column; align-items: center; }
+}

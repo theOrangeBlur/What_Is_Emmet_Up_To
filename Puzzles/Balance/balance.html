@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Coin Riddle | Emmet</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/media/favicon/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="./balance.css">
+</head>
+<body>
+
+  <canvas id="tri-bg"></canvas>
+
+  <nav class="top-nav">
+    <a href="../../index.html">Take me home, please!</a>
+    <button id="restart-btn">Restart</button>
+  </nav>
+
+  <h1>Coin Riddle</h1>
+
+  <div class="instructions-box">
+    <p>
+      One of these 12 coins weighs differently than the rest — but which one?<br>
+      <strong>Click coins</strong> to select them, then <strong>click a pan or the table</strong> to move them.
+      A perfect solve needs only <strong>3 weighings</strong>.<br>
+      When you're confident, hit <strong>Accuse a Coin</strong> and click the odd one out.
+    </p>
+  </div>
+
+  <div id="scene">
+
+    <div id="weighings-display">Weighings: 0 / 3</div>
+
+    <div id="main-area">
+
+      <div id="scale-wrapper">
+        <div id="scale-top">
+          <div id="beam-row">
+            <div class="arm" id="left-arm">
+              <div class="arm-beam"></div>
+              <div class="chain"></div>
+              <div class="pan-dish" id="left-pan"></div>
+            </div>
+            <div id="fulcrum"></div>
+            <div class="arm" id="right-arm">
+              <div class="arm-beam"></div>
+              <div class="chain"></div>
+              <div class="pan-dish" id="right-pan"></div>
+            </div>
+          </div>
+          <div id="scale-post"></div>
+        </div>
+        <div id="scale-base"></div>
+        <div id="scale-buttons">
+          <button id="weigh-btn">Weigh!</button>
+          <button id="accuse-btn">Accuse a Coin</button>
+        </div>
+      </div>
+
+      <div id="organizer">
+        <div class="org-zone" id="org1"></div>
+        <div class="org-zone" id="org2"></div>
+        <div class="org-zone" id="org3"></div>
+        <div class="org-zone" id="org4"></div>
+      </div>
+
+    </div>
+
+    <div id="palette-area" aria-label="Dye palette">
+      <svg id="palette-svg" viewBox="0 0 260 190" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="woodGrad" cx="40%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#ddb870"/>
+            <stop offset="50%" stop-color="#c49040"/>
+            <stop offset="100%" stop-color="#8a5e1a"/>
+          </radialGradient>
+          <clipPath id="paletteClip">
+            <path clip-rule="evenodd"
+                  d="M 22,95 C 10,44 50,6 108,6 C 165,6 218,28 242,66 C 260,96 250,142 218,162 C 186,180 134,186 82,174 C 38,163 12,136 22,95 Z
+                     M 62,95 m -27,0 a 27,27 0 1,0 54,0 a 27,27 0 1,0 -54,0 Z"/>
+          </clipPath>
+        </defs>
+        <path fill-rule="evenodd" fill="url(#woodGrad)" stroke="#5a3a10" stroke-width="2.5"
+              d="M 22,95 C 10,44 50,6 108,6 C 165,6 218,28 242,66 C 260,96 250,142 218,162 C 186,180 134,186 82,174 C 38,163 12,136 22,95 Z
+                 M 62,95 m -27,0 a 27,27 0 1,0 54,0 a 27,27 0 1,0 -54,0 Z"/>
+        <g clip-path="url(#paletteClip)">
+          <path fill="none" stroke="rgba(90,50,8,0.18)" stroke-width="1.5" d="M 50,55 Q 140,35 225,72"/>
+          <path fill="none" stroke="rgba(90,50,8,0.12)" stroke-width="1"   d="M 38,85 Q 135,65 245,100"/>
+          <path fill="none" stroke="rgba(90,50,8,0.14)" stroke-width="1.5" d="M 42,125 Q 138,108 238,132"/>
+          <path fill="none" stroke="rgba(90,50,8,0.10)" stroke-width="1"   d="M 58,152 Q 140,140 212,155"/>
+        </g>
+      </svg>
+      <button class="swatch" data-color="red"    aria-label="Red dye"></button>
+      <button class="swatch" data-color="orange" aria-label="Orange dye"></button>
+      <button class="swatch" data-color="gold"   aria-label="Remove dye"></button>
+      <button class="swatch" data-color="green"  aria-label="Green dye"></button>
+      <button class="swatch" data-color="blue"   aria-label="Blue dye"></button>
+      <button class="swatch" data-color="purple" aria-label="Purple dye"></button>
+    </div>
+
+  </div><!-- #scene -->
+
+  <div id="accusation-modal" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">Accuse Coin #<span id="accused-coin-num"></span>?</div>
+      <p>Is this the odd one out? If so, is it&hellip;</p>
+      <div class="accuse-buttons">
+        <button id="accuse-heavier" class="accuse-btn">Heavier &darr;</button>
+        <button id="accuse-lighter" class="accuse-btn">Lighter &uarr;</button>
+      </div>
+      <button id="accuse-cancel" class="cancel-btn">Cancel</button>
+    </div>
+  </div>
+
+  <div id="overlay-loss" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">Wrong!</div>
+      <p>That wasn't quite right.</p>
+      <p id="loss-info"></p>
+      <button class="overlay-restart">Try Again</button>
+    </div>
+  </div>
+
+  <div id="overlay-win" class="overlay hidden">
+    <div class="overlay-box">
+      <div class="overlay-title">Correct!</div>
+      <p id="win-weighings"></p>
+      <button class="overlay-restart">Play Again</button>
+    </div>
+  </div>
+
+  <div class="instructions-box">
+    <p>
+      This is the classic <em>balance puzzle</em>. <a href="https://en.wikipedia.org/wiki/Balance_puzzle">Learn more</a> once you've cracked it!
+    </p>
+  </div>
+
+  <script src="./balance.js"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById('tri-bg');
+      const ctx = canvas.getContext('2d');
+      const sqrt3 = Math.sqrt(3);
+
+      function draw() {
+        const W = canvas.width = window.innerWidth;
+        const H = canvas.height = window.innerHeight;
+        const s = 42;
+        const h = s * sqrt3 / 2;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = 'rgba(10, 60, 10, 0.13)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        for (let k = -1; k * h <= W + h; k++) {
+          ctx.moveTo(k * h, 0);
+          ctx.lineTo(k * h, H);
+        }
+
+        const bMin = Math.ceil(-H / s) - 1;
+        const bMax = Math.floor(W / (s * sqrt3)) + 1;
+        for (let k = bMin; k <= bMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h + sqrt3 * H, H);
+        }
+
+        const cMin = -1;
+        const cMax = Math.ceil((W + sqrt3 * H) / (2 * h)) + 1;
+        for (let k = cMin; k <= cMax; k++) {
+          ctx.moveTo(2 * k * h, 0);
+          ctx.lineTo(2 * k * h - sqrt3 * H, H);
+        }
+
+        ctx.stroke();
+      }
+
+      draw();
+      window.addEventListener('resize', draw);
+    })();
+  </script>
+
+</body>
+</html>
