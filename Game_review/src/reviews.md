@@ -163,3 +163,25 @@ The city is even more vast this time, but our spiders have great new abilities t
 I hope the third major installment shakes up the formula for combat and stealth. One of the things I really love about both Batman and Spider-man is how they use their brain to get themselves out of tough challenges. I don’t want to be the guy begging for my super heroes to be more adult… but you really can make a game that works for kids and adults. 
 
 I have many more specific thoughts about this one, but I don’t want to spoil anything! Hit me up if you want to talk!
+
+
+# Horizon Forbidden West
+
+
+Horizon Forbidden West
+
+My first game on my new PlayStation5! This hardware is fantastic - every controller should have haptic, analogue triggers. I don’t think it’s unfair to get lost in the plusses of the console itself, because this game uses a great deal of those features to bring immersion to a new level.
+
+There were countless times during this game I was awestruck by the beauty this game and hardware produced. During my favorite moment, I found myself suddenly overlooking El Capitan in an unmistakable Yosemite valley. Equally remarkable are the complex machines, so thoroughly designed that they feel real. The way they integrate into the world is perfect, and their blue lights shining out into the world somehow enhances the nature.
+
+The game is stuffed with fun side projects to work on as you progress through the story. Machine races, a fully fleshed out and intricate board game, rebel camps, training grounds… it goes on and on without feeling repetitive. Combat is also deep and rich, building quite well on its predecessor. It is endlessly fun to shoot at weak points on enemies, plan out satisfying elemental techniques, and bring enormous mechanical animals down. A huge variety of weapons and ammunition and skills add a welcome depth to combat as well, though I mostly stuck to the bows.
+
+
+
+I was suspicious that the story in this game would feel interesting after how satisfyingly completely the first game revealed the lore of the world Aloy finds herself in. I like to leave these reviews spoiler free, so all I will say is that I am not at all disappointed. Even the dialogue scenes are fantastically well done, with animations and stellar voice acting!
+
+
+
+Okay, time for some gripes. The climbing system felt majorly outdated. I was never excited to do any climbing, as it consisted of pointing the stick in a direction and occasionally pressing a jump button. It was a little inconsistent as well, and so any impatience of mine was met with having to start all over again and progress through the same linear path. Physical combat was majorly expanded and feels satisfying to land hits on people, though it is almost never a good option on machines. I’m considering trying the arena again, but it feels tailored to a normal difficulty level and feels unfair on the higher level I enjoy playing on (maybe I’ll bump it down?). I’m also not a fan of how objects (firegleam and metal flowers in this case) are spread around the map long before I have access to the story-locked items I need to access them, as this makes me feel punished for exploring. A better use of my time would be to rush through the story and then explore… but once I’m done with the story, I am always ready to put the game down. Metroidvanias do this better!
+
+This game was a wonderful bit of escapism for me during a tough time. I’m sad to let it go, but I’m ready to focus on my world more intently again. What a wonderfully crafted experience!
