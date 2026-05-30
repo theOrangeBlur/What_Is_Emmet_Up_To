@@ -16,3 +16,5 @@ The design is inspired by the Septagram Society, and made for a pretty piece!
 I also had to dig out a flat area for the door to be able to swing open, and set stones at the right angle so the autonomous mower can climb it.
 ## Result
 I think the result is eye-catching, and the gate works perfectly!
+
+![Gate with septagram inscribed](images/septigate.jpg)

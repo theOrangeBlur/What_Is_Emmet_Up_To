@@ -13,8 +13,9 @@ Food bits fall between the cracks on each side of the oven and are very difficul
 ## Process
 Plan is to print spacers to fit in the cracks - they need to handle warmth from the oven.
 
-![V1 Draft Right](images/V1-Right.jpg)
 ![V1 Draft Left](images/V1-Left.jpg)
+![V1 Draft Right](images/V1-Right.jpg)
+
 
 The counter is at a different height on the left side, so I needed slightly different parts. V1 worked well on the right, so I tweaked it for the left.
 
