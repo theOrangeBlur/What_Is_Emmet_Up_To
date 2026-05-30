@@ -249,6 +249,10 @@ def load_games(csv_path: Path) -> tuple:
             # Optional RAWG ID override for ambiguous game names
             rawg_id = (row.get('RAWG ID') or '').strip()
 
+            # Rating (score out of 100)
+            rating_str = row.get('Rating', '').strip()
+            rating = int(rating_str) if rating_str.isdigit() else None
+
             games.append({
                 'id': slugify(name),
                 'name': name,
@@ -262,6 +266,7 @@ def load_games(csv_path: Path) -> tuple:
                 'play_order': play_order,
                 'date_last_played': date_last_played,
                 'rawg_id': rawg_id,
+                'rating': rating,
             })
 
     return games, summary_stats
@@ -422,9 +427,18 @@ def generate_backlog_card(game: dict) -> str:
                 </div>'''
 
 
+def score_grade(rating: int) -> str:
+    """Return CSS grade class for a numeric score."""
+    if rating >= 90: return 'platinum'
+    if rating >= 85: return 'gold'
+    if rating >= 70: return 'green'
+    if rating >= 50: return 'brown'
+    return 'red'
+
+
 def generate_game_card(game: dict, review_html: str = None, image_url: str = '') -> str:
     """Generate HTML for a single game card."""
-    hours_display = f"{game['hours_played']:.1f}h" if game['hours_played'] else ''
+    hours_display = f"{game['hours_played']:.0f}h" if game['hours_played'] else ''
 
     meta_items = []
     if game['genre']:
@@ -444,7 +458,19 @@ def generate_game_card(game: dict, review_html: str = None, image_url: str = '')
 
     # Expandable class and icon only for cards with reviews
     expandable_class = ' expandable' if review_html else ''
-    expand_icon = '<span class="expand-icon">+</span>' if review_html else ''
+
+    # Right side: score badge + expand icon
+    right_parts = []
+    rating = game.get('rating')
+    if rating is not None:
+        grade = score_grade(rating)
+        right_parts.append(f'<div class="score-badge score-{grade}">{rating}</div>')
+    if review_html:
+        right_parts.append('<span class="expand-icon">+</span>')
+
+    right_html = ''
+    if right_parts:
+        right_html = f'<div class="game-card__right">{"".join(right_parts)}</div>'
 
     # Review in collapsible details section
     review_section = ''
@@ -462,7 +488,8 @@ def generate_game_card(game: dict, review_html: str = None, image_url: str = '')
                  data-status="{game['status']}"
                  data-name="{game['name']}"
                  data-play-order="{game['play_order']}"
-                 data-date-last-played="{game['date_last_played']}">
+                 data-date-last-played="{game['date_last_played']}"
+                 data-rating="{rating if rating is not None else ''}">
             <div class="game-card__header">
                 {cover_html}
                 <div class="game-card__info">
@@ -471,7 +498,7 @@ def generate_game_card(game: dict, review_html: str = None, image_url: str = '')
                         {meta_html}
                     </div>
                 </div>
-                {expand_icon}
+                {right_html}
             </div>{review_section}
         </article>'''
 

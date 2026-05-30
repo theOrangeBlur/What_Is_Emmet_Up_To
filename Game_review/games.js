@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (sortBy) {
                 case 'hours':
                     return parseFloat(b.dataset.hours || 0) - parseFloat(a.dataset.hours || 0);
+                case 'rating':
+                    return parseFloat(b.dataset.rating || 0) - parseFloat(a.dataset.rating || 0);
                 case 'name':
                     return (a.dataset.name || '').localeCompare(b.dataset.name || '');
                 case 'date':

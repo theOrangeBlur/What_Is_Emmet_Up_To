@@ -654,8 +654,14 @@ h1 {
     #organizer {
         max-width: 100%;
         width: 100%;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, auto);
+    }
+
+    .org-zone {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
