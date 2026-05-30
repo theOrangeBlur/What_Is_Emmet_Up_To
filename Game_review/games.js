@@ -62,4 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sortSelect.addEventListener('change', applyFiltersAndSort);
     filterSelect.addEventListener('change', applyFiltersAndSort);
+
+    applyFiltersAndSort();
 });
