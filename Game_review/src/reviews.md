@@ -106,7 +106,7 @@ I played this gem with my buddy David over the course of a few days, and we had 
 
 Jumping between sci-fi and fantasy worlds was quite enjoyable. The side stories were perfect bite sized chucks of novelty and joy. David and I both were anticipating some craziness with mingling of the genres at the climax, and what we got even surprised us! *spoiler warning* the game until this point features a split screen where you can see what your partner is up to, which suddenly starts to warp so that characters can move between, and other quick, fun novelties like that. *spoiler over*
 
-I did wish for more of a challenge on the puzzle side, and being able to always see my partner’s screen kept us from having to communicate to solve puzzles often. But, I understand that the target audience here isn’t for hardened puzzlers or even long time gamers. This is a game you can pick up with anyone who is comfortable moving a character with one stick and a camera with the other, and having a grand old time.
+I did wish for more of a challenge on the puzzle side, and being able to always see my partner’s screen kept us from having to communicate to solve puzzles often. But, I understand that the target audience here isn’t for hardened puzzlers or even long time gamers. This is a game you can pick up with anyone who is comfortable moving a character with one stick and a camera with the other, and having a grand old time. It does fall in a slightly strange zone where I can’t really play it with someone who isn’t video game literate, but it’s quite easy for any real gamer. Oh well, it was cute and fun!
 
 
 # Elden Ring
