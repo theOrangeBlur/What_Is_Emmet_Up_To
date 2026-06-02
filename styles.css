@@ -199,7 +199,8 @@ body {
     font-size: 0.78rem;
 }
 
-.nav-dropdown:hover .nav-dropdown-menu {
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu {
     display: block;
 }
 
@@ -304,6 +305,7 @@ body {
     opacity: 0.93;
 }
 
+.nav-full { display: inline; }
 .nav-short { display: none; }
 
 /* ── Nav Group (flat on desktop, dropdown on mobile) ── */
@@ -853,7 +855,8 @@ body {
         font-size: 0.78rem;
     }
 
-    .nav-group:hover .nav-group-items {
+    .nav-group:hover .nav-group-items,
+    .nav-group.open .nav-group-items {
         display: block;
     }
 

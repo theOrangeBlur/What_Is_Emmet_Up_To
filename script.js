@@ -473,7 +473,32 @@ function positionNavDropdowns() {
     });
 }
 
+// ── Mobile Nav Tap-to-Toggle (hover doesn't work on touch) ──
+function setupMobileNavTap() {
+    function closeAll() {
+        document.querySelectorAll('.nav-group.open, .nav-dropdown.open').forEach(el => el.classList.remove('open'));
+    }
+
+    document.querySelectorAll('.nav-group-toggle, .nav-dropdown-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            if (window.innerWidth > 768) return;
+            e.stopPropagation();
+            const parent = this.closest('.nav-group, .nav-dropdown');
+            if (!parent) return;
+            const isOpen = parent.classList.contains('open');
+            closeAll();
+            if (!isOpen) {
+                parent.classList.add('open');
+                positionNavDropdowns();
+            }
+        });
+    });
+
+    document.addEventListener('click', closeAll);
+}
+
 window.addEventListener('DOMContentLoaded', positionNavDropdowns);
+window.addEventListener('DOMContentLoaded', setupMobileNavTap);
 window.addEventListener('resize', positionNavDropdowns);
 
 document.addEventListener('DOMContentLoaded', initTypewriter);
