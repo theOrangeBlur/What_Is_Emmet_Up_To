@@ -304,6 +304,21 @@ body {
     opacity: 0.93;
 }
 
+.nav-short { display: none; }
+
+/* ── Nav Group (flat on desktop, dropdown on mobile) ── */
+.nav-group {
+    display: contents;
+}
+
+.nav-group-toggle {
+    display: none;
+}
+
+.nav-group-items {
+    display: contents;
+}
+
 /* ── Newspaper Body ── */
 .newspaper-body {
     max-width: 1200px;
@@ -775,6 +790,9 @@ body {
         display: none;
     }
 
+    .nav-short { display: inline; }
+    .nav-full { display: none; }
+
     .directory-strip a {
         padding: 2px 6px;
         border: 1px solid var(--rule);
@@ -788,19 +806,69 @@ body {
     }
 
     .nav-dropdown {
-        display: contents;
-    }
-
-    .nav-dropdown-toggle {
+        position: relative;
+        display: inline-block;
         padding: 2px 6px;
         border: 1px solid var(--rule);
     }
 
+    .nav-dropdown-toggle {
+        padding: 0;
+        border: none;
+    }
+
     .nav-dropdown-menu {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        top: auto;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        transform: none;
+    }
+
+    .nav-group {
+        position: relative;
+        display: inline-block;
+        padding: 2px 6px;
+        border: 1px solid var(--rule);
+    }
+
+    .nav-group-toggle {
+        display: inline;
+        cursor: default;
+        color: var(--ink);
+    }
+
+    .nav-group-items {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: var(--paper);
+        border: 1px solid var(--ink);
+        border-top: 2px solid var(--ink);
+        padding: 4px 0;
+        z-index: 1001;
+        white-space: nowrap;
+        box-shadow: 0 3px 8px rgba(28, 16, 8, 0.18);
+        font-family: 'IM Fell English', serif;
+        font-size: 0.78rem;
+    }
+
+    .nav-group:hover .nav-group-items {
+        display: block;
+    }
+
+    .nav-group .nav-group-items a {
+        display: block;
+        padding: 5px 20px;
+        border: none;
+        color: var(--ink);
+        text-decoration: none;
+    }
+
+    .nav-group .nav-group-items a:hover {
+        background: rgba(28, 16, 8, 0.07);
+        color: var(--red-accent);
+        text-decoration: none;
     }
 
     .bio-text::first-letter {

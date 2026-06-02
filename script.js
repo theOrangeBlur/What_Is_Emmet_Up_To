@@ -243,7 +243,7 @@ async function loadGamePreview() {
                     title: title,
                     genre: row[1],
                     timePlayed: row[4],
-                    actualBeat: row[3],
+                    completionStatus: row[13],
                     playOrder: playOrder,
                     dateLastPlayed: row[12]
                 };
@@ -266,7 +266,7 @@ async function loadGamePreview() {
         if (titleEl) titleEl.textContent = bestGame.title;
 
         // Determine status
-        const isCompleted = bestGame.actualBeat && bestGame.actualBeat.trim() !== '';
+        const isCompleted = bestGame.completionStatus && bestGame.completionStatus.trim().toLowerCase() === 'completed';
         const status = isCompleted ? 'completed' : 'in-progress';
         if (statusEl) {
             statusEl.textContent = isCompleted ? 'COMPLETED' : 'IN PROGRESS';
@@ -450,5 +450,30 @@ function initTypewriter() {
 
     tick();
 }
+
+// ── Nav Dropdown Positioning ──
+function positionNavDropdowns() {
+    const isMobile = window.innerWidth <= 768;
+    document.querySelectorAll('.nav-group, .nav-dropdown').forEach(group => {
+        const menu = group.querySelector('.nav-group-items, .nav-dropdown-menu');
+        if (!menu) return;
+        if (!isMobile) {
+            menu.style.left = '';
+            menu.style.right = '';
+            return;
+        }
+        const rect = group.getBoundingClientRect();
+        if (window.innerWidth - rect.right >= rect.left) {
+            menu.style.left = '0';
+            menu.style.right = 'auto';
+        } else {
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+        }
+    });
+}
+
+window.addEventListener('DOMContentLoaded', positionNavDropdowns);
+window.addEventListener('resize', positionNavDropdowns);
 
 document.addEventListener('DOMContentLoaded', initTypewriter);
