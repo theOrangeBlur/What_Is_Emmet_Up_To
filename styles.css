@@ -817,6 +817,7 @@ body {
     .nav-dropdown-toggle {
         padding: 0;
         border: none;
+        cursor: pointer;
     }
 
     .nav-dropdown-menu {
@@ -835,7 +836,7 @@ body {
 
     .nav-group-toggle {
         display: inline;
-        cursor: default;
+        cursor: pointer;
         color: var(--ink);
     }
 
