@@ -165,6 +165,7 @@ h1 {
     align-items: center;
     gap: 0;
     flex-shrink: 0;
+    position: relative;
 }
 
 /* ── ORGANIZER ─────────────────────────────────────────────────────── */
@@ -212,68 +213,41 @@ h1 {
     cursor: crosshair;
 }
 
-#scale-top {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+/* ── SCALE SVG ─────────────────────────────────────────────────────── */
+
+#scale-visual {
+    position: relative;
+    width: min(460px, 90vw);
+    overflow: visible;
+    margin-bottom: min(80px, 18vw);
 }
 
-/* ── BEAM ROW (rotates for tilt) ───────────────────────────────────── */
+#scale-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+}
 
-#beam-row {
-    display: flex;
-    align-items: flex-start;
-    width: min(460px, 90vw);
-    transform-origin: center 7px;
+/* ── SVG BEAM GROUP (rotates for tilt) ────────────────────────────── */
+
+#svg-beam-group {
+    transform-origin: 230px 141px;
+    transform-box: fill-box;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── ARM (half of beam + chain + pan) ──────────────────────────────── */
+/* ── TILT STATES ───────────────────────────────────────────────────── */
 
-.arm {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+#scale-wrapper.tilt-left  #svg-beam-group { transform: rotate(-11deg); }
+#scale-wrapper.tilt-right #svg-beam-group { transform: rotate(11deg); }
 
-.arm-beam {
-    width: 100%;
-    height: 14px;
-    background: linear-gradient(180deg, #c08040 0%, #7a4e20 100%);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-}
-
-#left-arm  .arm-beam { border-radius: 5px 0 0 5px; }
-#right-arm .arm-beam { border-radius: 0 5px 5px 0; }
-
-/* ── FULCRUM ───────────────────────────────────────────────────────── */
-
-#fulcrum {
-    width: 22px;
-    height: 22px;
-    background: radial-gradient(circle at 35% 35%, #d09050, #5c3810);
-    border-radius: 50%;
-    border: 3px solid #3a2000;
-    margin-top: -4px;
-    flex-shrink: 0;
-    z-index: 1;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-}
-
-/* ── CHAIN ─────────────────────────────────────────────────────────── */
-
-.chain {
-    width: 3px;
-    height: min(72px, 12vw);
-    background: linear-gradient(180deg, rgba(130,85,30,0.95), rgba(90,60,20,0.7));
-    border-radius: 2px;
-}
+#scale-wrapper.balanced #svg-pivot { filter: url(#sg-glow); }
 
 /* ── PAN DISH ──────────────────────────────────────────────────────── */
 
 .pan-dish {
+    position: absolute;
     width: min(130px, 22vw);
     min-height: min(54px, 9vw);
     background: linear-gradient(160deg, #a06830 0%, #7a4e20 60%, #5c3810 100%);
@@ -288,8 +262,22 @@ h1 {
     padding: 6px 4px 10px;
     transform-origin: top center;
     transition: background 0.15s, outline 0.15s,
-                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* chains at x=65/395; bracket bottom at SVG y=231 → top=231/275=84% */
+#left-pan {
+    top: 84%;
+    left: 14.13%;
+    transform: translateX(-50%);
+}
+
+#right-pan {
+    top: 84%;
+    right: 14.13%;
+    transform: translateX(50%);
 }
 
 /* zone hover when coins are selected */
@@ -302,41 +290,15 @@ h1 {
     outline: 2px dashed #ffd700;
 }
 
-/* ── SCALE POST ────────────────────────────────────────────────────── */
+/* ── PAN TILT: counter-rotation + vertical shift matching beam movement ── */
+/* tilt-left = left-heavy: left goes DOWN (top↑%), right goes UP (top↓%)    */
+/* tilt-right = right-heavy: right goes DOWN, left goes UP                  */
 
-#scale-post {
-    width: 16px;
-    height: min(64px, 11vw);
-    background: linear-gradient(180deg, #9a6030, #7a4e20);
-    border: 2px solid #3a2000;
-    border-top: none;
-    border-radius: 0 0 3px 3px;
-}
+#scale-wrapper.tilt-left  #left-pan  { top: 95.45%; transform: translateX(-50%) rotate(11deg); }
+#scale-wrapper.tilt-left  #right-pan { top: 72.55%; transform: translateX(50%)  rotate(11deg); }
 
-/* ── SCALE BASE ────────────────────────────────────────────────────── */
-
-#scale-base {
-    width: min(120px, 22vw);
-    height: 16px;
-    background: linear-gradient(180deg, #8a5a28, #5c3810);
-    border-radius: 8px;
-    border: 2px solid #3a2000;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.45);
-}
-
-/* ── TILT STATES ───────────────────────────────────────────────────── */
-
-#scale-wrapper.tilt-left  #beam-row  { transform: rotate(-11deg); }
-#scale-wrapper.tilt-left  #left-pan  { transform: rotate(11deg); }
-#scale-wrapper.tilt-left  #right-pan { transform: rotate(11deg); }
-
-#scale-wrapper.tilt-right #beam-row  { transform: rotate(11deg); }
-#scale-wrapper.tilt-right #left-pan  { transform: rotate(-11deg); }
-#scale-wrapper.tilt-right #right-pan { transform: rotate(-11deg); }
-
-#scale-wrapper.balanced #fulcrum {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 14px rgba(255, 215, 0, 0.55);
-}
+#scale-wrapper.tilt-right #left-pan  { top: 72.55%; transform: translateX(-50%) rotate(-11deg); }
+#scale-wrapper.tilt-right #right-pan { top: 95.45%; transform: translateX(50%)  rotate(-11deg); }
 
 /* ── SCALE BUTTONS ─────────────────────────────────────────────────── */
 

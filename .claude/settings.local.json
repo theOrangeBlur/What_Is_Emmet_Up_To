@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python build.py:*)",
       "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\eckma\\\\OneDrive\\\\Documents\\\\Website\\\\Blog\" | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}})",
-      "Bash(dir /B \"c:\\\\Users\\\\eckma\\\\OneDrive\\\\Documents\\\\Website\\\\Puzzles\\\\Boat\")"
+      "Bash(dir /B \"c:\\\\Users\\\\eckma\\\\OneDrive\\\\Documents\\\\Website\\\\Puzzles\\\\Boat\")",
+      "Read(//c/tmp/pw_verify/**)",
+      "Bash(node screenshot.mjs)"
     ]
   }
 }
