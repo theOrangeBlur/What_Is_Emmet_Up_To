@@ -41,7 +41,7 @@
       <div id="scale-wrapper">
 
         <div id="scale-visual">
-        <svg id="scale-svg" viewBox="0 0 460 275" xmlns="http://www.w3.org/2000/svg">
+        <svg id="scale-svg" viewBox="0 0 460 402" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="sg-beam" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%"   stop-color="#e0b050"/>
@@ -84,21 +84,21 @@
           </defs>
 
           <!-- BASE -->
-          <ellipse cx="178" cy="257" rx="16" ry="6" fill="#3a2000" opacity="0.7"/>
-          <ellipse cx="282" cy="257" rx="16" ry="6" fill="#3a2000" opacity="0.7"/>
-          <rect x="145" y="239" width="170" height="18" rx="9"
+          <ellipse cx="178" cy="384.5" rx="16" ry="6" fill="#3a2000" opacity="0.7"/>
+          <ellipse cx="282" cy="384.5" rx="16" ry="6" fill="#3a2000" opacity="0.7"/>
+          <rect x="145" y="366.5" width="170" height="18" rx="9"
                 fill="url(#sg-base)" stroke="#2a1800" stroke-width="2"/>
-          <rect x="150" y="241" width="160" height="5" rx="2.5"
+          <rect x="150" y="368.5" width="160" height="5" rx="2.5"
                 fill="rgba(255,210,90,0.22)"/>
 
           <!-- POST -->
-          <rect x="222" y="156" width="16" height="85"
+          <rect x="222" y="156" width="16" height="212.5"
                 fill="url(#sg-post)" stroke="#2a1800" stroke-width="1.5"/>
-          <rect x="219" y="174" width="22" height="8" rx="3"
+          <rect x="219" y="201" width="22" height="8" rx="3"
                 fill="url(#sg-post)" stroke="#2a1800" stroke-width="1.5"/>
-          <rect x="219" y="200" width="22" height="8" rx="3"
+          <rect x="219" y="266" width="22" height="8" rx="3"
                 fill="url(#sg-post)" stroke="#2a1800" stroke-width="1.5"/>
-          <rect x="225" y="158" width="4" height="80" rx="2"
+          <rect x="225" y="158" width="4" height="200" rx="2"
                 fill="rgba(255,210,90,0.18)"/>
 
           <!-- FULCRUM PYRAMID SUPPORT -->
@@ -157,7 +157,11 @@
             <circle cx="230" cy="141" r="2.5"
                     fill="#2a1800"/>
 
-            <!-- LEFT CHAIN (8 links, cx=65) -->
+
+          </g><!-- end svg-beam-group -->
+
+          <!-- LEFT CHAIN (8 links, translates vertically with beam end) -->
+          <g id="svg-left-chain">
             <ellipse cx="65" cy="157" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="65" cy="167" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="65" cy="175" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
@@ -166,11 +170,12 @@
             <ellipse cx="65" cy="203" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="65" cy="211" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="65" cy="221" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
-            <!-- Left bracket -->
             <path d="M 53,224 Q 59,231 65,227 Q 71,231 77,224"
                   fill="none" stroke="#8a5a20" stroke-width="2.5" stroke-linecap="round"/>
+          </g>
 
-            <!-- RIGHT CHAIN (8 links, cx=395) -->
+          <!-- RIGHT CHAIN (8 links, translates vertically with beam end) -->
+          <g id="svg-right-chain">
             <ellipse cx="395" cy="157" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="395" cy="167" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="395" cy="175" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
@@ -179,11 +184,9 @@
             <ellipse cx="395" cy="203" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="395" cy="211" rx="3.5" ry="6"   fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
             <ellipse cx="395" cy="221" rx="6"   ry="3.5" fill="none" stroke="url(#sg-chain)" stroke-width="2.2"/>
-            <!-- Right bracket -->
             <path d="M 383,224 Q 389,231 395,227 Q 401,231 407,224"
                   fill="none" stroke="#8a5a20" stroke-width="2.5" stroke-linecap="round"/>
-
-          </g><!-- end svg-beam-group -->
+          </g>
         </svg>
 
         <!-- HTML pan divs: absolutely positioned over chain ends -->
@@ -242,7 +245,7 @@
 
   <div id="accusation-modal" class="overlay hidden">
     <div class="overlay-box">
-      <div class="overlay-title">Accuse Coin #<span id="accused-coin-num"></span>?</div>
+      <div class="overlay-title">Is this the odd coin?</div>
       <p>Is this the odd one out? If so, is it&hellip;</p>
       <div class="accuse-buttons">
         <button id="accuse-heavier" class="accuse-btn">Heavier &darr;</button>
@@ -271,7 +274,11 @@
 
   <div class="instructions-box">
     <p>
-      This is the classic <em>balance puzzle</em>. <a href="https://en.wikipedia.org/wiki/Balance_puzzle">Learn more</a> once you've cracked it!
+      This is the classic <em>balance puzzle</em>. While on a long drive from Maryland to the Florida Keys, I tasked myself to solve it. 
+      Because I was driving I could not write anything down, which added an additional fun challenge! It took me just about an hour... let's see how you do!
+    </p>
+    <p>
+      <a href="https://en.wikipedia.org/wiki/Balance_puzzle">Learn more</a> once you've cracked it!
     </p>
   </div>
 

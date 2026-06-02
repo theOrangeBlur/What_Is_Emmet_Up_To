@@ -233,8 +233,7 @@ h1 {
 
 #svg-beam-group {
     transform-origin: 230px 141px;
-    transform-box: fill-box;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── TILT STATES ───────────────────────────────────────────────────── */
@@ -262,20 +261,20 @@ h1 {
     padding: 6px 4px 10px;
     transform-origin: top center;
     transition: background 0.15s, outline 0.15s,
-                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                top 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                transform 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                top 1.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* chains at x=65/395; bracket bottom at SVG y=231 → top=231/275=84% */
+/* chains at x=65/395; bracket bottom at SVG y=231 → top=231/402=57.46% */
 #left-pan {
-    top: 84%;
+    top: 57.46%;
     left: 14.13%;
     transform: translateX(-50%);
 }
 
 #right-pan {
-    top: 84%;
+    top: 57.46%;
     right: 14.13%;
     transform: translateX(50%);
 }
@@ -294,11 +293,66 @@ h1 {
 /* tilt-left = left-heavy: left goes DOWN (top↑%), right goes UP (top↓%)    */
 /* tilt-right = right-heavy: right goes DOWN, left goes UP                  */
 
-#scale-wrapper.tilt-left  #left-pan  { top: 95.45%; transform: translateX(-50%) rotate(11deg); }
-#scale-wrapper.tilt-left  #right-pan { top: 72.55%; transform: translateX(50%)  rotate(11deg); }
+#scale-wrapper.tilt-left  #left-pan  { top: 64.88%; transform: translateX(-50%); }
+#scale-wrapper.tilt-left  #right-pan { top: 49.22%; transform: translateX(50%); }
 
-#scale-wrapper.tilt-right #left-pan  { top: 72.55%; transform: translateX(-50%) rotate(-11deg); }
-#scale-wrapper.tilt-right #right-pan { top: 95.45%; transform: translateX(50%)  rotate(-11deg); }
+#scale-wrapper.tilt-right #left-pan  { top: 49.22%; transform: translateX(-50%); }
+#scale-wrapper.tilt-right #right-pan { top: 64.88%; transform: translateX(50%); }
+
+/* ── BALANCE WOBBLE (plays once when scale settles to even) ────────── */
+
+@keyframes beam-wobble {
+    0%   { transform: rotate(0deg); }
+    28%  { transform: rotate(-4deg); }
+    72%  { transform: rotate(4deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes left-pan-wobble {
+    0%   { top: 57.46%; transform: translateX(-50%); }
+    28%  { top: 60.16%; transform: translateX(-50%); }
+    72%  { top: 54.76%; transform: translateX(-50%); }
+    100% { top: 57.46%; transform: translateX(-50%); }
+}
+
+@keyframes right-pan-wobble {
+    0%   { top: 57.46%; transform: translateX(50%); }
+    28%  { top: 54.76%; transform: translateX(50%); }
+    72%  { top: 60.16%; transform: translateX(50%); }
+    100% { top: 57.46%; transform: translateX(50%); }
+}
+
+@keyframes left-chain-wobble {
+    0%   { transform: translateY(0); }
+    28%  { transform: translateY(12px); }
+    72%  { transform: translateY(-12px); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes right-chain-wobble {
+    0%   { transform: translateY(0); }
+    28%  { transform: translateY(-12px); }
+    72%  { transform: translateY(12px); }
+    100% { transform: translateY(0); }
+}
+
+#scale-wrapper.balanced-wobble #svg-beam-group  { animation: beam-wobble       1.1s ease-in-out forwards; }
+#scale-wrapper.balanced-wobble #left-pan        { animation: left-pan-wobble   1.1s ease-in-out forwards; }
+#scale-wrapper.balanced-wobble #right-pan       { animation: right-pan-wobble  1.1s ease-in-out forwards; }
+#scale-wrapper.balanced-wobble #svg-left-chain  { animation: left-chain-wobble 1.1s ease-in-out forwards; }
+#scale-wrapper.balanced-wobble #svg-right-chain { animation: right-chain-wobble 1.1s ease-in-out forwards; }
+
+/* ── CHAIN GROUPS (translate vertically to follow beam ends) ───────── */
+
+#svg-left-chain,
+#svg-right-chain {
+    transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#scale-wrapper.tilt-left  #svg-left-chain  { transform: translateY(32px); }
+#scale-wrapper.tilt-left  #svg-right-chain { transform: translateY(-32px); }
+#scale-wrapper.tilt-right #svg-left-chain  { transform: translateY(-32px); }
+#scale-wrapper.tilt-right #svg-right-chain { transform: translateY(32px); }
 
 /* ── SCALE BUTTONS ─────────────────────────────────────────────────── */
 
@@ -397,6 +451,20 @@ h1 {
 .coin.dyed-green  { background: radial-gradient(circle at 35% 30%, #70d060, #18901a); border-color: #0c6010; }
 .coin.dyed-purple { background: radial-gradient(circle at 35% 30%, #c070ff, #6018c0); border-color: #420890; }
 .coin.dyed-orange { background: radial-gradient(circle at 35% 30%, #ffaa50, #d05010); border-color: #a03408; }
+
+/* ── CORRECT COIN REVEAL (blue glow on wrong guess) ─────────────────── */
+
+@keyframes correct-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px #40a0ff, 0 0 16px 4px rgba(64, 160, 255, 0.8), 0 0 36px 8px rgba(64, 160, 255, 0.4); }
+    50%       { box-shadow: 0 0 0 3px #40a0ff, 0 0 26px 8px rgba(64, 160, 255, 1),   0 0 56px 14px rgba(64, 160, 255, 0.65); }
+}
+
+.coin.correct-reveal {
+    border-color: #40a0ff !important;
+    box-shadow: 0 0 0 3px #40a0ff, 0 0 16px 4px rgba(64, 160, 255, 0.8), 0 0 36px 8px rgba(64, 160, 255, 0.4) !important;
+    animation: correct-pulse 1.2s ease-in-out infinite;
+    cursor: default;
+}
 
 .coin.accuse-target {
     cursor: crosshair;
@@ -497,6 +565,38 @@ h1 {
     justify-content: center;
     z-index: 2000;
     backdrop-filter: blur(5px);
+}
+
+/* Loss overlay: small corner notification, no blur, out of the way */
+#overlay-loss {
+    inset: unset;
+    bottom: 28px;
+    right: 24px;
+    width: 240px;
+    background: transparent;
+    backdrop-filter: none;
+    display: block;
+    align-items: unset;
+    justify-content: unset;
+}
+
+#overlay-loss.hidden { display: none; }
+
+#overlay-loss .overlay-box {
+    background: rgba(18, 0, 0, 0.93);
+    border-color: #c62828;
+    padding: 20px 22px;
+    max-width: none;
+    width: 100%;
+}
+
+#overlay-loss .overlay-title {
+    color: #ff6b6b;
+    text-shadow: 1px 1px 0 #7a0000;
+}
+
+#overlay-loss .overlay-box p {
+    color: #ffd0d0;
 }
 
 .overlay.hidden { display: none; }
@@ -621,9 +721,7 @@ h1 {
     }
 
     .org-zone {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        flex-wrap: wrap;
     }
 }
 

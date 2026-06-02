@@ -60,12 +60,25 @@ function weigh() {
     const leftW  = left.reduce((s, id)  => s + weight(id), 0);
     const rightW = right.reduce((s, id) => s + weight(id), 0);
 
+    const prevState = state.scaleState;
     if      (leftW > rightW)  state.scaleState = 'left-heavy';
     else if (rightW > leftW)  state.scaleState = 'right-heavy';
     else                      state.scaleState = 'balanced';
 
     state.weighings++;
     render();
+
+    if (state.scaleState === 'balanced') {
+        const wrapper = document.getElementById('scale-wrapper');
+        const comingFromTilt = prevState === 'left-heavy' || prevState === 'right-heavy';
+        const delay = comingFromTilt ? 1300 : 100;
+        setTimeout(() => {
+            if (state.scaleState === 'balanced' && !state.gameOver) {
+                wrapper.classList.add('balanced-wobble');
+                setTimeout(() => wrapper.classList.remove('balanced-wobble'), 1150);
+            }
+        }, delay);
+    }
 }
 
 // ── SELECTION ────────────────────────────────────────────────────────────────
@@ -80,12 +93,19 @@ function toggleSelection(coinId) {
     render();
 }
 
+function clearSelection() {
+    if (state.gameOver || state.accusing || state.selected.size === 0) return;
+    state.selected.clear();
+    render();
+}
+
 function moveSelectedTo(zone) {
     if (state.gameOver || state.accusing || state.selected.size === 0) return;
     for (const id of state.selected) {
         state.coins.set(id, zone);
     }
     state.selected.clear();
+    state.scaleState = 'idle';
     render();
 }
 
@@ -107,7 +127,6 @@ function exitAccuseMode() {
 function handleCoinAccuse(coinId) {
     if (!state.accusing || state.gameOver) return;
     state.accusedCoin = coinId;
-    document.getElementById('accused-coin-num').textContent = coinId;
     document.getElementById('accusation-modal').classList.remove('hidden');
 }
 
@@ -121,13 +140,17 @@ function resolveAccusation(type) {
         const w = state.weighings;
         const msg = w <= 3
             ? `You nailed it in ${w} weighing${w === 1 ? '' : 's'}! Perfect!`
-            : `Correct! But it took ${w} weighings — try for 3 next time.`;
+            : `Correct! It took ${w} weighings — you can get it in three!!`;
         document.getElementById('win-weighings').textContent = msg;
         document.getElementById('overlay-win').classList.remove('hidden');
     } else {
-        document.getElementById('loss-info').textContent =
-            `The odd coin was #${state.oddCoin} (${state.oddType}).`;
+        const rightCoinWrongWeight = state.accusedCoin === state.oddCoin;
+        document.getElementById('loss-info').innerHTML = rightCoinWrongWeight
+            ? `So close! That's the right coin, but it's actually <strong><em>${state.oddType}!</em></strong>`
+            : `The odd coin is ${state.oddType}. (glowing blue)`;
         document.getElementById('overlay-loss').classList.remove('hidden');
+        const correctEl = document.querySelector(`.coin[data-coin-id="${state.oddCoin}"]`);
+        if (correctEl) correctEl.classList.add('correct-reveal');
     }
 }
 
@@ -150,7 +173,7 @@ function render() {
 
     // Scale tilt
     const wrapper = document.getElementById('scale-wrapper');
-    wrapper.classList.remove('tilt-left', 'tilt-right', 'balanced');
+    wrapper.classList.remove('tilt-left', 'tilt-right', 'balanced', 'balanced-wobble');
     if      (state.scaleState === 'left-heavy')  wrapper.classList.add('tilt-left');
     else if (state.scaleState === 'right-heavy') wrapper.classList.add('tilt-right');
     else if (state.scaleState === 'balanced')    wrapper.classList.add('balanced');
@@ -247,6 +270,10 @@ document.getElementById('accuse-lighter').addEventListener('click', () => resolv
 document.getElementById('accuse-cancel').addEventListener('click', () => {
     document.getElementById('accusation-modal').classList.add('hidden');
     exitAccuseMode();
+});
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.coin, button')) clearSelection();
 });
 
 setupZoneClicks();
