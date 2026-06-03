@@ -9,7 +9,7 @@ Opening paragraph — set the scene or hook the reader.
 
 Body text goes here. Write as much as you want. Use **bold** or *italic* for emphasis.
 
-![Image description](images/filename.jpg)
+![Image description](media/filename.jpg)
 
 More text after the image.
 
