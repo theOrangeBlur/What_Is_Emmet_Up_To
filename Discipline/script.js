@@ -487,7 +487,7 @@ function restartDanceAnimation() {
 async function loadWeeklyGoals() {
     const container = document.getElementById('weeklyGoalsContent');
     if (!container) return;
-    const url = `https://docs.google.com/spreadsheets/d/${GOALS_SHEET_ID}/export?format=csv&gid=${GOALS_GID}`;
+    const url = `https://docs.google.com/spreadsheets/d/${GOALS_SHEET_ID}/export?format=csv&gid=${GOALS_GID}&_v=${Date.now()}`;
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
