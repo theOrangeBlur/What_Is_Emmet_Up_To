@@ -223,6 +223,7 @@ body {
 .kk.green  { background: var(--green);  color: #fff; }
 .kk.yellow { background: var(--yellow); color: #fff; }
 .kk.used   { background: #1e1e1e; color: #333; }
+.kk-bksp   { min-width: 38px; max-width: 44px; font-size: 14px; }
 
 @media (max-width: 400px) {
   :root { --tile: 44px; }

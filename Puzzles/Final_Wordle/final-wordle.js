@@ -130,7 +130,7 @@ function buildGame() {
   const gr = document.createElement('div'); gr.className = 'ginput-row';
   const inp = document.createElement('input');
   inp.className = 'ginput'; inp.maxLength = 5; inp.placeholder = '?????';
-  inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.autocomplete = 'off'; inp.spellcheck = false; inp.inputMode = 'none';
   const gbtn = document.createElement('button'); gbtn.className = 'gbtn'; gbtn.textContent = 'guess';
   gr.appendChild(inp); gr.appendChild(gbtn); gw.appendChild(gl); gw.appendChild(gr); root.appendChild(gw);
 
@@ -140,18 +140,23 @@ function buildGame() {
   const kb = document.createElement('div'); kb.className = 'kb';
   const kbLayout = [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m']];
   const kbMap = {};
-  kbLayout.forEach(row => {
+  kbLayout.forEach((row, rowIdx) => {
     const div = document.createElement('div'); div.className = 'kb-row';
     row.forEach(k => {
       const btn = document.createElement('button'); btn.className = 'kk'; btn.textContent = k.toUpperCase(); btn.dataset.k = k;
-      btn.addEventListener('click', () => { if (inp.value.length < 5 && !gbtn.disabled) { inp.value += k; updateTiles(inp.value); inp.focus(); } });
+      btn.addEventListener('click', () => { if (inp.value.length < 5 && !gbtn.disabled) { inp.value += k; updateTiles(inp.value); } });
       kbMap[k] = btn; div.appendChild(btn);
     });
+    if (rowIdx === 2) {
+      const bksp = document.createElement('button'); bksp.className = 'kk kk-bksp'; bksp.textContent = '⌫';
+      bksp.addEventListener('click', () => { if (!gbtn.disabled && inp.value.length > 0) { inp.value = inp.value.slice(0, -1); updateTiles(inp.value); } });
+      div.appendChild(bksp);
+    }
     kb.appendChild(div);
   });
   root.appendChild(kb);
 
-  inp.focus();
+  if (!('ontouchstart' in window)) inp.focus();
 
   const usedLetters = {};
   for (let r = 0; r < guesses.length; r++) {
