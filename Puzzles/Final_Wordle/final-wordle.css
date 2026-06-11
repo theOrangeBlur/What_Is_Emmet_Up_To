@@ -45,6 +45,23 @@ body {
   transition: color .15s;
 }
 .home-link:hover { color: var(--text2); }
+#yesterday {
+  position: fixed;
+  bottom: 18px;
+  left: 18px;
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text3);
+  line-height: 1.8;
+}
+#yesterday .yw {
+  display: block;
+  color: var(--text2);
+  font-size: 11px;
+  letter-spacing: .3em;
+}
 .hd {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
@@ -228,4 +245,180 @@ body {
 @media (max-width: 400px) {
   :root { --tile: 44px; }
   .rule, .guess-wrap, .reveal-btn, .kb { width: 290px; }
+}
+
+/* Mode toggle */
+.mode-toggle {
+  display: flex;
+  width: 340px;
+  border: 1px solid var(--border2);
+  margin-bottom: 20px;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 9px 0;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  border-bottom: 2px solid transparent;
+}
+.mode-btn:hover { color: var(--text); }
+.mode-btn.active { color: var(--text); border-bottom-color: var(--green); }
+
+/* Leaderboard */
+#leaderboard {
+  width: 340px;
+  margin: 24px 0 48px;
+  font-family: 'Space Mono', monospace;
+}
+.lb-title {
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.lb-loading, .lb-empty {
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: center;
+  padding: 16px 0;
+}
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.lb-header th {
+  font-size: 8px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text2);
+  font-weight: 700;
+  padding: 0 0 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.lb-header th:first-child { width: 28px; }
+.lb-header th:nth-child(3), .lb-header th:nth-child(4) { text-align: right; }
+.lb-row td {
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--text);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.lb-row td:first-child { color: var(--text2); font-size: 9px; }
+.lb-row td:nth-child(3), .lb-row td:nth-child(4) { text-align: right; }
+.lb-row.mine td { color: var(--green-light); }
+
+/* Daily recap */
+.daily-recap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 0 20px;
+}
+.recap-solved {
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--green-light);
+}
+.recap-stats {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+/* Arcade name modal */
+.arcade-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.arcade-card {
+  background: var(--bg);
+  border: 1px solid var(--green);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 300px;
+}
+.arcade-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--green-light);
+}
+.arcade-time {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.arcade-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .5em;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  outline: none;
+  text-align: center;
+}
+.arcade-input:focus { border-color: var(--green); }
+.arcade-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.arcade-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 9px 0;
+  cursor: pointer;
+  transition: all .15s;
+}
+.arcade-btn:hover { border-color: var(--text2); color: var(--text); }
+.arcade-btn-primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.arcade-btn-primary:hover { opacity: .85; border-color: var(--green); color: #fff; }
+
+@media (max-width: 400px) {
+  .mode-toggle, #leaderboard { width: 290px; }
+  .arcade-card { width: 260px; }
 }

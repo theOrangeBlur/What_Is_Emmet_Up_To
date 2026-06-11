@@ -1,0 +1,63 @@
+name: Archive Wordle Scores
+
+on:
+  schedule:
+    - cron: '55 23 * * *'
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch and archive today's scores
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os, json, datetime, urllib.request
+
+          url = os.environ['SUPABASE_URL']
+          key = os.environ['SUPABASE_ANON_KEY']
+
+          today = datetime.date.today()
+          date_key = str(today.year * 10000 + today.month * 100 + today.day)
+
+          req = urllib.request.Request(
+              f"{url}/rest/v1/wordle_scores?date=eq.{date_key}&order=time_ms.asc&limit=20",
+              headers={'apikey': key, 'Authorization': f'Bearer {key}'}
+          )
+          with urllib.request.urlopen(req) as r:
+              scores = json.loads(r.read())
+
+          if not scores:
+              print("No scores today, skipping.")
+              exit(0)
+
+          archive_path = 'Puzzles/Final_Wordle/leaderboard-archive.json'
+          try:
+              with open(archive_path) as f:
+                  archive = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              archive = {}
+
+          archive[date_key] = [
+              {'name': s['name'], 'time_ms': s['time_ms'], 'guesses': s['guesses']}
+              for s in scores
+          ]
+
+          with open(archive_path, 'w') as f:
+              json.dump(archive, f, indent=2)
+
+          print(f"Archived {len(scores)} score(s) for {date_key}")
+          EOF
+
+      - name: Commit archive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Puzzles/Final_Wordle/leaderboard-archive.json
+          git diff --cached --quiet || git commit -m "Archive wordle scores $(date +%Y%m%d) [automated]"
+          git push
