@@ -143,7 +143,7 @@ async function fetchDeviceScore() {
 async function insertScore(name, timeMs, guesses) {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
   try {
-    await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_scores`, {
+    const res = await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_scores`, {
       method: 'POST',
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
@@ -153,7 +153,8 @@ async function insertScore(name, timeMs, guesses) {
       },
       body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId() })
     });
-  } catch {}
+    if (!res.ok) console.error('insertScore failed:', res.status, await res.text());
+  } catch (e) { console.error('insertScore error:', e); }
 }
 
 async function renderLeaderboard() {
