@@ -15,7 +15,7 @@ function seededRng(seed) {
 
 function getDayKey() {
   const d = new Date();
-  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
 }
 
 function getDaySeed() {
