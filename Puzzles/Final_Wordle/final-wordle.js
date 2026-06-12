@@ -293,7 +293,7 @@ function buildGame(mode) {
     if (kbMap[l]) kbMap[l].className = 'kk ' + (s === 'green' ? 'green' : s === 'yellow' ? 'yellow' : 'used');
   });
 
-  let guessCount = 0, won = false, startTime = null;
+  let guessCount = 0, won = false, startTime = mode === 'daily' ? dailyStartTime : null;
 
   function updateTiles(val) {
     for (let c = 0; c < 5; c++) {
@@ -353,7 +353,6 @@ function buildGame(mode) {
   }
 
   inp.addEventListener('input', () => {
-    if (mode === 'daily' && !startTime) startTime = Date.now();
     inp.value = inp.value.replace(/[^a-zA-Z]/g, '').toLowerCase().slice(0, 5);
     updateTiles(inp.value);
     setFb('', '');
@@ -391,6 +390,8 @@ function buildGame(mode) {
 }
 
 let currentMode = 'daily';
+let dailyStartTime = null;
+window.addEventListener('load', () => { dailyStartTime = Date.now(); });
 buildGame('daily');
 
 document.getElementById('mode-daily').addEventListener('click', () => {
