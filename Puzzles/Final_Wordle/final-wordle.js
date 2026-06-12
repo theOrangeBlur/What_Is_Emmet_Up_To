@@ -13,9 +13,17 @@ function seededRng(seed) {
   return () => { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
 }
 
-function getDaySeed() {
+function getDayKey() {
   const d = new Date();
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+}
+
+function getDaySeed() {
+  // Multiply by a large prime so consecutive days produce seeds ~48271 apart,
+  // preventing the fallback loop from landing on an adjacent day's starting seed.
+  const n = getDayKey();
+  let h = (n * 48271) % 2147483647;
+  return h <= 0 ? h + 2147483646 : h;
 }
 
 function scoreGuess(guess, answer) {
@@ -94,7 +102,7 @@ function formatTime(ms) {
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
-    const date = String(getDaySeed());
+    const date = String(getDayKey());
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&order=time_ms.asc&limit=20`;
     const res = await fetch(url, {
       headers: {
@@ -117,7 +125,7 @@ async function insertScore(name, timeMs, guesses) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ date: String(getDaySeed()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses })
+      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses })
     });
   } catch {}
 }
@@ -201,7 +209,7 @@ function buildGame(mode) {
 
   if (mode === 'daily') {
     lb.style.display = '';
-    const dayKey = 'wordle_' + getDaySeed();
+    const dayKey = 'wordle_' + getDayKey();
     const saved = localStorage.getItem(dayKey);
     if (saved) {
       showDailyRecap(JSON.parse(saved), root);
@@ -341,7 +349,7 @@ function buildGame(mode) {
       gbtn.disabled = true; inp.disabled = true; revBtn.style.display = 'none';
       if (mode === 'daily') {
         const timeMs = startTime ? Date.now() - startTime : 0;
-        const dayKey = 'wordle_' + getDaySeed();
+        const dayKey = 'wordle_' + getDayKey();
         setTimeout(() => showNameModal(timeMs, totalGuesses, dayKey), 800);
       }
     } else {
@@ -412,7 +420,9 @@ document.getElementById('mode-free').addEventListener('click', () => {
 (function() {
   const d = new Date();
   d.setDate(d.getDate() - 1);
-  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  const n = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  let seed = (n * 48271) % 2147483647;
+  if (seed <= 0) seed += 2147483646;
   const rng = seededRng(seed);
   const word = WORDS[Math.floor(rng() * WORDS.length)];
   const el = document.getElementById('yesterday');
