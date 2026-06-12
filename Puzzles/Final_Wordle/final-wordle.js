@@ -99,6 +99,15 @@ function formatTime(ms) {
   return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + '.' + t;
 }
 
+function getDeviceId() {
+  let id = localStorage.getItem('wordle_device_id');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('wordle_device_id', id);
+  }
+  return id;
+}
+
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
@@ -114,6 +123,23 @@ async function fetchTodayScores() {
   } catch { return []; }
 }
 
+async function fetchDeviceScore() {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
+  try {
+    const date = String(getDayKey());
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&device_id=eq.${getDeviceId()}&limit=1`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': window.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows.length ? rows[0] : null;
+  } catch { return null; }
+}
+
 async function insertScore(name, timeMs, guesses) {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
   try {
@@ -125,7 +151,7 @@ async function insertScore(name, timeMs, guesses) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses })
+      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId() })
     });
   } catch {}
 }
@@ -197,25 +223,27 @@ function showDailyRecap(saved, root) {
   const msg = document.createElement('div'); msg.className = 'daily-recap';
   const line1 = document.createElement('div'); line1.className = 'recap-solved'; line1.textContent = 'already solved today';
   const line2 = document.createElement('div'); line2.className = 'recap-stats';
-  line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(saved.timeMs) + ' — ' + saved.guesses + ' guess' + (saved.guesses === 1 ? '' : 'es');
+  const timeMs = saved.time_ms !== undefined ? saved.time_ms : saved.timeMs;
+  line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs) + ' — ' + saved.guesses + ' guess' + (saved.guesses === 1 ? '' : 'es');
   msg.appendChild(line1); msg.appendChild(line2);
   root.appendChild(msg);
 }
 
-function buildGame(mode) {
+async function buildGame(mode) {
   const root = document.getElementById('root');
-  root.innerHTML = '';
+  root.innerHTML = '<div style="color:var(--text2);font-size:11px;letter-spacing:.2em;padding:80px 0">loading...</div>';
   const lb = document.getElementById('leaderboard');
 
   if (mode === 'daily') {
     lb.style.display = '';
-    const dayKey = 'wordle_' + getDayKey();
-    const saved = localStorage.getItem(dayKey);
-    if (saved) {
-      showDailyRecap(JSON.parse(saved), root);
+    const deviceScore = await fetchDeviceScore();
+    if (deviceScore) {
+      root.innerHTML = '';
+      showDailyRecap(deviceScore, root);
       renderLeaderboard();
       return;
     }
+    root.innerHTML = '';
   } else {
     lb.style.display = 'none';
     lb.innerHTML = '';
@@ -350,7 +378,7 @@ function buildGame(mode) {
       if (mode === 'daily') {
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
-        setTimeout(() => showNameModal(timeMs, totalGuesses, dayKey), 800);
+        setTimeout(() => showNameModal(timeMs, guessCount, dayKey), 800);
       }
     } else {
       setFb('not the word', 'err'); shake();
