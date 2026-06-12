@@ -185,7 +185,7 @@ async function renderLeaderboard() {
   lb.appendChild(table);
 }
 
-function showNameModal(timeMs, totalGuesses, dayKey) {
+function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
   const card = document.createElement('div'); card.className = 'arcade-card';
   const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'enter your name';
@@ -199,6 +199,7 @@ function showNameModal(timeMs, totalGuesses, dayKey) {
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
   async function doSubmit() {
+    if (setNameTarget) setNameTarget(null);
     const name = nameInp.value || 'AAA';
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
@@ -206,6 +207,7 @@ function showNameModal(timeMs, totalGuesses, dayKey) {
     await renderLeaderboard();
   }
   async function doSkip() {
+    if (setNameTarget) setNameTarget(null);
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses }));
     await renderLeaderboard();
@@ -217,6 +219,7 @@ function showNameModal(timeMs, totalGuesses, dayKey) {
   card.appendChild(heading); card.appendChild(timeDisplay); card.appendChild(nameInp); card.appendChild(btnRow);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+  if (setNameTarget) setNameTarget(nameInp);
   setTimeout(() => nameInp.focus(), 50);
 }
 
@@ -261,6 +264,7 @@ async function buildGame(mode) {
     scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
   );
   const { answer, guesses, results } = puzzle;
+  let nameTarget = null;
 
   const board = document.createElement('div'); board.className = 'board';
   for (let r = 0; r < guesses.length; r++) {
@@ -305,12 +309,12 @@ async function buildGame(mode) {
     const div = document.createElement('div'); div.className = 'kb-row';
     row.forEach(k => {
       const btn = document.createElement('button'); btn.className = 'kk'; btn.textContent = k.toUpperCase(); btn.dataset.k = k;
-      btn.addEventListener('click', () => { if (inp.value.length < 5 && !gbtn.disabled) { inp.value += k; updateTiles(inp.value); } });
+      btn.addEventListener('click', () => { if (nameTarget) { if (nameTarget.value.length < 6) nameTarget.value += k.toUpperCase(); return; } if (inp.value.length < 5 && !gbtn.disabled) { inp.value += k; updateTiles(inp.value); } });
       kbMap[k] = btn; div.appendChild(btn);
     });
     if (rowIdx === 2) {
       const bksp = document.createElement('button'); bksp.className = 'kk kk-bksp'; bksp.textContent = '⌫';
-      bksp.addEventListener('click', () => { if (!gbtn.disabled && inp.value.length > 0) { inp.value = inp.value.slice(0, -1); updateTiles(inp.value); } });
+      bksp.addEventListener('click', () => { if (nameTarget) { nameTarget.value = nameTarget.value.slice(0, -1); return; } if (!gbtn.disabled && inp.value.length > 0) { inp.value = inp.value.slice(0, -1); updateTiles(inp.value); } });
       div.appendChild(bksp);
     }
     kb.appendChild(div);
@@ -379,7 +383,7 @@ async function buildGame(mode) {
       if (mode === 'daily') {
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
-        setTimeout(() => showNameModal(timeMs, guessCount, dayKey), 800);
+        setTimeout(() => showNameModal(timeMs, guessCount, dayKey, t => { nameTarget = t; }), 800);
       }
     } else {
       setFb('not the word', 'err'); shake();
