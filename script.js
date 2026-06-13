@@ -174,7 +174,7 @@ async function loadMoviePreview() {
             titleEl.textContent = name + ' (' + year + ')';
         }
         if (ratingEl && !isNaN(rating)) {
-            ratingEl.textContent = renderStars(rating);
+            ratingEl.innerHTML = renderStars(rating);
         }
         if (movieDateEl && watchedDate) {
             const d = new Date(watchedDate + 'T00:00:00');
@@ -184,14 +184,17 @@ async function loadMoviePreview() {
 }
 
 function renderStars(rating) {
-    let stars = '';
     const full = Math.floor(rating);
-    const half = rating % 1 >= 0.5;
-    for (let i = 0; i < full; i++) stars += '★';
-    if (half) stars += '½';
-    const empty = 5 - full - (half ? 1 : 0);
-    for (let i = 0; i < empty; i++) stars += '☆';
-    return stars;
+    const hasHalf = rating % 1 >= 0.5;
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+        let fill;
+        if (i < full) fill = 'star-full';
+        else if (i === full && hasHalf) fill = 'star-half';
+        else fill = 'star-empty';
+        html += `<span class="star star-${i+1} ${fill}">★</span>`;
+    }
+    return html;
 }
 
 // Simple CSV row parser (handles quoted fields with commas)

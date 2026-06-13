@@ -622,6 +622,32 @@ body {
     letter-spacing: 1px;
 }
 
+.star-rating .star {
+    display: inline-block;
+}
+
+.star-rating .star-full {
+    color: var(--red-accent);
+}
+
+.star-rating .star-empty {
+    color: rgba(255, 60, 60, 0.2);
+}
+
+.star-rating .star-half {
+    position: relative;
+    color: rgba(255, 60, 60, 0.2);
+}
+
+.star-rating .star-half::after {
+    content: '★';
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--red-accent);
+    clip-path: inset(0 50% 0 0);
+}
+
 .game-preview {
     display: flex;
     gap: 10px;
