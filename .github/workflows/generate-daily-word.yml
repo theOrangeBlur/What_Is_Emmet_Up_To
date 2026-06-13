@@ -12,20 +12,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Compute and store today's word
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           python3 - <<'EOF'
-          import json, datetime, urllib.request, re
+          import os, json, datetime, urllib.request, re
 
           with open('Puzzles/Final_Wordle/final-wordle.js') as f:
               content = f.read()
           match = re.search(r'const WORDS = \[([^\]]+)\]', content)
           words = [w.strip().strip('"') for w in match.group(1).split(',')]
 
-          # Read Supabase config from the HTML (already public values)
+          # Read Supabase URL from the HTML (public value); key comes from secret
           with open('Puzzles/Final_Wordle/final-wordle.html') as f:
               html = f.read()
           url = re.search(r"window\.SUPABASE_URL\s*=\s*'([^']+)'", html).group(1)
-          key = re.search(r"window\.SUPABASE_ANON_KEY\s*=\s*'([^']+)'", html).group(1)
+          key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '').strip()
+          print(f"Key length: {len(key)}")
 
           def seeded_rng(seed):
               s = [seed % 2147483647]
@@ -56,6 +59,10 @@ jobs:
               },
               method='POST'
           )
-          with urllib.request.urlopen(req) as r:
-              print(f"Stored: HTTP {r.status}")
+          try:
+              with urllib.request.urlopen(req) as r:
+                  print(f"Stored: HTTP {r.status}")
+          except urllib.error.HTTPError as e:
+              print(f"HTTP {e.code}: {e.read().decode()}")
+              raise
           EOF
