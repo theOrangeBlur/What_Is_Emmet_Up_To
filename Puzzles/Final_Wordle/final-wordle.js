@@ -157,7 +157,7 @@ async function insertScore(name, timeMs, guesses) {
   } catch (e) { console.error('insertScore error:', e); }
 }
 
-async function renderLeaderboard() {
+async function renderLeaderboard(solved = false) {
   const lb = document.getElementById('leaderboard');
   if (!lb) return;
   lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
@@ -174,7 +174,7 @@ async function renderLeaderboard() {
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, formatTime(s.time_ms), s.guesses].forEach(v => {
+    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—', s.guesses].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     table.appendChild(tr);
@@ -204,13 +204,13 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
     await insertScore(name, timeMs, totalGuesses);
-    await renderLeaderboard();
+    await renderLeaderboard(true);
   }
   async function doSkip() {
     if (setNameTarget) setNameTarget(null);
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses }));
-    await renderLeaderboard();
+    await renderLeaderboard(true);
   }
   submitBtn.addEventListener('click', doSubmit);
   nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
@@ -244,10 +244,11 @@ async function buildGame(mode) {
     if (deviceScore) {
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
-      renderLeaderboard();
+      renderLeaderboard(true);
       return;
     }
     root.innerHTML = '';
+    renderLeaderboard(false);
   } else {
     lb.style.display = 'none';
     lb.innerHTML = '';
