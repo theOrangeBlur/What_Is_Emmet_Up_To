@@ -450,14 +450,27 @@ document.getElementById('mode-free').addEventListener('click', () => {
   buildGame('free');
 });
 
-(function() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  const n = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  let seed = (n * 48271) % 2147483647;
-  if (seed <= 0) seed += 2147483646;
-  const rng = seededRng(seed);
-  const word = WORDS[Math.floor(rng() * WORDS.length)];
+(async function() {
+  const yDate = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() - 1));
+  const yKey = yDate.getUTCFullYear() * 10000 + (yDate.getUTCMonth() + 1) * 100 + yDate.getUTCDate();
+
+  let word = null;
+  if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+    try {
+      const res = await fetch(
+        `${window.SUPABASE_URL}/rest/v1/daily_words?date=eq.${yKey}&select=word`,
+        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` } }
+      );
+      const data = await res.json();
+      if (data && data[0]) word = data[0].word;
+    } catch (e) {}
+  }
+  if (!word) {
+    let seed = (yKey * 48271) % 2147483647;
+    if (seed <= 0) seed += 2147483646;
+    const rng = seededRng(seed);
+    word = WORDS[Math.floor(rng() * WORDS.length)];
+  }
   const el = document.getElementById('yesterday');
   if (el) el.innerHTML = 'yesterday<span class="yw">' + word.toUpperCase() + '</span>';
 })();

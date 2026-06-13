@@ -1,0 +1,60 @@
+name: Generate Daily Wordle Word
+
+on:
+  schedule:
+    - cron: '5 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute and store today's word
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os, json, datetime, urllib.request, re
+
+          with open('Puzzles/Final_Wordle/final-wordle.js') as f:
+              content = f.read()
+          match = re.search(r'const WORDS = \[([^\]]+)\]', content)
+          words = [w.strip().strip('"') for w in match.group(1).split(',')]
+
+          def seeded_rng(seed):
+              s = [seed % 2147483647]
+              if s[0] <= 0: s[0] += 2147483646
+              def rng():
+                  s[0] = s[0] * 16807 % 2147483647
+                  return (s[0] - 1) / 2147483646
+              return rng
+
+          today = datetime.date.today()  # GitHub Actions runners use UTC
+          day_key = today.year * 10000 + today.month * 100 + today.day
+          seed = (day_key * 48271) % 2147483647
+          if seed <= 0: seed += 2147483646
+          rng = seeded_rng(seed)
+          word = words[int(rng() * len(words))]
+
+          print(f"Date key: {day_key}, Word: {word}")
+
+          url = os.environ['SUPABASE_URL']
+          key = os.environ['SUPABASE_ANON_KEY']
+          payload = json.dumps({'date': day_key, 'word': word}).encode()
+          req = urllib.request.Request(
+              f"{url}/rest/v1/daily_words",
+              data=payload,
+              headers={
+                  'apikey': key,
+                  'Authorization': f'Bearer {key}',
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+              },
+              method='POST'
+          )
+          with urllib.request.urlopen(req) as r:
+              print(f"Stored: HTTP {r.status}")
+          EOF
