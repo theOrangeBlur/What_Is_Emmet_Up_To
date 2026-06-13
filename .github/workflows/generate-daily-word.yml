@@ -20,15 +20,19 @@ jobs:
 
           with open('Puzzles/Final_Wordle/final-wordle.js') as f:
               content = f.read()
-          match = re.search(r'const WORDS = \[([^\]]+)\]', content)
-          words = [w.strip().strip('"') for w in match.group(1).split(',')]
 
-          # Read Supabase URL from the HTML (public value); key comes from secret
+          words_match = re.search(r'const WORDS = \[([^\]]+)\]', content)
+          words = [w.strip().strip('"') for w in words_match.group(1).split(',')]
+
+          vg_start = content.index('const VALID_GUESSES = new Set([') + len('const VALID_GUESSES = new Set([')
+          vg_end = content.index('])', vg_start)
+          valid_guesses = [w.strip().strip('"') for w in content[vg_start:vg_end].split(',')]
+          all_words = list(dict.fromkeys(words + valid_guesses))
+
           with open('Puzzles/Final_Wordle/final-wordle.html') as f:
               html = f.read()
           url = re.search(r"window\.SUPABASE_URL\s*=\s*'([^']+)'", html).group(1)
           key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '').strip()
-          print(f"Key length: {len(key)}")
 
           def seeded_rng(seed):
               s = [seed % 2147483647]
@@ -38,13 +42,90 @@ jobs:
                   return (s[0] - 1) / 2147483646
               return rng
 
-          today = datetime.date.today()  # GitHub Actions runners use UTC
+          def score_guess(guess, answer):
+              res = ['dark'] * 5
+              used = [False] * 5
+              for i in range(5):
+                  if guess[i] == answer[i]:
+                      res[i] = 'green'
+                      used[i] = True
+              for i in range(5):
+                  if res[i] == 'green':
+                      continue
+                  for j in range(5):
+                      if not used[j] and guess[i] == answer[j]:
+                          res[i] = 'yellow'
+                          used[j] = True
+                          break
+              return res
+
+          def filter_words(wds, guess, result):
+              return [w for w in wds if score_guess(guess, w) == result]
+
+          def best_guess(candidates, rng):
+              if len(candidates) <= 2:
+                  return candidates[0]
+              sample = [c for c in candidates if rng() < 10 / len(candidates)]
+              pool = sample if len(sample) >= 2 else candidates[:2]
+              best = candidates[0]
+              best_score = float('inf')
+              for g in pool:
+                  buckets = {}
+                  for c in candidates:
+                      k = ''.join(score_guess(g, c))
+                      buckets[k] = buckets.get(k, 0) + 1
+                  s = max(buckets.values())
+                  if s < best_score or (s == best_score and g in candidates):
+                      best_score = s
+                      best = g
+              return best
+
+          def generate_puzzle(seed):
+              rng = seeded_rng(seed)
+              answer = words[int(rng() * len(words))]
+              starters = ['crane','slate','audio','raise','stare','stern','cloud','plant']
+              first_guess = starters[int(rng() * len(starters))]
+              remaining = list(words)
+              guesses, results = [], []
+              attempts = 0
+              while len(remaining) > 1:
+                  g = first_guess if attempts == 0 else best_guess(remaining, rng)
+                  r = score_guess(g, answer)
+                  guesses.append(g)
+                  results.append(r)
+                  remaining = filter_words(remaining, g, r)
+                  attempts += 1
+                  if len(remaining) == 1:
+                      break
+              full_remaining = list(all_words)
+              for i in range(len(guesses)):
+                  full_remaining = filter_words(full_remaining, guesses[i], results[i])
+              unique_across_all = len(full_remaining) == 1 and full_remaining[0] == answer
+              return {'answer': answer, 'guesses': guesses, 'results': results, 'unique_across_all': unique_across_all}
+
+          def score_puzzle(results):
+              score = 0
+              for row in results:
+                  for s in row:
+                      if s == 'green': score += 15
+                      elif s == 'yellow': score += 5
+                      else: score += 1
+              return score
+
+          today = datetime.date.today()
           day_key = today.year * 10000 + today.month * 100 + today.day
           seed = (day_key * 48271) % 2147483647
           if seed <= 0: seed += 2147483646
-          rng = seeded_rng(seed)
-          word = words[int(rng() * len(words))]
 
+          while True:
+              puzzle = generate_puzzle(seed)
+              seed = (seed % 2147483646) + 1
+              if (puzzle['unique_across_all'] and
+                  not (puzzle['guesses'] and puzzle['guesses'][-1] == puzzle['answer']) and
+                  score_puzzle(puzzle['results']) <= 40):
+                  break
+
+          word = puzzle['answer']
           print(f"Date key: {day_key}, Word: {word}")
 
           payload = json.dumps({'date': day_key, 'word': word}).encode()
