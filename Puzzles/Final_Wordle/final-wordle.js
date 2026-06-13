@@ -205,12 +205,14 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
     await insertScore(name, timeMs, totalGuesses);
     await renderLeaderboard(true);
+    document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   async function doSkip() {
     if (setNameTarget) setNameTarget(null);
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses }));
     await renderLeaderboard(true);
+    document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   submitBtn.addEventListener('click', doSubmit);
   nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
