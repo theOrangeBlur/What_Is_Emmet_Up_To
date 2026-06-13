@@ -382,6 +382,32 @@ section h2 {
     letter-spacing: 2px;
 }
 
+.rating .star {
+    display: inline-block;
+}
+
+.rating .star-full {
+    color: #ffd700;
+}
+
+.rating .star-empty {
+    color: rgba(255, 215, 0, 0.2);
+}
+
+.rating .star-half {
+    position: relative;
+    color: rgba(255, 215, 0, 0.2);
+}
+
+.rating .star-half::after {
+    content: '★';
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #ffd700;
+    clip-path: inset(0 50% 0 0);
+}
+
 .movie-meta .date {
     color: #a5b4fc;
 }

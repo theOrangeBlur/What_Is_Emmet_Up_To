@@ -167,25 +167,21 @@ def slugify(name: str) -> str:
     return slug.strip('-')
 
 
-def rating_to_stars(rating: float, wrap_individually: bool = False) -> str:
-    """Convert numeric rating to star display.
-
-    If wrap_individually is True, wraps each star in a span for animation.
-    """
+def rating_to_stars(rating: float) -> str:
     if not rating:
         return ""
-    full_stars = int(rating)
-    half_star = rating % 1 >= 0.5
-
-    if wrap_individually and rating == 5:
-        # Wrap each star for wave animation
-        stars = ''.join(f'<span class="star star-{i+1}">★</span>' for i in range(full_stars))
-    else:
-        stars = "★" * full_stars
-
-    if half_star:
-        stars += "½"
-    return stars
+    full = int(rating)
+    has_half = rating % 1 >= 0.5
+    html = ""
+    for i in range(5):
+        if i < full:
+            fill = "star-full"
+        elif i == full and has_half:
+            fill = "star-half"
+        else:
+            fill = "star-empty"
+        html += f'<span class="star star-{i+1} {fill}">★</span>'
+    return html
 
 
 def load_movies(csv_path: Path) -> list:
@@ -228,7 +224,7 @@ def load_movies(csv_path: Path) -> list:
                 'name': name,
                 'year': row.get('Year', '').strip(),
                 'rating': rating,
-                'stars': rating_to_stars(rating, wrap_individually=(rating == 5)),
+                'stars': rating_to_stars(rating),
                 'watched_date': watched_date,
                 'watched_str': watched_str,
                 'rewatch': rewatch,
