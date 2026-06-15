@@ -5,5 +5,17 @@
       "time_ms": 23439,
       "guesses": 1
     }
+  ],
+  "20260615": [
+    {
+      "name": "NECKM",
+      "time_ms": 79198,
+      "guesses": 1
+    },
+    {
+      "name": "BLUR",
+      "time_ms": 84186,
+      "guesses": 1
+    }
   ]
 }
