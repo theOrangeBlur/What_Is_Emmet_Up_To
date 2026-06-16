@@ -16,22 +16,17 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           python3 - <<'EOF'
-          import os, json, datetime, urllib.request, re
+          import os, json, datetime, urllib.request
 
-          with open('Puzzles/Final_Wordle/final-wordle.js') as f:
-              content = f.read()
+          with open('Puzzles/Final_Wordle/words.json') as f:
+              words = json.load(f)
 
-          words_match = re.search(r'const WORDS = \[([^\]]+)\]', content)
-          words = [w.strip().strip('"') for w in words_match.group(1).split(',')]
+          with open('Puzzles/Final_Wordle/valid-guesses.json') as f:
+              valid_guesses = json.load(f)
 
-          vg_start = content.index('const VALID_GUESSES = new Set([') + len('const VALID_GUESSES = new Set([')
-          vg_end = content.index('])', vg_start)
-          valid_guesses = [w.strip().strip('"') for w in content[vg_start:vg_end].split(',')]
           all_words = list(dict.fromkeys(words + valid_guesses))
 
-          with open('Puzzles/Final_Wordle/final-wordle.html') as f:
-              html = f.read()
-          url = re.search(r"window\.SUPABASE_URL\s*=\s*'([^']+)'", html).group(1)
+          url = 'https://nsocmpzeccpoatrfddjf.supabase.co'
           key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '').strip()
 
           def seeded_rng(seed):
@@ -126,9 +121,14 @@ jobs:
                   break
 
           word = puzzle['answer']
-          print(f"Date key: {day_key}, Word: {word}")
+          print(f"Date key: {day_key}, Word: {word}, Guesses: {puzzle['guesses']}")
 
-          payload = json.dumps({'date': day_key, 'word': word}).encode()
+          payload = json.dumps({
+              'date': day_key,
+              'word': word,
+              'guesses': puzzle['guesses'],
+              'results': puzzle['results']
+          }).encode()
           req = urllib.request.Request(
               f"{url}/rest/v1/daily_words",
               data=payload,

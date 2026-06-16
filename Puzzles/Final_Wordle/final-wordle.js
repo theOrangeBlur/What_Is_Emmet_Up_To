@@ -256,16 +256,30 @@ async function buildGame(mode) {
     lb.innerHTML = '';
   }
 
-  let seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
-  let puzzle;
-  do {
-    puzzle = generatePuzzle(seed);
-    seed = (seed % 2147483646) + 1;
-  } while (
-    !puzzle.uniqueAcrossAll ||
-    (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
-    scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
-  );
+  let puzzle = null;
+  if (mode === 'daily' && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+    try {
+      const res = await fetch(
+        `${window.SUPABASE_URL}/rest/v1/daily_words?date=eq.${getDayKey()}&select=word,guesses,results`,
+        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` } }
+      );
+      const data = await res.json();
+      if (data?.[0]?.guesses) {
+        puzzle = { answer: data[0].word, guesses: data[0].guesses, results: data[0].results, uniqueAcrossAll: true };
+      }
+    } catch (e) {}
+  }
+  if (!puzzle) {
+    let seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
+    do {
+      puzzle = generatePuzzle(seed);
+      seed = (seed % 2147483646) + 1;
+    } while (
+      !puzzle.uniqueAcrossAll ||
+      (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
+      scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
+    );
+  }
   const { answer, guesses, results } = puzzle;
   let nameTarget = null;
 
