@@ -17,5 +17,17 @@
       "time_ms": 84186,
       "guesses": 1
     }
+  ],
+  "20260616": [
+    {
+      "name": "NOAH",
+      "time_ms": 194252,
+      "guesses": 1
+    },
+    {
+      "name": "BLUR",
+      "time_ms": 337944,
+      "guesses": 1
+    }
   ]
 }
