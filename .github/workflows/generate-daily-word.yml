@@ -2,7 +2,7 @@ name: Generate Daily Wordle Word
 
 on:
   schedule:
-    - cron: '5 0 * * *'
+    - cron: '5 5 * * *'
   workflow_dispatch:
 
 jobs:
