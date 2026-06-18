@@ -29,5 +29,17 @@
       "time_ms": 337944,
       "guesses": 1
     }
+  ],
+  "20260618": [
+    {
+      "name": "BB",
+      "time_ms": 187628,
+      "guesses": 1
+    },
+    {
+      "name": "BLUR",
+      "time_ms": 11406316,
+      "guesses": 1
+    }
   ]
 }
