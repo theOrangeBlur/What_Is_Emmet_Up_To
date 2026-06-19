@@ -14,7 +14,7 @@ function seededRng(seed) {
 }
 
 function getDayKey() {
-  const d = new Date();
+  const d = new Date(Date.now() - 5 * 60 * 60 * 1000); // UTC-5 (EST)
   return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
 }
 
@@ -463,7 +463,7 @@ let wordsReady = false;
   dailyStartTime = Date.now();
   buildGame('daily');
 
-  const yDate = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() - 1));
+  const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
   const yKey = yDate.getUTCFullYear() * 10000 + (yDate.getUTCMonth() + 1) * 100 + yDate.getUTCDate();
   let word = null;
   if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {

@@ -107,7 +107,7 @@ jobs:
                       else: score += 1
               return score
 
-          today = datetime.date.today()
+          today = datetime.datetime.utcnow() - datetime.timedelta(hours=5)  # EST
           day_key = today.year * 10000 + today.month * 100 + today.day
           seed = (day_key * 48271) % 2147483647
           if seed <= 0: seed += 2147483646
