@@ -444,3 +444,49 @@ body {
   #leaderboard { width: 290px; }
   .arcade-card { width: 260px; }
 }
+
+/* Free play session bar */
+#free-play-bar {
+  width: 340px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+}
+.fp-timer {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: .05em;
+  color: var(--text);
+  transition: color .3s;
+}
+.fp-timer.fp-timer-warn { color: var(--yellow-light); }
+.fp-timer.fp-timer-done { color: #e05555; }
+.fp-score {
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.fp-restart {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  flex-shrink: 0;
+}
+.fp-restart:hover { color: var(--text); border-color: var(--text2); }
+@media (max-width: 400px) {
+  #free-play-bar { width: 290px; }
+}

@@ -157,6 +157,41 @@ async function insertScore(name, timeMs, guesses) {
   } catch (e) { console.error('insertScore error:', e); }
 }
 
+function getFreeLeaderboard() {
+  try { return JSON.parse(localStorage.getItem('wordle_freeplay_lb') || '[]'); } catch { return []; }
+}
+
+function saveFreeScore(name, score) {
+  const lb = getFreeLeaderboard();
+  lb.push({ name: (name || '---').toUpperCase().slice(0, 6), score, date: String(getDayKey()) });
+  lb.sort((a, b) => b.score - a.score);
+  lb.splice(5);
+  localStorage.setItem('wordle_freeplay_lb', JSON.stringify(lb));
+  return lb;
+}
+
+function renderFreeLeaderboard() {
+  const el = document.getElementById('leaderboard');
+  if (!el) return;
+  el.style.display = '';
+  const scores = getFreeLeaderboard();
+  el.innerHTML = '';
+  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'best sessions'; el.appendChild(title);
+  if (!scores.length) {
+    const empty = document.createElement('div'); empty.className = 'lb-empty'; empty.textContent = 'no scores yet'; el.appendChild(empty); return;
+  }
+  const table = document.createElement('table'); table.className = 'lb-table';
+  const header = document.createElement('tr'); header.className = 'lb-header';
+  ['#', 'NAME', 'WORDS'].forEach(h => { const th = document.createElement('th'); th.textContent = h; header.appendChild(th); });
+  table.appendChild(header);
+  scores.forEach((s, i) => {
+    const tr = document.createElement('tr'); tr.className = 'lb-row';
+    [i + 1, s.name, s.score].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    table.appendChild(tr);
+  });
+  el.appendChild(table);
+}
+
 async function renderLeaderboard(solved = false) {
   const lb = document.getElementById('leaderboard');
   if (!lb) return;
@@ -225,6 +260,36 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   setTimeout(() => nameInp.focus(), 50);
 }
 
+function showFreeNameModal(score) {
+  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
+  const card = document.createElement('div'); card.className = 'arcade-card';
+  const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'new best!';
+  const scoreDisplay = document.createElement('div'); scoreDisplay.className = 'arcade-time';
+  scoreDisplay.textContent = score + ' word' + (score === 1 ? '' : 's') + ' in 5 minutes';
+  const nameInp = document.createElement('input');
+  nameInp.className = 'arcade-input'; nameInp.maxLength = 6; nameInp.placeholder = '______';
+  nameInp.autocomplete = 'off'; nameInp.spellcheck = false;
+  nameInp.addEventListener('input', () => { nameInp.value = nameInp.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 6); });
+  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
+  const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
+  const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
+  function doSave(name) {
+    overlay.remove();
+    saveFreeScore(name, score);
+    renderFreeLeaderboard();
+    const lb = document.getElementById('leaderboard');
+    if (lb) lb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  submitBtn.addEventListener('click', () => doSave(nameInp.value));
+  nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(nameInp.value); });
+  skipBtn.addEventListener('click', () => doSave(''));
+  btnRow.appendChild(submitBtn); btnRow.appendChild(skipBtn);
+  card.appendChild(heading); card.appendChild(scoreDisplay); card.appendChild(nameInp); card.appendChild(btnRow);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  setTimeout(() => nameInp.focus(), 50);
+}
+
 function showDailyRecap(saved, root) {
   const msg = document.createElement('div'); msg.className = 'daily-recap';
   const line1 = document.createElement('div'); line1.className = 'recap-solved'; line1.textContent = 'already solved today';
@@ -233,6 +298,51 @@ function showDailyRecap(saved, root) {
   line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs) + ' — ' + saved.guesses + ' guess' + (saved.guesses === 1 ? '' : 'es');
   msg.appendChild(line1); msg.appendChild(line2);
   root.appendChild(msg);
+}
+
+function startFreeSession() {
+  freeSession.active = true;
+  freeSession.startTime = Date.now();
+  freeSession.wordsSolved = 0;
+  freeSession.sessionDone = false;
+  const timerEl = document.getElementById('fp-timer');
+  const scoreEl = document.getElementById('fp-score');
+  if (scoreEl) scoreEl.textContent = '0 solved';
+  clearInterval(freeSession.timerInterval);
+  freeSession.timerInterval = setInterval(() => {
+    const remaining = Math.max(0, FREE_SESSION_MS - (Date.now() - freeSession.startTime));
+    const s = Math.ceil(remaining / 1000);
+    if (timerEl) {
+      timerEl.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      timerEl.classList.toggle('fp-timer-warn', remaining <= 60000 && remaining > 0);
+    }
+    if (remaining <= 0) {
+      clearInterval(freeSession.timerInterval);
+      freeSession.active = false;
+      freeSession.sessionDone = true;
+      endFreeSession();
+    }
+  }, 100);
+}
+
+function endFreeSession() {
+  const timerEl = document.getElementById('fp-timer');
+  if (timerEl) { timerEl.textContent = '0:00'; timerEl.classList.remove('fp-timer-warn'); timerEl.classList.add('fp-timer-done'); }
+  const inp = document.querySelector('.ginput');
+  const gbtn = document.querySelector('.gbtn');
+  const revBtn = document.querySelector('.reveal-btn');
+  if (inp) inp.disabled = true;
+  if (gbtn) gbtn.disabled = true;
+  if (revBtn) revBtn.style.display = 'none';
+  const score = freeSession.wordsSolved;
+  setTimeout(() => {
+    const lb = getFreeLeaderboard();
+    if (score > 0 && (lb.length < 5 || score > lb[lb.length - 1].score)) {
+      showFreeNameModal(score);
+    } else {
+      renderFreeLeaderboard();
+    }
+  }, 800);
 }
 
 async function buildGame(mode) {
@@ -252,8 +362,9 @@ async function buildGame(mode) {
     root.innerHTML = '';
     renderLeaderboard(false);
   } else {
-    lb.style.display = 'none';
-    lb.innerHTML = '';
+    renderFreeLeaderboard();
+    document.getElementById('free-play-bar').style.display = '';
+    if (!freeSession.active && !freeSession.sessionDone) startFreeSession();
   }
 
   let puzzle = null;
@@ -316,7 +427,7 @@ async function buildGame(mode) {
   const gbtn = document.createElement('button'); gbtn.className = 'gbtn'; gbtn.textContent = 'guess';
   gr.appendChild(inp); gr.appendChild(gbtn); gw.appendChild(gl); gw.appendChild(gr); root.appendChild(gw);
 
-  const revBtn = document.createElement('button'); revBtn.className = 'reveal-btn'; revBtn.textContent = 'reveal the answer'; root.appendChild(revBtn);
+  const revBtn = document.createElement('button'); revBtn.className = 'reveal-btn'; revBtn.textContent = mode === 'free' ? 'skip this word' : 'reveal the answer'; root.appendChild(revBtn);
   const revWord = document.createElement('div'); revWord.className = 'revealed'; revWord.textContent = answer.toUpperCase(); root.appendChild(revWord);
 
   const kb = document.createElement('div'); kb.className = 'kb';
@@ -339,6 +450,10 @@ async function buildGame(mode) {
   root.appendChild(kb);
 
   if (!('ontouchstart' in window)) inp.focus();
+
+  if (mode === 'free' && freeSession.sessionDone) {
+    gbtn.disabled = true; inp.disabled = true;
+  }
 
   const usedLetters = {};
   for (let r = 0; r < guesses.length; r++) {
@@ -401,6 +516,13 @@ async function buildGame(mode) {
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
         setTimeout(() => showNameModal(timeMs, guessCount, dayKey, t => { nameTarget = t; }), 800);
+      } else if (mode === 'free') {
+        freeSession.wordsSolved++;
+        const scoreEl = document.getElementById('fp-score');
+        if (scoreEl) scoreEl.textContent = freeSession.wordsSolved + ' solved';
+        if (!freeSession.sessionDone) {
+          setTimeout(() => { if (!freeSession.sessionDone) buildGame('free'); }, 1000);
+        }
       }
     } else {
       setFb('not the word', 'err'); shake();
@@ -439,17 +561,26 @@ async function buildGame(mode) {
   revBtn.addEventListener('click', () => {
     revWord.style.display = 'block'; revBtn.style.display = 'none';
     inp.disabled = true; gbtn.disabled = true;
-    ct.textContent = 'better luck tomorrow';
-    setFb('', '');
+    if (mode === 'free' && !freeSession.sessionDone) {
+      ct.textContent = 'skipped';
+      setFb('', '');
+      setTimeout(() => { if (!freeSession.sessionDone) buildGame('free'); }, 1200);
+    } else {
+      ct.textContent = 'better luck tomorrow';
+      setFb('', '');
+    }
   });
   if (mode === 'free') {
-    setTimeout(() => { if (!won) revBtn.style.display = 'block'; }, 30000);
+    setTimeout(() => { if (!won && !freeSession.sessionDone) revBtn.style.display = 'block'; }, 30000);
   }
 }
 
 let currentMode = 'daily';
 let dailyStartTime = null;
 let wordsReady = false;
+
+const FREE_SESSION_MS = 5 * 60 * 1000;
+let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
 
 (async function init() {
   const [wordsRes, guessesRes] = await Promise.all([
@@ -489,13 +620,27 @@ let wordsReady = false;
 document.getElementById('mode-daily').addEventListener('click', () => {
   if (currentMode === 'daily' || !wordsReady) return;
   currentMode = 'daily';
+  clearInterval(freeSession.timerInterval);
+  freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
+  document.getElementById('free-play-bar').style.display = 'none';
   document.getElementById('mode-daily').classList.add('active');
   document.getElementById('mode-free').classList.remove('active');
   buildGame('daily');
 });
+document.getElementById('fp-restart').addEventListener('click', () => {
+  if (!wordsReady || currentMode !== 'free') return;
+  clearInterval(freeSession.timerInterval);
+  freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
+  const timerEl = document.getElementById('fp-timer');
+  if (timerEl) { timerEl.textContent = '5:00'; timerEl.classList.remove('fp-timer-warn', 'fp-timer-done'); }
+  buildGame('free');
+});
 document.getElementById('mode-free').addEventListener('click', () => {
-  if (currentMode === 'free' || !wordsReady) return;
+  if (!wordsReady) return;
+  if (currentMode === 'free' && !freeSession.sessionDone) return;
   currentMode = 'free';
+  clearInterval(freeSession.timerInterval);
+  freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
   document.getElementById('mode-free').classList.add('active');
   document.getElementById('mode-daily').classList.remove('active');
   buildGame('free');
