@@ -18,10 +18,10 @@ jobs:
           python3 - <<'EOF'
           import os, json, datetime, urllib.request
 
-          with open('Puzzles/Final_Wordle/words.json') as f:
+          with open('Puzzles/Final_Wordle/words.json', encoding='utf-8-sig') as f:
               words = json.load(f)
 
-          with open('Puzzles/Final_Wordle/valid-guesses.json') as f:
+          with open('Puzzles/Final_Wordle/valid-guesses.json', encoding='utf-8-sig') as f:
               valid_guesses = json.load(f)
 
           all_words = list(dict.fromkeys(words + valid_guesses))
