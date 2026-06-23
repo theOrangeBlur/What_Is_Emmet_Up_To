@@ -157,26 +157,75 @@ async function insertScore(name, timeMs, guesses) {
   } catch (e) { console.error('insertScore error:', e); }
 }
 
-function getFreeLeaderboard() {
-  try { return JSON.parse(localStorage.getItem('wordle_freeplay_lb') || '[]'); } catch { return []; }
+async function fetchFreeScores() {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?order=score.desc&limit=10`;
+    const res = await fetch(url, {
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+    });
+    return res.ok ? await res.json() : [];
+  } catch { return []; }
 }
 
-function saveFreeScore(name, score) {
-  const lb = getFreeLeaderboard();
-  lb.push({ name: (name || '---').toUpperCase().slice(0, 6), score, date: String(getDayKey()) });
-  lb.sort((a, b) => b.score - a.score);
-  lb.splice(5);
-  localStorage.setItem('wordle_freeplay_lb', JSON.stringify(lb));
-  return lb;
+async function fetchDeviceFreeScore() {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}&limit=1`;
+    const res = await fetch(url, {
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows.length ? rows[0] : null;
+  } catch { return null; }
 }
 
-function renderFreeLeaderboard() {
+async function submitFreeScore(name, score) {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+  try {
+    const existing = await fetchDeviceFreeScore();
+    if (existing && existing.score >= score) return;
+    const cleanName = (name || '---').toUpperCase().slice(0, 6);
+    if (existing) {
+      const res = await fetch(
+        `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': window.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ name: cleanName, score })
+        }
+      );
+      if (!res.ok) console.error('updateFreeScore failed:', res.status, await res.text());
+    } else {
+      const res = await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores`, {
+        method: 'POST',
+        headers: {
+          'apikey': window.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ device_id: getDeviceId(), name: cleanName, score })
+      });
+      if (!res.ok) console.error('insertFreeScore failed:', res.status, await res.text());
+    }
+  } catch (e) { console.error('submitFreeScore error:', e); }
+}
+
+async function renderFreeLeaderboard() {
   const el = document.getElementById('leaderboard');
   if (!el) return;
   el.style.display = '';
-  const scores = getFreeLeaderboard();
+  el.innerHTML = '<div class="lb-loading">loading scores...</div>';
+  const scores = await fetchFreeScores();
   el.innerHTML = '';
-  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'best sessions'; el.appendChild(title);
+  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'all-time best'; el.appendChild(title);
   if (!scores.length) {
     const empty = document.createElement('div'); empty.className = 'lb-empty'; empty.textContent = 'no scores yet'; el.appendChild(empty); return;
   }
@@ -273,10 +322,10 @@ function showFreeNameModal(score) {
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
-  function doSave(name) {
+  async function doSave(name) {
     overlay.remove();
-    saveFreeScore(name, score);
-    renderFreeLeaderboard();
+    await submitFreeScore(name, score);
+    await renderFreeLeaderboard();
     const lb = document.getElementById('leaderboard');
     if (lb) lb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -335,9 +384,11 @@ function endFreeSession() {
   if (gbtn) gbtn.disabled = true;
   if (revBtn) revBtn.style.display = 'none';
   const score = freeSession.wordsSolved;
-  setTimeout(() => {
-    const lb = getFreeLeaderboard();
-    if (score > 0 && (lb.length < 5 || score > lb[lb.length - 1].score)) {
+  setTimeout(async () => {
+    const [lb, deviceScore] = await Promise.all([fetchFreeScores(), fetchDeviceFreeScore()]);
+    const qualifiesForBoard = score > 0 && (lb.length < 10 || score > lb[lb.length - 1].score);
+    const beatPersonalBest = score > 0 && (!deviceScore || score > deviceScore.score);
+    if (qualifiesForBoard || beatPersonalBest) {
       showFreeNameModal(score);
     } else {
       renderFreeLeaderboard();
@@ -362,7 +413,7 @@ async function buildGame(mode) {
     root.innerHTML = '';
     renderLeaderboard(false);
   } else {
-    renderFreeLeaderboard();
+    renderFreeLeaderboard();  // async, fire-and-forget here
     document.getElementById('free-play-bar').style.display = '';
     if (!freeSession.active && !freeSession.sessionDone) startFreeSession();
   }
