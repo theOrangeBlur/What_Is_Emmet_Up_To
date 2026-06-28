@@ -194,5 +194,13 @@
   "The Court Jester|1955": {
     "poster": "https://image.tmdb.org/t/p/w300/pPCOAipDP0sm8SLChpTMBPdCiqB.jpg",
     "director": "Norman Panama"
+  },
+  "The Fifth Element|1997": {
+    "poster": "https://image.tmdb.org/t/p/w300/fPtlCO1yQtnoLHOwKtWz7db6RGU.jpg",
+    "director": "Luc Besson"
+  },
+  "Ender's Game|2013": {
+    "poster": "https://image.tmdb.org/t/p/w300/pVcRI5YKnkkgaAD876jBeKb189d.jpg",
+    "director": "Gavin Hood"
   }
 }
