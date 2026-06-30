@@ -396,6 +396,25 @@ function endFreeSession() {
   }, 800);
 }
 
+function prefetchNextFreePuzzle() {
+  if (prefetchInProgress || prefetchedPuzzle) return;
+  prefetchInProgress = true;
+  setTimeout(() => {
+    let seed = Math.floor(Math.random() * 2147483646) + 1;
+    let puzzle;
+    do {
+      puzzle = generatePuzzle(seed);
+      seed = (seed % 2147483646) + 1;
+    } while (
+      !puzzle.uniqueAcrossAll ||
+      (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
+      scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
+    );
+    prefetchedPuzzle = puzzle;
+    prefetchInProgress = false;
+  }, 0);
+}
+
 async function buildGame(mode) {
   const root = document.getElementById('root');
   root.innerHTML = '<div style="color:var(--text2);font-size:11px;letter-spacing:.2em;padding:80px 0">loading...</div>';
@@ -432,15 +451,20 @@ async function buildGame(mode) {
     } catch (e) {}
   }
   if (!puzzle) {
-    let seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
-    do {
-      puzzle = generatePuzzle(seed);
-      seed = (seed % 2147483646) + 1;
-    } while (
-      !puzzle.uniqueAcrossAll ||
-      (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
-      scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
-    );
+    if (mode === 'free' && prefetchedPuzzle) {
+      puzzle = prefetchedPuzzle;
+      prefetchedPuzzle = null;
+    } else {
+      let seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
+      do {
+        puzzle = generatePuzzle(seed);
+        seed = (seed % 2147483646) + 1;
+      } while (
+        !puzzle.uniqueAcrossAll ||
+        (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
+        scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
+      );
+    }
   }
   const { answer, guesses, results } = puzzle;
   let nameTarget = null;
@@ -500,7 +524,30 @@ async function buildGame(mode) {
   });
   root.appendChild(kb);
 
-  if (!('ontouchstart' in window)) inp.focus();
+  if (mode === 'daily' && dailyStartTime === null) {
+    gw.style.display = 'none';
+    kb.style.display = 'none';
+    const startContainer = document.createElement('div');
+    startContainer.className = 'start-container';
+    const startBtn = document.createElement('button');
+    startBtn.className = 'start-btn';
+    startBtn.textContent = 'start';
+    startBtn.addEventListener('click', () => {
+      const now = Date.now();
+      dailyStartTime = now;
+      startTime = now;
+      localStorage.setItem('wordle_start_' + getDayKey(), now);
+      startContainer.remove();
+      gw.style.display = '';
+      kb.style.display = '';
+      if (!('ontouchstart' in window)) inp.focus();
+    });
+    startContainer.appendChild(startBtn);
+    root.appendChild(startContainer);
+  } else if (!('ontouchstart' in window)) {
+    inp.focus();
+  }
+  if (mode === 'free') prefetchNextFreePuzzle();
 
   if (mode === 'free' && freeSession.sessionDone) {
     gbtn.disabled = true; inp.disabled = true;
@@ -629,6 +676,8 @@ async function buildGame(mode) {
 let currentMode = 'daily';
 let dailyStartTime = null;
 let wordsReady = false;
+let prefetchedPuzzle = null;
+let prefetchInProgress = false;
 
 const FREE_SESSION_MS = 5 * 60 * 1000;
 let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
@@ -642,7 +691,9 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
   VALID_GUESSES = new Set(await guessesRes.json());
   wordsReady = true;
 
-  dailyStartTime = Date.now();
+  const todayStartKey = 'wordle_start_' + getDayKey();
+  const savedStart = localStorage.getItem(todayStartKey);
+  dailyStartTime = savedStart ? parseInt(savedStart, 10) : null;
   buildGame('daily');
 
   const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
@@ -673,6 +724,7 @@ document.getElementById('mode-daily').addEventListener('click', () => {
   currentMode = 'daily';
   clearInterval(freeSession.timerInterval);
   freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
+  prefetchedPuzzle = null; prefetchInProgress = false;
   document.getElementById('free-play-bar').style.display = 'none';
   document.getElementById('mode-daily').classList.add('active');
   document.getElementById('mode-free').classList.remove('active');
@@ -682,6 +734,7 @@ document.getElementById('fp-restart').addEventListener('click', () => {
   if (!wordsReady || currentMode !== 'free') return;
   clearInterval(freeSession.timerInterval);
   freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
+  prefetchedPuzzle = null; prefetchInProgress = false;
   const timerEl = document.getElementById('fp-timer');
   if (timerEl) { timerEl.textContent = '5:00'; timerEl.classList.remove('fp-timer-warn', 'fp-timer-done'); }
   buildGame('free');
@@ -692,6 +745,7 @@ document.getElementById('mode-free').addEventListener('click', () => {
   currentMode = 'free';
   clearInterval(freeSession.timerInterval);
   freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterval: null, sessionDone: false };
+  prefetchedPuzzle = null; prefetchInProgress = false;
   document.getElementById('mode-free').classList.add('active');
   document.getElementById('mode-daily').classList.remove('active');
   buildGame('free');

@@ -490,3 +490,27 @@ body {
 @media (max-width: 400px) {
   #free-play-bar { width: 290px; }
 }
+
+/* Daily start button */
+.start-container {
+  width: 340px;
+  margin-top: 8px;
+}
+.start-btn {
+  width: 100%;
+  background: var(--green);
+  border: none;
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  padding: 16px 0;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.start-btn:hover { opacity: .85; }
+@media (max-width: 400px) {
+  .start-container { width: 290px; }
+}
