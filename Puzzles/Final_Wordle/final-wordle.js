@@ -525,20 +525,26 @@ async function buildGame(mode) {
   root.appendChild(kb);
 
   if (mode === 'daily' && dailyStartTime === null) {
+    board.style.display = 'none';
+    ct.style.display = 'none';
     gw.style.display = 'none';
+    revBtn.style.display = 'none';
     kb.style.display = 'none';
     const startContainer = document.createElement('div');
     startContainer.className = 'start-container';
     const startBtn = document.createElement('button');
     startBtn.className = 'start-btn';
-    startBtn.textContent = 'start';
+    startBtn.textContent = 'BEGIN';
     startBtn.addEventListener('click', () => {
       const now = Date.now();
       dailyStartTime = now;
       startTime = now;
       localStorage.setItem('wordle_start_' + getDayKey(), now);
       startContainer.remove();
+      board.style.display = '';
+      ct.style.display = '';
       gw.style.display = '';
+      revBtn.style.display = '';
       kb.style.display = '';
       if (!('ontouchstart' in window)) inp.focus();
     });
