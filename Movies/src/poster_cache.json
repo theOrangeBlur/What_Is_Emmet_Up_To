@@ -202,5 +202,13 @@
   "Ender's Game|2013": {
     "poster": "https://image.tmdb.org/t/p/w300/pVcRI5YKnkkgaAD876jBeKb189d.jpg",
     "director": "Gavin Hood"
+  },
+  "Supergirl|2026": {
+    "poster": "https://image.tmdb.org/t/p/w300/niSvU02l2BONH9ivubV6K1a5QiK.jpg",
+    "director": "Craig Gillespie"
+  },
+  "Avatar: Fire and Ash|2025": {
+    "poster": "https://image.tmdb.org/t/p/w300/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg",
+    "director": "James Cameron"
   }
 }
