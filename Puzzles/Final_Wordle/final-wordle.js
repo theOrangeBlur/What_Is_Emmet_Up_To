@@ -7,6 +7,8 @@ const SCORE_YELLOW = 5;
 const SCORE_GREEN  = 15;
 const MAX_PUZZLE_SCORE = 40;
 
+const FAMILY_CODE = 'COOPERSTUPOR';
+
 function seededRng(seed) {
   let s = seed % 2147483647;
   if (s <= 0) s += 2147483646;
@@ -108,11 +110,30 @@ function getDeviceId() {
   return id;
 }
 
+function isFamilyUnlocked() {
+  return localStorage.getItem('wordle_family') === '1';
+}
+
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
     const date = String(getDayKey());
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&order=time_ms.asc&limit=20`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': window.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+      }
+    });
+    return res.ok ? await res.json() : [];
+  } catch { return []; }
+}
+
+async function fetchFamilyScores() {
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
+  try {
+    const date = String(getDayKey());
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&is_family=eq.true&order=time_ms.asc&limit=20`;
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
@@ -151,7 +172,7 @@ async function insertScore(name, timeMs, guesses) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId() })
+      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked() })
     });
     if (!res.ok) console.error('insertScore failed:', res.status, await res.text());
   } catch (e) { console.error('insertScore error:', e); }
@@ -269,6 +290,70 @@ async function renderLeaderboard(solved = false) {
   lb.appendChild(table);
 }
 
+async function renderFamilyLeaderboard(solved = false) {
+  const lb = document.getElementById('family-leaderboard');
+  if (!lb) return;
+  lb.style.display = '';
+  lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
+  const scores = await fetchFamilyScores();
+  lb.innerHTML = '';
+  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'family scores'; lb.appendChild(title);
+  if (!scores.length) {
+    const empty = document.createElement('div'); empty.className = 'lb-empty'; empty.textContent = 'no scores yet today'; lb.appendChild(empty); return;
+  }
+  const table = document.createElement('table'); table.className = 'lb-table';
+  const header = document.createElement('tr'); header.className = 'lb-header';
+  ['#', 'NAME', 'TIME', 'GUESSES'].forEach(h => {
+    const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
+  });
+  table.appendChild(header);
+  scores.forEach((s, i) => {
+    const tr = document.createElement('tr'); tr.className = 'lb-row';
+    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—', s.guesses].forEach(v => {
+      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+  lb.appendChild(table);
+}
+
+async function applyFamilyUnlock() {
+  const link = document.getElementById('family-link');
+  if (link) link.style.display = 'none';
+  if (currentMode !== 'daily') return;
+  const deviceScore = await fetchDeviceScore();
+  renderFamilyLeaderboard(!!deviceScore);
+}
+
+function showFamilyCodeModal() {
+  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
+  const card = document.createElement('div'); card.className = 'arcade-card';
+  const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'family code';
+  const codeInp = document.createElement('input');
+  codeInp.className = 'arcade-input'; codeInp.maxLength = 20; codeInp.placeholder = 'code';
+  codeInp.autocomplete = 'off'; codeInp.spellcheck = false;
+  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
+  const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'unlock';
+  const cancelBtn = document.createElement('button'); cancelBtn.className = 'arcade-btn'; cancelBtn.textContent = 'cancel';
+  function tryUnlock() {
+    if (codeInp.value.trim().toUpperCase() === FAMILY_CODE.toUpperCase()) {
+      localStorage.setItem('wordle_family', '1');
+      overlay.remove();
+      applyFamilyUnlock();
+    } else {
+      codeInp.classList.remove('invalid'); void codeInp.offsetWidth; codeInp.classList.add('invalid');
+    }
+  }
+  submitBtn.addEventListener('click', tryUnlock);
+  codeInp.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+  cancelBtn.addEventListener('click', () => overlay.remove());
+  btnRow.appendChild(submitBtn); btnRow.appendChild(cancelBtn);
+  card.appendChild(heading); card.appendChild(codeInp); card.appendChild(btnRow);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  setTimeout(() => codeInp.focus(), 50);
+}
+
 function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
   const card = document.createElement('div'); card.className = 'arcade-card';
@@ -289,6 +374,7 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
     await insertScore(name, timeMs, totalGuesses);
     await renderLeaderboard(true);
+    if (isFamilyUnlocked()) await renderFamilyLeaderboard(true);
     document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   async function doSkip() {
@@ -296,6 +382,7 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses }));
     await renderLeaderboard(true);
+    if (isFamilyUnlocked()) await renderFamilyLeaderboard(true);
     document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   submitBtn.addEventListener('click', doSubmit);
@@ -427,10 +514,12 @@ async function buildGame(mode) {
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
       renderLeaderboard(true);
+      if (isFamilyUnlocked()) renderFamilyLeaderboard(true);
       return;
     }
     root.innerHTML = '';
     renderLeaderboard(false);
+    if (isFamilyUnlocked()) renderFamilyLeaderboard(false);
   } else {
     renderFreeLeaderboard();  // async, fire-and-forget here
     document.getElementById('free-play-bar').style.display = '';
@@ -702,6 +791,12 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
   dailyStartTime = savedStart ? parseInt(savedStart, 10) : null;
   buildGame('daily');
 
+  const familyLink = document.getElementById('family-link');
+  if (familyLink) {
+    familyLink.style.display = isFamilyUnlocked() ? 'none' : '';
+    familyLink.addEventListener('click', showFamilyCodeModal);
+  }
+
   const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
   const yKey = yDate.getUTCFullYear() * 10000 + (yDate.getUTCMonth() + 1) * 100 + yDate.getUTCDate();
   let word = null;
@@ -734,6 +829,8 @@ document.getElementById('mode-daily').addEventListener('click', () => {
   document.getElementById('free-play-bar').style.display = 'none';
   document.getElementById('mode-daily').classList.add('active');
   document.getElementById('mode-free').classList.remove('active');
+  const familyLink = document.getElementById('family-link');
+  if (familyLink) familyLink.style.display = isFamilyUnlocked() ? 'none' : '';
   buildGame('daily');
 });
 document.getElementById('fp-restart').addEventListener('click', () => {
@@ -754,5 +851,9 @@ document.getElementById('mode-free').addEventListener('click', () => {
   prefetchedPuzzle = null; prefetchInProgress = false;
   document.getElementById('mode-free').classList.add('active');
   document.getElementById('mode-daily').classList.remove('active');
+  const familyBoard = document.getElementById('family-leaderboard');
+  if (familyBoard) familyBoard.style.display = 'none';
+  const familyLink = document.getElementById('family-link');
+  if (familyLink) familyLink.style.display = 'none';
   buildGame('free');
 });
