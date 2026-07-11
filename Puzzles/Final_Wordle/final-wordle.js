@@ -273,13 +273,13 @@ async function renderLeaderboard(solved = false) {
   }
   const table = document.createElement('table'); table.className = 'lb-table';
   const header = document.createElement('tr'); header.className = 'lb-header';
-  ['#', 'NAME', 'TIME', 'GUESSES'].forEach(h => {
+  ['#', 'NAME', 'TIME'].forEach(h => {
     const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
   });
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—', s.guesses].forEach(v => {
+    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     table.appendChild(tr);
@@ -303,13 +303,13 @@ async function renderFamilyLeaderboard(solved = false) {
   }
   const table = document.createElement('table'); table.className = 'lb-table';
   const header = document.createElement('tr'); header.className = 'lb-header';
-  ['#', 'NAME', 'TIME', 'GUESSES'].forEach(h => {
+  ['#', 'NAME', 'TIME'].forEach(h => {
     const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
   });
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—', s.guesses].forEach(v => {
+    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     table.appendChild(tr);
@@ -359,7 +359,7 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   const card = document.createElement('div'); card.className = 'arcade-card';
   const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'enter your name';
   const timeDisplay = document.createElement('div'); timeDisplay.className = 'arcade-time';
-  timeDisplay.textContent = formatTime(timeMs) + ' — ' + totalGuesses + ' guess' + (totalGuesses === 1 ? '' : 'es');
+  timeDisplay.textContent = formatTime(timeMs);
   const nameInp = document.createElement('input');
   nameInp.className = 'arcade-input'; nameInp.maxLength = 6; nameInp.placeholder = '______';
   nameInp.autocomplete = 'off'; nameInp.spellcheck = false;
@@ -431,7 +431,7 @@ function showDailyRecap(saved, root) {
   const line1 = document.createElement('div'); line1.className = 'recap-solved'; line1.textContent = 'already solved today';
   const line2 = document.createElement('div'); line2.className = 'recap-stats';
   const timeMs = saved.time_ms !== undefined ? saved.time_ms : saved.timeMs;
-  line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs) + ' — ' + saved.guesses + ' guess' + (saved.guesses === 1 ? '' : 'es');
+  line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs);
   msg.appendChild(line1); msg.appendChild(line2);
   root.appendChild(msg);
 }
@@ -702,8 +702,7 @@ async function buildGame(mode) {
       });
       winMsg.style.display = 'block';
       setFb('', '');
-      const totalGuesses = guesses.length + guessCount;
-      ct.textContent = 'solved in ' + totalGuesses + ' total guess' + (totalGuesses === 1 ? '' : 'es');
+      ct.textContent = '';
       gbtn.disabled = true; inp.disabled = true; revBtn.style.display = 'none';
       if (mode === 'daily') {
         const timeMs = startTime ? Date.now() - startTime : 0;
@@ -719,7 +718,7 @@ async function buildGame(mode) {
       }
     } else {
       setFb('not the word', 'err'); shake();
-      ct.textContent = guessCount + ' guess' + (guessCount === 1 ? '' : 'es') + ' — keep going';
+      ct.textContent = 'keep going';
       if (guessCount >= 3) revBtn.style.display = 'block';
     }
     if (!won) { inp.value = ''; updateTiles(''); inp.focus(); }
