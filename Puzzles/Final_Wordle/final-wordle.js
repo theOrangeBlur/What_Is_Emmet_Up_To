@@ -162,10 +162,11 @@ async function fetchDeviceScore() {
 }
 
 async function insertScore(name, timeMs, guesses) {
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return false;
   try {
     const res = await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_scores`, {
       method: 'POST',
+      keepalive: true,
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
@@ -174,8 +175,9 @@ async function insertScore(name, timeMs, guesses) {
       },
       body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked() })
     });
-    if (!res.ok) console.error('insertScore failed:', res.status, await res.text());
-  } catch (e) { console.error('insertScore error:', e); }
+    if (!res.ok) { console.error('insertScore failed:', res.status, await res.text()); return false; }
+    return true;
+  } catch (e) { console.error('insertScore error:', e); return false; }
 }
 
 async function fetchFreeScores() {
@@ -367,23 +369,52 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
-  async function doSubmit() {
-    if (setNameTarget) setNameTarget(null);
-    const name = nameInp.value || 'AAA';
+  let submitting = false;
+  function showInscribingState() {
+    card.innerHTML = '';
+    const h = document.createElement('div'); h.className = 'arcade-heading'; h.textContent = 'submitting';
+    const spinner = document.createElement('div'); spinner.className = 'arcade-spinner';
+    const text = document.createElement('div'); text.className = 'arcade-inscribe-text';
+    text.textContent = 'Your score is being inscribed into the annuls of fwordle history...';
+    card.appendChild(h); card.appendChild(spinner); card.appendChild(text);
+  }
+  function showRetryState(name) {
+    card.innerHTML = '';
+    const h = document.createElement('div'); h.className = 'arcade-heading'; h.textContent = 'submission failed';
+    const msg = document.createElement('div'); msg.className = 'arcade-error-text';
+    msg.textContent = "couldn't save your score — check your connection";
+    const row = document.createElement('div'); row.className = 'arcade-btns';
+    const retryBtn = document.createElement('button'); retryBtn.className = 'arcade-btn arcade-btn-primary'; retryBtn.textContent = 'retry';
+    const giveUpBtn = document.createElement('button'); giveUpBtn.className = 'arcade-btn'; giveUpBtn.textContent = 'skip';
+    retryBtn.addEventListener('click', () => attemptSubmit(name));
+    giveUpBtn.addEventListener('click', doSkip);
+    row.appendChild(retryBtn); row.appendChild(giveUpBtn);
+    card.appendChild(h); card.appendChild(msg); card.appendChild(row);
+  }
+  async function finish() {
     overlay.remove();
-    localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
-    await insertScore(name, timeMs, totalGuesses);
     await renderLeaderboard(true);
     if (isFamilyUnlocked()) await renderFamilyLeaderboard(true);
     document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+  async function attemptSubmit(name) {
+    showInscribingState();
+    const ok = await insertScore(name, timeMs, totalGuesses);
+    if (!ok) { showRetryState(name); return; }
+    localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses, name }));
+    await finish();
+  }
+  async function doSubmit() {
+    if (submitting) return;
+    submitting = true;
+    if (setNameTarget) setNameTarget(null);
+    const name = nameInp.value || 'AAA';
+    await attemptSubmit(name);
+  }
   async function doSkip() {
     if (setNameTarget) setNameTarget(null);
-    overlay.remove();
     localStorage.setItem(dayKey, JSON.stringify({ timeMs, guesses: totalGuesses }));
-    await renderLeaderboard(true);
-    if (isFamilyUnlocked()) await renderFamilyLeaderboard(true);
-    document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    await finish();
   }
   submitBtn.addEventListener('click', doSubmit);
   nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
