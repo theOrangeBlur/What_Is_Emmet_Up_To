@@ -321,6 +321,39 @@ body {
   margin-bottom: 12px;
   text-align: center;
 }
+.lb-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.lb-header-row .lb-title { margin-bottom: 0; }
+.lb-nav-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 9px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color .15s, border-color .15s;
+}
+.lb-nav-btn:hover:not(:disabled) { color: var(--text); border-color: var(--text2); }
+.lb-nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+.lb-date {
+  font-size: 8px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: center;
+  margin: 0 0 10px;
+}
 .lb-loading, .lb-empty {
   font-size: 9px;
   letter-spacing: .15em;

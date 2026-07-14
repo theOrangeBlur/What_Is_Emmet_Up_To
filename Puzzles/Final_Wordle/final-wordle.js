@@ -8,6 +8,7 @@ const SCORE_GREEN  = 15;
 const MAX_PUZZLE_SCORE = 40;
 
 const FAMILY_CODE = 'COOPERSTUPOR';
+const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — no is_family rows exist before this
 
 function seededRng(seed) {
   let s = seed % 2147483647;
@@ -18,6 +19,29 @@ function seededRng(seed) {
 function getDayKey() {
   const d = new Date(Date.now() - 5 * 60 * 60 * 1000); // UTC-5 (EST)
   return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+}
+
+function dayKeyToDate(dayKey) {
+  const y = Math.floor(dayKey / 10000);
+  const m = Math.floor((dayKey % 10000) / 100);
+  const d = dayKey % 100;
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+function dateToDayKey(date) {
+  return date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+}
+
+function addDays(dayKey, delta) {
+  const date = dayKeyToDate(dayKey);
+  date.setUTCDate(date.getUTCDate() + delta);
+  return dateToDayKey(date);
+}
+
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function formatDayKeyDisplay(dayKey) {
+  const d = dayKeyToDate(dayKey);
+  return `${MONTH_ABBR[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
 function getDaySeed() {
@@ -129,10 +153,10 @@ async function fetchTodayScores() {
   } catch { return []; }
 }
 
-async function fetchFamilyScores() {
+async function fetchFamilyScores(dayKey = getDayKey()) {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
-    const date = String(getDayKey());
+    const date = String(dayKey);
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&is_family=eq.true&order=time_ms.asc&limit=20`;
     const res = await fetch(url, {
       headers: {
@@ -292,16 +316,45 @@ async function renderLeaderboard(solved = false) {
   lb.appendChild(table);
 }
 
-async function renderFamilyLeaderboard(solved = false) {
+async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   const lb = document.getElementById('family-leaderboard');
   if (!lb) return;
   lb.style.display = '';
-  lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  const scores = await fetchFamilyScores();
   lb.innerHTML = '';
-  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'family scores'; lb.appendChild(title);
+
+  const isToday = dayKey === getDayKey();
+
+  const headerRow = document.createElement('div'); headerRow.className = 'lb-header-row';
+  const prevBtn = document.createElement('button'); prevBtn.className = 'lb-nav-btn';
+  prevBtn.innerHTML = '&#9664;'; prevBtn.setAttribute('aria-label', 'previous day');
+  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'family scores';
+  const nextBtn = document.createElement('button'); nextBtn.className = 'lb-nav-btn';
+  nextBtn.innerHTML = '&#9654;'; nextBtn.setAttribute('aria-label', 'next day');
+  prevBtn.disabled = dayKey <= MIN_FAMILY_DAY_KEY;
+  nextBtn.disabled = isToday;
+  prevBtn.addEventListener('click', () => renderFamilyLeaderboard(true, addDays(dayKey, -1)));
+  nextBtn.addEventListener('click', () => renderFamilyLeaderboard(true, addDays(dayKey, 1)));
+  headerRow.appendChild(prevBtn); headerRow.appendChild(title); headerRow.appendChild(nextBtn);
+  lb.appendChild(headerRow);
+
+  if (!isToday) {
+    const dateEl = document.createElement('div'); dateEl.className = 'lb-date';
+    dateEl.textContent = formatDayKeyDisplay(dayKey);
+    lb.appendChild(dateEl);
+  }
+
+  const body = document.createElement('div'); body.className = 'lb-body';
+  body.innerHTML = '<div class="lb-loading">loading scores...</div>';
+  lb.appendChild(body);
+
+  const scores = await fetchFamilyScores(dayKey);
+  const showTimes = !isToday || solved;
+
+  body.innerHTML = '';
   if (!scores.length) {
-    const empty = document.createElement('div'); empty.className = 'lb-empty'; empty.textContent = 'no scores yet today'; lb.appendChild(empty); return;
+    const empty = document.createElement('div'); empty.className = 'lb-empty';
+    empty.textContent = isToday ? 'no scores yet today' : 'no scores that day';
+    body.appendChild(empty); return;
   }
   const table = document.createElement('table'); table.className = 'lb-table';
   const header = document.createElement('tr'); header.className = 'lb-header';
@@ -311,12 +364,12 @@ async function renderFamilyLeaderboard(solved = false) {
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—'].forEach(v => {
+    [i + 1, s.name, showTimes ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     table.appendChild(tr);
   });
-  lb.appendChild(table);
+  body.appendChild(table);
 }
 
 async function applyFamilyUnlock() {
