@@ -10,6 +10,9 @@ const MAX_PUZZLE_SCORE = 40;
 const FAMILY_CODE = 'COOPERSTUPOR';
 const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — no is_family rows exist before this
 
+const POINTS_TABLE = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3];
+function pointsForPlace(place) { return place <= POINTS_TABLE.length ? POINTS_TABLE[place - 1] : 3; }
+
 function seededRng(seed) {
   let s = seed % 2147483647;
   if (s <= 0) s += 2147483646;
@@ -166,6 +169,53 @@ async function fetchFamilyScores(dayKey = getDayKey()) {
     });
     return res.ok ? await res.json() : [];
   } catch { return []; }
+}
+
+let familyMembersCache = null; // Map<device_id, display_name>, fetched once per page load
+let familyPointsCache = null;  // Map<display_name, total_points>, fetched once per page load
+
+async function getFamilyMembers() {
+  if (familyMembersCache) return familyMembersCache;
+  familyMembersCache = new Map();
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return familyMembersCache;
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?select=device_id,display_name`;
+    const res = await fetch(url, {
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+    });
+    if (res.ok) (await res.json()).forEach(r => familyMembersCache.set(r.device_id, r.display_name));
+  } catch {}
+  return familyMembersCache;
+}
+
+async function getFamilyPoints() {
+  if (familyPointsCache) return familyPointsCache;
+  familyPointsCache = new Map();
+  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return familyPointsCache;
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_points?select=display_name,total_points`;
+    const res = await fetch(url, {
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+    });
+    if (res.ok) (await res.json()).forEach(r => familyPointsCache.set(r.display_name, r.total_points));
+  } catch {}
+  return familyPointsCache;
+}
+
+function computeFamilyPoints(scores, membersMap) {
+  const recognized = scores
+    .filter(s => membersMap.has(s.device_id))
+    .slice()
+    .sort((a, b) => a.time_ms - b.time_ms || new Date(a.created_at) - new Date(b.created_at));
+  const byId = new Map(); // row id -> { points, firstBonus, lastBonus }
+  recognized.forEach((s, i) => byId.set(s.id, { points: pointsForPlace(i + 1), firstBonus: false, lastBonus: false }));
+  if (recognized.length) {
+    const first = recognized.reduce((a, b) => new Date(a.created_at) < new Date(b.created_at) ? a : b);
+    const last = recognized.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+    byId.get(first.id).firstBonus = true;
+    byId.get(last.id).lastBonus = true;
+  }
+  return byId;
 }
 
 async function fetchDeviceScore() {
@@ -347,8 +397,11 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   body.innerHTML = '<div class="lb-loading">loading scores...</div>';
   lb.appendChild(body);
 
-  const scores = await fetchFamilyScores(dayKey);
+  const [scores, membersMap, pointsMap] = await Promise.all([
+    fetchFamilyScores(dayKey), getFamilyMembers(), getFamilyPoints()
+  ]);
   const showTimes = !isToday || solved;
+  const pointsById = computeFamilyPoints(scores, membersMap);
 
   body.innerHTML = '';
   if (!scores.length) {
@@ -358,7 +411,7 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   }
   const table = document.createElement('table'); table.className = 'lb-table';
   const header = document.createElement('tr'); header.className = 'lb-header';
-  ['#', 'NAME', 'TIME'].forEach(h => {
+  ['#', 'NAME', 'TIME', 'PTS', 'ALL-TIME'].forEach(h => {
     const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
   });
   table.appendChild(header);
@@ -367,6 +420,20 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
     [i + 1, s.name, showTimes ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
+    const ptsTd = document.createElement('td');
+    const info = pointsById.get(s.id);
+    if (showTimes && info) {
+      ptsTd.appendChild(document.createTextNode(String(info.points)));
+      if (info.firstBonus) { const tag = document.createElement('span'); tag.className = 'lb-bonus-tag'; tag.textContent = ' +3!'; ptsTd.appendChild(tag); }
+      if (info.lastBonus) { const tag = document.createElement('span'); tag.className = 'lb-bonus-tag'; tag.textContent = ' +1!'; ptsTd.appendChild(tag); }
+    } else {
+      ptsTd.textContent = '—';
+    }
+    tr.appendChild(ptsTd);
+    const allTd = document.createElement('td');
+    const displayName = membersMap.get(s.device_id);
+    allTd.textContent = (displayName && pointsMap.has(displayName)) ? String(pointsMap.get(displayName)) : '—';
+    tr.appendChild(allTd);
     table.appendChild(tr);
   });
   body.appendChild(table);

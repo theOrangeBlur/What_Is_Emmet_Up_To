@@ -377,7 +377,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .lb-header th:first-child { width: 28px; }
-.lb-header th:nth-child(3), .lb-header th:nth-child(4) { text-align: right; }
+.lb-header th:nth-child(3), .lb-header th:nth-child(4), .lb-header th:nth-child(5) { text-align: right; }
 .lb-row td {
   font-size: 10px;
   letter-spacing: .08em;
@@ -386,8 +386,14 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .lb-row td:first-child { color: var(--text2); font-size: 9px; }
-.lb-row td:nth-child(3), .lb-row td:nth-child(4) { text-align: right; }
+.lb-row td:nth-child(3), .lb-row td:nth-child(4), .lb-row td:nth-child(5) { text-align: right; }
 .lb-row.mine td { color: var(--green-light); }
+.lb-bonus-tag {
+  color: var(--yellow-light);
+  font-size: 8px;
+  margin-left: 2px;
+  font-weight: 700;
+}
 
 /* Daily recap */
 .daily-recap {

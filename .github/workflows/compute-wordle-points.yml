@@ -1,0 +1,83 @@
+name: Compute Wordle Family Points
+
+on:
+  schedule:
+    - cron: '20 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  compute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recompute all-time family points
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python3 - <<'EOF'
+          import os, json, urllib.request
+          from collections import defaultdict
+          from itertools import groupby
+
+          URL = 'https://nsocmpzeccpoatrfddjf.supabase.co'
+          KEY = os.environ['SUPABASE_SERVICE_ROLE_KEY'].strip()
+
+          POINTS_TABLE = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3]
+          def points_for_place(place):
+              return POINTS_TABLE[place - 1] if place <= len(POINTS_TABLE) else 3
+
+          def req(method, path, body=None, extra_headers=None):
+              headers = {'apikey': KEY, 'Authorization': f'Bearer {KEY}'}
+              if extra_headers:
+                  headers.update(extra_headers)
+              data = None
+              if body is not None:
+                  data = json.dumps(body).encode()
+                  headers['Content-Type'] = 'application/json'
+              r = urllib.request.Request(f'{URL}/rest/v1/{path}', data=data, headers=headers, method=method)
+              with urllib.request.urlopen(r) as resp:
+                  raw = resp.read()
+                  return json.loads(raw) if raw else None
+
+          # 1. Family membership map
+          members = req('GET', 'wordle_family_members?select=device_id,display_name')
+          device_to_name = {m['device_id']: m['display_name'] for m in members}
+          if not device_to_name:
+              print('no family members configured yet, nothing to compute')
+              exit(0)
+
+          # 2. All wordle_scores rows, paginated defensively
+          all_scores = []
+          offset = 0
+          page_size = 1000
+          while True:
+              headers = {'Range': f'{offset}-{offset + page_size - 1}'}
+              page = req('GET', 'wordle_scores?select=date,name,time_ms,device_id,created_at&order=date.asc', extra_headers=headers)
+              all_scores.extend(page)
+              if len(page) < page_size:
+                  break
+              offset += page_size
+
+          # 3. Keep only recognized family devices (not filtered by is_family)
+          recognized = [s for s in all_scores if s.get('device_id') in device_to_name]
+
+          # 4. Group by day, award placement points + chronological first/last bonuses
+          totals = defaultdict(int)
+          for date, rows_iter in groupby(recognized, key=lambda s: s['date']):
+              rows = list(rows_iter)
+              ranked = sorted(rows, key=lambda r: (r['time_ms'], r['created_at']))
+              for i, r in enumerate(ranked):
+                  name = device_to_name[r['device_id']]
+                  totals[name] += points_for_place(i + 1)
+              first = min(rows, key=lambda r: r['created_at'])
+              last = max(rows, key=lambda r: r['created_at'])
+              totals[device_to_name[first['device_id']]] += 3
+              totals[device_to_name[last['device_id']]] += 1
+
+          # 5. Wipe and rewrite wordle_family_points wholesale
+          req('DELETE', 'wordle_family_points?id=gte.0')
+          if totals:
+              body = [{'display_name': n, 'total_points': p} for n, p in totals.items()]
+              req('POST', 'wordle_family_points', body=body, extra_headers={'Prefer': 'return=minimal'})
+
+          print(f'Recomputed points for {len(totals)} family member(s) across {len(set(r["date"] for r in recognized))} day(s)')
+          EOF
