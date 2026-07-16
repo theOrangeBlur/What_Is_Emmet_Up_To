@@ -543,7 +543,8 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
     allTd.textContent = allTimePts !== null ? String(allTimePts) : '—';
     tr.appendChild(allTd);
     const totalTd = document.createElement('td'); totalTd.className = 'lb-sky';
-    totalTd.textContent = (showTimes && info && allTimePts !== null) ? String(info.points + allTimePts) : '—';
+    const todayPts = info ? info.points + (info.firstBonus ? 3 : 0) + (info.lastBonus ? 1 : 0) : 0;
+    totalTd.textContent = (showTimes && info && allTimePts !== null) ? String(todayPts + allTimePts) : '—';
     tr.appendChild(totalTd);
     table.appendChild(tr);
   });
