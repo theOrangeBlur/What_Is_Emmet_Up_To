@@ -21,6 +21,8 @@ jobs:
           URL = 'https://nsocmpzeccpoatrfddjf.supabase.co'
           KEY = os.environ['SUPABASE_SERVICE_ROLE_KEY'].strip()
 
+          MIN_FAMILY_DAY_KEY = 20260711  # day the family leaderboard shipped — no points before this
+
           POINTS_TABLE = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3]
           def points_for_place(place):
               return POINTS_TABLE[place - 1] if place <= len(POINTS_TABLE) else 3
@@ -57,8 +59,12 @@ jobs:
                   break
               offset += page_size
 
-          # 3. Keep only recognized family devices (not filtered by is_family)
-          recognized = [s for s in all_scores if s.get('device_id') in device_to_name]
+          # 3. Keep only recognized family devices, on or after the day the family
+          #    leaderboard shipped (not filtered by is_family, which is unreliable pre-shipping)
+          recognized = [
+              s for s in all_scores
+              if s.get('device_id') in device_to_name and int(s['date']) >= MIN_FAMILY_DAY_KEY
+          ]
 
           # 4. Group by day, award placement points + chronological first/last bonuses
           totals = defaultdict(int)

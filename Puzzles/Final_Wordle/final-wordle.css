@@ -321,6 +321,28 @@ body {
   margin-bottom: 12px;
   text-align: center;
 }
+.lb-view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.lb-view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.lb-view-btn:hover { color: var(--text2); }
+.lb-view-btn.active { color: var(--text); border-bottom-color: var(--green); }
 .lb-header-row {
   display: flex;
   align-items: center;
@@ -388,6 +410,9 @@ body {
 .lb-row td:first-child { color: var(--text2); font-size: 9px; }
 .lb-row td:nth-child(3), .lb-row td:nth-child(4), .lb-row td:nth-child(5) { text-align: right; }
 .lb-row.mine td { color: var(--green-light); }
+.lb-table-standings th:first-child { width: auto; }
+.lb-table-standings th:not(:first-child), .lb-table-standings td:not(:first-child) { text-align: right; }
+.lb-table-standings td:first-child { color: var(--text); font-size: 10px; }
 .lb-bonus-tag {
   color: var(--yellow-light);
   font-size: 8px;
