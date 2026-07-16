@@ -156,11 +156,14 @@ async function fetchTodayScores() {
   } catch { return []; }
 }
 
-async function fetchFamilyScores(dayKey = getDayKey()) {
+async function fetchFamilyScores(dayKey, membersMap) {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
+  const deviceIds = [...membersMap.keys()];
+  if (!deviceIds.length) return [];
   try {
     const date = String(dayKey);
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&is_family=eq.true&order=time_ms.asc&limit=20`;
+    const idsParam = deviceIds.map(id => `"${id}"`).join(',');
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&device_id=in.(${idsParam})&order=time_ms.asc&limit=20`;
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
@@ -430,7 +433,7 @@ async function renderFamilyStandings() {
 
   const membersMap = await getFamilyMembers();
   const [todayScores, pointsMap, submitCounts] = await Promise.all([
-    fetchFamilyScores(getDayKey()), getFamilyPoints(), fetchFamilySubmitCounts(membersMap)
+    fetchFamilyScores(getDayKey(), membersMap), getFamilyPoints(), fetchFamilySubmitCounts(membersMap)
   ]);
   const todayPointsByName = computeTodayPointsByName(todayScores, membersMap);
 
@@ -504,8 +507,9 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   body.innerHTML = '<div class="lb-loading">loading scores...</div>';
   lb.appendChild(body);
 
-  const [scores, membersMap, pointsMap] = await Promise.all([
-    fetchFamilyScores(dayKey), getFamilyMembers(), getFamilyPoints()
+  const membersMap = await getFamilyMembers();
+  const [scores, pointsMap] = await Promise.all([
+    fetchFamilyScores(dayKey, membersMap), getFamilyPoints()
   ]);
   const showTimes = !isToday || solved;
   const pointsById = computeFamilyPoints(scores, membersMap);
