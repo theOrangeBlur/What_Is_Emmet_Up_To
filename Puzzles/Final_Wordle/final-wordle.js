@@ -399,6 +399,7 @@ async function renderLeaderboard(solved = false) {
 }
 
 let familyView = 'day'; // 'day' | 'standings'
+let familySolvedToday = false; // whether this device has solved today's daily puzzle
 
 function appendFamilyViewToggle(lb) {
   const toggle = document.createElement('div'); toggle.className = 'lb-view-toggle';
@@ -406,7 +407,7 @@ function appendFamilyViewToggle(lb) {
   dayBtn.className = 'lb-view-btn' + (familyView === 'day' ? ' active' : ''); dayBtn.textContent = 'daily';
   const standingsBtn = document.createElement('button');
   standingsBtn.className = 'lb-view-btn' + (familyView === 'standings' ? ' active' : ''); standingsBtn.textContent = 'standings';
-  dayBtn.addEventListener('click', () => { if (familyView !== 'day') { familyView = 'day'; renderFamilyLeaderboard(); } });
+  dayBtn.addEventListener('click', () => { if (familyView !== 'day') { familyView = 'day'; renderFamilyLeaderboard(familySolvedToday); } });
   standingsBtn.addEventListener('click', () => { if (familyView !== 'standings') { familyView = 'standings'; renderFamilyStandings(); } });
   toggle.appendChild(dayBtn); toggle.appendChild(standingsBtn);
   lb.appendChild(toggle);
@@ -492,8 +493,8 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   nextBtn.innerHTML = '&#9654;'; nextBtn.setAttribute('aria-label', 'next day');
   prevBtn.disabled = dayKey <= MIN_FAMILY_DAY_KEY;
   nextBtn.disabled = isToday;
-  prevBtn.addEventListener('click', () => renderFamilyLeaderboard(true, addDays(dayKey, -1)));
-  nextBtn.addEventListener('click', () => renderFamilyLeaderboard(true, addDays(dayKey, 1)));
+  prevBtn.addEventListener('click', () => renderFamilyLeaderboard(familySolvedToday, addDays(dayKey, -1)));
+  nextBtn.addEventListener('click', () => renderFamilyLeaderboard(familySolvedToday, addDays(dayKey, 1)));
   headerRow.appendChild(prevBtn); headerRow.appendChild(title); headerRow.appendChild(nextBtn);
   lb.appendChild(headerRow);
 
@@ -531,15 +532,20 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
     [i + 1, s.name, showTimes ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
-    const ptsTd = document.createElement('td'); ptsTd.className = 'lb-sky';
+    const ptsTd = document.createElement('td'); ptsTd.className = 'lb-pts-cell';
     const info = pointsById.get(s.id);
+    const numSpan = document.createElement('span'); numSpan.className = 'lb-pts-num';
+    const bonusSpan = document.createElement('span'); bonusSpan.className = 'lb-pts-bonus';
     if (showTimes && info) {
-      ptsTd.appendChild(document.createTextNode(String(info.points)));
-      if (info.firstBonus) { const tag = document.createElement('span'); tag.className = 'lb-bonus-tag'; tag.textContent = ' +3!'; ptsTd.appendChild(tag); }
-      if (info.lastBonus) { const tag = document.createElement('span'); tag.className = 'lb-bonus-tag'; tag.textContent = ' +1!'; ptsTd.appendChild(tag); }
+      numSpan.textContent = String(info.points);
+      let bonus = '';
+      if (info.firstBonus) bonus += '+3!';
+      if (info.lastBonus) bonus += '+1!';
+      bonusSpan.textContent = bonus;
     } else {
-      ptsTd.textContent = '—';
+      numSpan.textContent = '—';
     }
+    ptsTd.appendChild(numSpan); ptsTd.appendChild(bonusSpan);
     tr.appendChild(ptsTd);
     const allTd = document.createElement('td');
     const displayName = membersMap.get(s.device_id);
@@ -560,7 +566,8 @@ async function applyFamilyUnlock() {
   if (link) link.style.display = 'none';
   if (currentMode !== 'daily') return;
   const deviceScore = await fetchDeviceScore();
-  updateFamilyLeaderboard(!!deviceScore);
+  familySolvedToday = !!deviceScore;
+  updateFamilyLeaderboard(familySolvedToday);
 }
 
 function showFamilyCodeModal() {
@@ -629,6 +636,7 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   }
   async function finish() {
     overlay.remove();
+    familySolvedToday = true;
     await renderLeaderboard(true);
     if (isFamilyUnlocked()) await updateFamilyLeaderboard(true);
     document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -777,6 +785,7 @@ async function buildGame(mode) {
   if (mode === 'daily') {
     lb.style.display = '';
     const deviceScore = await fetchDeviceScore();
+    familySolvedToday = !!deviceScore;
     if (deviceScore) {
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
