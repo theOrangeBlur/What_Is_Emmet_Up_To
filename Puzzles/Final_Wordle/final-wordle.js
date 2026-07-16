@@ -518,7 +518,7 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   }
   const table = document.createElement('table'); table.className = 'lb-table';
   const header = document.createElement('tr'); header.className = 'lb-header';
-  ['#', 'NAME', 'TIME', 'PTS', 'ALL-TIME'].forEach(h => {
+  ['#', 'NAME', 'TIME', 'PTS', 'ALL-TIME', 'TOTAL'].forEach(h => {
     const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
   });
   table.appendChild(header);
@@ -527,7 +527,7 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
     [i + 1, s.name, showTimes ? formatTime(s.time_ms) : '—'].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
-    const ptsTd = document.createElement('td');
+    const ptsTd = document.createElement('td'); ptsTd.className = 'lb-sky';
     const info = pointsById.get(s.id);
     if (showTimes && info) {
       ptsTd.appendChild(document.createTextNode(String(info.points)));
@@ -539,8 +539,12 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
     tr.appendChild(ptsTd);
     const allTd = document.createElement('td');
     const displayName = membersMap.get(s.device_id);
-    allTd.textContent = (displayName && pointsMap.has(displayName)) ? String(pointsMap.get(displayName)) : '—';
+    const allTimePts = (displayName && pointsMap.has(displayName)) ? pointsMap.get(displayName) : null;
+    allTd.textContent = allTimePts !== null ? String(allTimePts) : '—';
     tr.appendChild(allTd);
+    const totalTd = document.createElement('td'); totalTd.className = 'lb-sky';
+    totalTd.textContent = (showTimes && info && allTimePts !== null) ? String(info.points + allTimePts) : '—';
+    tr.appendChild(totalTd);
     table.appendChild(tr);
   });
   body.appendChild(table);
