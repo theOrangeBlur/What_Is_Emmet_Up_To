@@ -214,5 +214,17 @@
   "The Mandalorian and Grogu|2026": {
     "poster": "https://image.tmdb.org/t/p/w300/5Vi8dSauVwH1HOsiZceDMbRr1Ca.jpg",
     "director": "Jon Favreau"
+  },
+  "Superfast!|2015": {
+    "poster": "https://image.tmdb.org/t/p/w300/iuIWl90qCpoxv6g775JB6Kg0m86.jpg",
+    "director": "Jason Friedberg"
+  },
+  "The Limits of Control|2009": {
+    "poster": "https://image.tmdb.org/t/p/w300/5e4hjFt3V8LTUXPxvZ2plPpgGLk.jpg",
+    "director": "Jim Jarmusch"
+  },
+  "The Odyssey|2026": {
+    "poster": "https://image.tmdb.org/t/p/w300/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
+    "director": "Christopher Nolan"
   }
 }
