@@ -9,6 +9,7 @@ Usage: python sync_rss.py
 """
 
 import csv
+import html
 import re
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -80,8 +81,9 @@ def parse_rss(xml_content: str) -> list:
             else:
                 # No "Watched on" line — strip the poster image paragraph
                 review_html = re.sub(r'<p>\s*<img[^>]*/>\s*</p>', '', desc, count=1)
-            # Remove HTML tags
+            # Remove HTML tags, then decode entities (e.g. &#039; -> ')
             review_text = re.sub(r'<[^>]+>', '', review_html).strip()
+            review_text = html.unescape(review_text)
 
         movie = {
             'Date': datetime.now().strftime('%Y-%m-%d'),  # When synced
