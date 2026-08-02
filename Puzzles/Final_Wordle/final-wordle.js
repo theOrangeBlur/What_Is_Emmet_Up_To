@@ -131,13 +131,10 @@ function scorePuzzle(results) {
   }, 0);
 }
 
-// Difficulty gating (MAX_PUZZLE_SCORE) is intentionally disabled for now — proving a word
-// is the one valid answer out of the full guess dictionary needs a lot more revealed info
-// than the old small-pool solve did, so the old ceiling no longer means anything. Revisit
-// once letter-level scoring itself is redesigned; scorePuzzle/SCORE_* are left in place for that.
 function isPuzzleAccepted(puzzle) {
   return puzzle.uniqueAcrossAll &&
-    !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer);
+    !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) &&
+    scorePuzzle(puzzle.results) <= MAX_PUZZLE_SCORE;
 }
 
 // Keeps retrying the SAME answer word (new guess path each time, since seed+1 barely

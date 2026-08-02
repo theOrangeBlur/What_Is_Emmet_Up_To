@@ -114,11 +114,10 @@ function scorePuzzle(results) {
   }, 0);
 }
 
-// Score gating (MAX_PUZZLE_SCORE) is disabled to match final-wordle.js — kept here only
-// for reporting the natural score distribution, not as an accept/reject gate.
 function isPuzzleAccepted(puzzle) {
   return puzzle.uniqueAcrossAll &&
-    !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer);
+    !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) &&
+    scorePuzzle(puzzle.results) <= MAX_PUZZLE_SCORE;
 }
 
 // classify why a generated puzzle would be rejected, matching the || short-circuit
@@ -127,6 +126,7 @@ function classify(puzzle) {
   if (!puzzle.uniqueAcrossAll) return 'not_unique';
   const last = puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer;
   if (last) return 'last_guess_is_answer';
+  if (scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE) return 'too_easy';
   return 'accepted';
 }
 
@@ -137,7 +137,7 @@ const numDays = parseInt(process.argv[2], 10) || 50;
 const attemptCounts = new Map(); // word -> times attempted as a candidate answer
 const acceptCounts = new Map();  // word -> times accepted as the day's answer
 const exhaustedCounts = new Map(); // word -> times it burned through all 1500 tries and was abandoned
-const rejectReasonCounts = { not_unique: 0, last_guess_is_answer: 0 };
+const rejectReasonCounts = { not_unique: 0, last_guess_is_answer: 0, too_easy: 0 };
 let totalAttempts = 0;
 let totalRetries = 0;
 let maxRetries = 0;
@@ -229,7 +229,7 @@ if (attemptedButNeverAccepted.length) {
 }
 
 console.log();
-console.log(`=== Accepted puzzle shape (score gate disabled — for inspection only) ===`);
+console.log(`=== Accepted puzzle shape (score gate: MAX_PUZZLE_SCORE=${MAX_PUZZLE_SCORE}) ===`);
 function pct(arr, p) { const s = [...arr].sort((a, b) => a - b); return s[Math.floor(s.length * p)]; }
 console.log(`Score:  min ${Math.min(...acceptedScores)}, p25 ${pct(acceptedScores, .25)}, median ${pct(acceptedScores, .5)}, p75 ${pct(acceptedScores, .75)}, max ${Math.max(...acceptedScores)}`);
 console.log(`Rows:   min ${Math.min(...acceptedRows)}, p25 ${pct(acceptedRows, .25)}, median ${pct(acceptedRows, .5)}, p75 ${pct(acceptedRows, .75)}, max ${Math.max(...acceptedRows)}`);
