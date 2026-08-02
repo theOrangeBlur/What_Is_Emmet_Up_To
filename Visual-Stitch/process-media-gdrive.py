@@ -30,6 +30,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from google.cloud import storage
+from PIL import Image
+from pillow_heif import register_heif_opener
+
+register_heif_opener()
 
 # Configuration
 SCRIPT_DIR = Path(__file__).parent
@@ -61,8 +65,9 @@ SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 
 # Supported formats
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+HEIC_EXTENSIONS = {'.heic', '.heif'}  # converted to .jpg before processing
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.m4v', '.3gp'}
-ALL_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
+ALL_EXTENSIONS = IMAGE_EXTENSIONS | HEIC_EXTENSIONS | VIDEO_EXTENSIONS
 
 def get_credentials():
     """
@@ -360,8 +365,20 @@ def get_file_extension(mime_type: str, filename: str) -> str:
         'video/x-matroska': '.mkv',
         'video/x-m4v': '.m4v',
         'video/3gpp': '.3gp',
+        'image/heic': '.heic',
+        'image/heif': '.heif',
     }
     return mime_to_ext.get(mime_type, '.dat')
+
+
+def convert_heic_to_jpg(heic_path: Path) -> Path:
+    """Convert a HEIC/HEIF image to JPG, deleting the source file. Returns the new path."""
+    jpg_path = heic_path.with_suffix('.jpg')
+    if not jpg_path.exists():
+        with Image.open(heic_path) as img:
+            img.convert('RGB').save(jpg_path, 'JPEG', quality=95)
+    heic_path.unlink()
+    return jpg_path
 
 
 def get_gps_from_video(video_path: Path) -> Tuple[Optional[float], Optional[float]]:
@@ -446,21 +463,32 @@ def process_folder_media(service, folder_id: str, limit: int = None) -> List[Tup
         ext = get_file_extension(mime_type, filename)
 
         # Check if it's a supported format
-        if ext not in IMAGE_EXTENSIONS and ext not in VIDEO_EXTENSIONS:
+        if ext not in ALL_EXTENSIONS:
             print(f"Skipping (unsupported format): {filename}")
             continue
 
         # Create local path preserving original filename
         local_path = TEMP_DOWNLOAD_DIR / filename
+        converted_path = local_path.with_suffix('.jpg') if ext in HEIC_EXTENSIONS else None
 
         # Check if file already exists locally (incremental download)
-        if local_path.exists():
+        if converted_path and converted_path.exists():
+            print(f"Using cached (converted): {filename}")
+            local_path, filename, ext = converted_path, converted_path.name, '.jpg'
+        elif local_path.exists():
             print(f"Using cached: {filename}")
         else:
             # Download the file
             print(f"Downloading: {filename}")
             if not download_drive_file(service, file_id, filename, local_path):
                 continue
+
+        # Convert HEIC/HEIF to JPG so downstream processing (FFmpeg) can read it
+        if ext in HEIC_EXTENSIONS:
+            print(f"  Converting HEIC to JPG: {filename}")
+            local_path = convert_heic_to_jpg(local_path)
+            filename = local_path.name
+            ext = '.jpg'
 
         # Get creation time - prefer filename, then EXIF via Drive API, then Drive upload time
         creation_time = parse_datetime_from_filename(filename)
@@ -730,7 +758,7 @@ def load_local_media() -> List[Tuple[Path, float, datetime, str, str, Optional[f
 
     local_media = []
 
-    for file_path in TEMP_DOWNLOAD_DIR.iterdir():
+    for file_path in list(TEMP_DOWNLOAD_DIR.iterdir()):
         if not file_path.is_file():
             continue
 
@@ -743,9 +771,16 @@ def load_local_media() -> List[Tuple[Path, float, datetime, str, str, Optional[f
             continue
 
         # Check if it's a supported format
-        if ext not in IMAGE_EXTENSIONS and ext not in VIDEO_EXTENSIONS:
+        if ext not in ALL_EXTENSIONS:
             print(f"Skipping (unsupported format): {filename}")
             continue
+
+        # Convert HEIC/HEIF to JPG so downstream processing (FFmpeg) can read it
+        if ext in HEIC_EXTENSIONS:
+            print(f"Converting HEIC to JPG: {filename}")
+            file_path = convert_heic_to_jpg(file_path)
+            filename = file_path.name
+            ext = '.jpg'
 
         # Parse date from filename (PXL_YYYYMMDD_HHMMSS format)
         creation_time = parse_datetime_from_filename(filename) or datetime.now()
@@ -1198,12 +1233,24 @@ def main():
             ext = get_file_extension(mime_type, filename)
 
             local_path = TEMP_DOWNLOAD_DIR / filename
-            if not local_path.exists():
+            converted_path = local_path.with_suffix('.jpg') if ext in HEIC_EXTENSIONS else None
+
+            if converted_path and converted_path.exists():
+                print(f"  Using cached (converted): {filename}")
+                local_path, filename, ext = converted_path, converted_path.name, '.jpg'
+            elif local_path.exists():
+                print(f"  Using cached: {filename}")
+            else:
                 print(f"  Downloading: {filename}")
                 if not download_drive_file(service, file_id, filename, local_path):
                     continue
-            else:
-                print(f"  Using cached: {filename}")
+
+            # Convert HEIC/HEIF to JPG so downstream processing (FFmpeg) can read it
+            if ext in HEIC_EXTENSIONS:
+                print(f"  Converting HEIC to JPG: {filename}")
+                local_path = convert_heic_to_jpg(local_path)
+                filename = local_path.name
+                ext = '.jpg'
 
             # Get creation time
             creation_time = parse_datetime_from_filename(filename)

@@ -1,11 +1,13 @@
 ﻿let WORDS = [];
 let VALID_GUESSES = new Set();
+let ALL_WORDS = []; // WORDS ∪ VALID_GUESSES, deduped once words load — used by every generatePuzzle() call
 
 
 const SCORE_DARK   = 1;
 const SCORE_YELLOW = 5;
 const SCORE_GREEN  = 15;
 const MAX_PUZZLE_SCORE = 40;
+const MAX_TRIES_PER_WORD = 1500; // guess-path attempts on one answer before giving up and moving to a new word
 
 const FAMILY_CODE = 'COOPERSTUPOR';
 const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — no is_family rows exist before this
@@ -73,43 +75,51 @@ function filterWords(words, guess, result) {
   return words.filter(w => scoreGuess(guess, w).every((c, i) => c === result[i]));
 }
 
-function bestGuess(candidates, rng) {
-  if (candidates.length <= 2) return candidates[0];
-  const sample = candidates.filter(() => rng() < 10 / candidates.length);
-  const pool = sample.length >= 2 ? sample : candidates.slice(0, 2);
-  let best = candidates[0], bestScore = Infinity;
+// candidates: the full remaining-answer set, used to score how well a guess splits them.
+// guessPool: the words allowed to be picked AS the guess (excludes the true answer during
+// generation, so a disambiguating clue guess can never spoil the board by being the answer).
+function bestGuess(candidates, guessPool, rng) {
+  if (guessPool.length === 0) guessPool = candidates;
+  if (guessPool.length <= 2) return guessPool[0];
+  const sample = guessPool.filter(() => rng() < 10 / guessPool.length);
+  const pool = sample.length >= 2 ? sample : guessPool.slice(0, 2);
+  let best = pool[0], bestScore = Infinity;
   for (const g of pool) {
     const buckets = {};
     for (const c of candidates) { const k = scoreGuess(g, c).join(''); buckets[k] = (buckets[k] || 0) + 1; }
     const s = Math.max(...Object.values(buckets));
-    if (s < bestScore || (s === bestScore && candidates.includes(g))) { bestScore = s; best = g; }
+    if (s < bestScore || (s === bestScore && guessPool.includes(g))) { bestScore = s; best = g; }
   }
   return best;
 }
 
-function generatePuzzle(seed) {
+function generatePuzzle(seed, forcedAnswer) {
   const rng = seededRng(seed);
-  const answer = WORDS[Math.floor(rng() * WORDS.length)];
+  // Always draw this, even when forcedAnswer overrides it: skipping it would shift
+  // firstGuess into the position of a seed's near-frozen first draw (see seededRng),
+  // collapsing sticky retries onto the same guess path instead of varying it.
+  const drawnAnswer = WORDS[Math.floor(rng() * WORDS.length)];
+  const answer = forcedAnswer || drawnAnswer;
   const starters = ['crane','slate','audio','raise','stare','stern','cloud','plant'];
-  const firstGuess = starters[Math.floor(rng() * starters.length)];
-  let remaining = [...WORDS];
+  // Exclude the answer from the words that can be PICKED as a guess (starter or otherwise)
+  // so a clue row can never literally spell out the answer before the player's typed a thing.
+  const starterPool = starters.filter(w => w !== answer);
+  const firstGuess = starterPool[Math.floor(rng() * starterPool.length)] || starters[0];
+  // Solve against the full valid-guess pool, not just WORDS: narrowing only within WORDS
+  // can land on a candidate that's unique among answers but still matched by some other
+  // valid guess, which isn't actually a solvable one-answer puzzle.
+  let remaining = [...ALL_WORDS];
   const guesses = [], results = [];
   let attempts = 0;
   while (remaining.length > 1) {
-    const g = attempts === 0 ? firstGuess : bestGuess(remaining, rng);
+    const guessPool = remaining.filter(w => w !== answer);
+    const g = attempts === 0 ? firstGuess : bestGuess(remaining, guessPool, rng);
     const r = scoreGuess(g, answer);
     guesses.push(g); results.push(r);
     remaining = filterWords(remaining, g, r);
     attempts++;
-    if (remaining.length === 1) break;
   }
-  // Verify uniqueness across the full valid word set, not just WORDS
-  const allWords = [...new Set([...WORDS, ...VALID_GUESSES])];
-  let fullRemaining = allWords;
-  for (let i = 0; i < guesses.length; i++) {
-    fullRemaining = filterWords(fullRemaining, guesses[i], results[i]);
-  }
-  const uniqueAcrossAll = fullRemaining.length === 1 && fullRemaining[0] === answer;
+  const uniqueAcrossAll = remaining.length === 1 && remaining[0] === answer;
   return { answer, guesses, results, uniqueAcrossAll };
 }
 
@@ -119,6 +129,38 @@ function scorePuzzle(results) {
     if (s === 'yellow') return sum + SCORE_YELLOW;
     return sum + SCORE_DARK;
   }, 0);
+}
+
+// Difficulty gating (MAX_PUZZLE_SCORE) is intentionally disabled for now — proving a word
+// is the one valid answer out of the full guess dictionary needs a lot more revealed info
+// than the old small-pool solve did, so the old ceiling no longer means anything. Revisit
+// once letter-level scoring itself is redesigned; scorePuzzle/SCORE_* are left in place for that.
+function isPuzzleAccepted(puzzle) {
+  return puzzle.uniqueAcrossAll &&
+    !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer);
+}
+
+// Keeps retrying the SAME answer word (new guess path each time, since seed+1 barely
+// shifts the RNG's first draw but reshuffles everything after it) for up to
+// MAX_TRIES_PER_WORD attempts before giving up and letting the next unforced draw
+// pick a new word — by then the seed has advanced well past one answer-word's ~124-wide
+// RNG bucket, so a new word is all but guaranteed.
+function generateAcceptedPuzzle(seed) {
+  let puzzle = generatePuzzle(seed);
+  let stickyAnswer = puzzle.answer;
+  let triesOnWord = 1;
+  while (!isPuzzleAccepted(puzzle)) {
+    seed = (seed % 2147483646) + 1;
+    if (triesOnWord >= MAX_TRIES_PER_WORD) {
+      puzzle = generatePuzzle(seed);
+      stickyAnswer = puzzle.answer;
+      triesOnWord = 1;
+    } else {
+      puzzle = generatePuzzle(seed, stickyAnswer);
+      triesOnWord++;
+    }
+  }
+  return puzzle;
 }
 
 
@@ -762,17 +804,8 @@ function prefetchNextFreePuzzle() {
   if (prefetchInProgress || prefetchedPuzzle) return;
   prefetchInProgress = true;
   setTimeout(() => {
-    let seed = Math.floor(Math.random() * 2147483646) + 1;
-    let puzzle;
-    do {
-      puzzle = generatePuzzle(seed);
-      seed = (seed % 2147483646) + 1;
-    } while (
-      !puzzle.uniqueAcrossAll ||
-      (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
-      scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
-    );
-    prefetchedPuzzle = puzzle;
+    const seed = Math.floor(Math.random() * 2147483646) + 1;
+    prefetchedPuzzle = generateAcceptedPuzzle(seed);
     prefetchInProgress = false;
   }, 0);
 }
@@ -820,15 +853,8 @@ async function buildGame(mode) {
       puzzle = prefetchedPuzzle;
       prefetchedPuzzle = null;
     } else {
-      let seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
-      do {
-        puzzle = generatePuzzle(seed);
-        seed = (seed % 2147483646) + 1;
-      } while (
-        !puzzle.uniqueAcrossAll ||
-        (puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) ||
-        scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE
-      );
+      const seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
+      puzzle = generateAcceptedPuzzle(seed);
     }
   }
   const { answer, guesses, results } = puzzle;
@@ -1059,6 +1085,7 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
   ]);
   WORDS = await wordsRes.json();
   VALID_GUESSES = new Set(await guessesRes.json());
+  ALL_WORDS = [...new Set([...WORDS, ...VALID_GUESSES])];
   wordsReady = true;
 
   const todayStartKey = 'wordle_start_' + getDayKey();
