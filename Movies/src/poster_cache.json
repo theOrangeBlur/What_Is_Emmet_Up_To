@@ -226,5 +226,13 @@
   "The Odyssey|2026": {
     "poster": "https://image.tmdb.org/t/p/w300/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
     "director": "Christopher Nolan"
+  },
+  "Spider-Man: No Way Home|2021": {
+    "poster": "https://image.tmdb.org/t/p/w300/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
+    "director": "Jon Watts"
+  },
+  "Spider-Man: Far From Home|2019": {
+    "poster": "https://image.tmdb.org/t/p/w300/4q2NNj4S5dG2RLF9CpXsej7yXl.jpg",
+    "director": "Jon Watts"
   }
 }
