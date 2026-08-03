@@ -3,10 +3,16 @@ let VALID_GUESSES = new Set();
 let ALL_WORDS = []; // WORDS ∪ VALID_GUESSES, deduped once words load — used by every generatePuzzle() call
 
 
-const SCORE_DARK   = 1;
-const SCORE_YELLOW = 5;
-const SCORE_GREEN  = 15;
-const MAX_PUZZLE_SCORE = 40;
+const SCORE_DARK         = 0.1;
+const SCORE_DARK_VOWEL   = 3;
+const SCORE_GREEN        = 15;
+const SCORE_YELLOW       = 5;
+const SCORE_YELLOW_VOWEL = 8;
+const SCORE_YELLOW_EXTRA = 3; // each yellow occurrence of a letter beyond its first
+const SCORE_ALL_REVEALED = 50; // flat bonus once every letter in the answer is confirmed present (green or yellow)
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
+const MAX_PUZZLE_SCORE_DAILY = 35; // daily challenge: harder ceiling, one shot a day
+const MAX_PUZZLE_SCORE_FREE = 60;  // free play: looser ceiling, higher throughput
 const MAX_TRIES_PER_WORD = 1500; // guess-path attempts on one answer before giving up and moving to a new word
 
 const FAMILY_CODE = 'COOPERSTUPOR';
@@ -109,11 +115,14 @@ function generatePuzzle(seed, forcedAnswer) {
   // can land on a candidate that's unique among answers but still matched by some other
   // valid guess, which isn't actually a solvable one-answer puzzle.
   let remaining = [...ALL_WORDS];
+  // Free-mode guessing, not hard-mode: guesses can be ANY valid word, not just ones
+  // consistent with clues revealed so far. Hoisted since it's the same set on every
+  // iteration (only the answer is excluded, and that's fixed for this call).
+  const freeGuessPool = ALL_WORDS.filter(w => w !== answer);
   const guesses = [], results = [];
   let attempts = 0;
   while (remaining.length > 1) {
-    const guessPool = remaining.filter(w => w !== answer);
-    const g = attempts === 0 ? firstGuess : bestGuess(remaining, guessPool, rng);
+    const g = attempts === 0 ? firstGuess : bestGuess(remaining, freeGuessPool, rng);
     const r = scoreGuess(g, answer);
     guesses.push(g); results.push(r);
     remaining = filterWords(remaining, g, r);
@@ -123,18 +132,58 @@ function generatePuzzle(seed, forcedAnswer) {
   return { answer, guesses, results, uniqueAcrossAll };
 }
 
-function scorePuzzle(results) {
-  return results.flat().reduce((sum, s) => {
-    if (s === 'green')  return sum + SCORE_GREEN;
-    if (s === 'yellow') return sum + SCORE_YELLOW;
-    return sum + SCORE_DARK;
-  }, 0);
+// Scored per DISTINCT LETTER (like the keyboard's aggregated state), not per tile: a letter
+// guessed gray five times across five rows still only counts once. Green beats yellow beats
+// dark, same priority the keyboard highlighting uses. Yellow escalates with repeat occurrences
+// (each extra yellow reveal of the same letter tells the player it repeats in the answer);
+// green escalates too, but board-wide across CONFIRMED POSITIONS rather than per letter: the
+// 1st confirmed position costs 15, the 2nd costs 30, the 3rd costs 45, and so on (triangular),
+// so a double letter fully revealed (e.g. both L's in LEVEL — 2 positions) or any second green
+// elsewhere on the board gets sharply more expensive than the first.
+function scorePuzzle(guesses, results, answer) {
+  const letterStatus = {};
+  const yellowCounts = {};
+  const greenColumns = {};
+  for (let r = 0; r < guesses.length; r++) {
+    for (let c = 0; c < 5; c++) {
+      const l = guesses[r][c], s = results[r][c];
+      if (s === 'yellow') yellowCounts[l] = (yellowCounts[l] || 0) + 1;
+      if (s === 'green') (greenColumns[l] || (greenColumns[l] = new Set())).add(c);
+      if (!letterStatus[l] || letterStatus[l] === 'dark' || (letterStatus[l] === 'yellow' && s === 'green')) {
+        letterStatus[l] = s;
+      }
+    }
+  }
+  let total = 0;
+  let revealedLetterCount = 0;
+  const allGreenColumns = new Set();
+  for (const l in letterStatus) {
+    const isVowel = VOWELS.has(l);
+    const status = letterStatus[l];
+    if (status === 'green') {
+      for (const c of greenColumns[l]) allGreenColumns.add(c);
+      revealedLetterCount++;
+    } else if (status === 'dark') {
+      total += isVowel ? SCORE_DARK_VOWEL : SCORE_DARK;
+    } else {
+      const extra = (yellowCounts[l] || 1) - 1;
+      total += (isVowel ? SCORE_YELLOW_VOWEL : SCORE_YELLOW) + extra * SCORE_YELLOW_EXTRA;
+      revealedLetterCount++;
+    }
+  }
+  const n = allGreenColumns.size;
+  total += SCORE_GREEN * n * (n + 1) / 2; // 1st green=15, 2nd=+30 (45 total), 3rd=+45 (90 total), ...
+  // Every letter in the answer confirmed present (green OR yellow) means the whole word is
+  // pinned down to an anagram search, even with zero greens on the board — just as much a
+  // giveaway as seeing every position directly, so it gets the same flat penalty.
+  if (revealedLetterCount >= new Set(answer).size) total += SCORE_ALL_REVEALED;
+  return total;
 }
 
-function isPuzzleAccepted(puzzle) {
+function isPuzzleAccepted(puzzle, maxScore) {
   return puzzle.uniqueAcrossAll &&
     !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) &&
-    scorePuzzle(puzzle.results) <= MAX_PUZZLE_SCORE;
+    scorePuzzle(puzzle.guesses, puzzle.results, puzzle.answer) <= maxScore;
 }
 
 // Keeps retrying the SAME answer word (new guess path each time, since seed+1 barely
@@ -142,11 +191,11 @@ function isPuzzleAccepted(puzzle) {
 // MAX_TRIES_PER_WORD attempts before giving up and letting the next unforced draw
 // pick a new word — by then the seed has advanced well past one answer-word's ~124-wide
 // RNG bucket, so a new word is all but guaranteed.
-function generateAcceptedPuzzle(seed) {
+function generateAcceptedPuzzle(seed, maxScore) {
   let puzzle = generatePuzzle(seed);
   let stickyAnswer = puzzle.answer;
   let triesOnWord = 1;
-  while (!isPuzzleAccepted(puzzle)) {
+  while (!isPuzzleAccepted(puzzle, maxScore)) {
     seed = (seed % 2147483646) + 1;
     if (triesOnWord >= MAX_TRIES_PER_WORD) {
       puzzle = generatePuzzle(seed);
@@ -802,7 +851,7 @@ function prefetchNextFreePuzzle() {
   prefetchInProgress = true;
   setTimeout(() => {
     const seed = Math.floor(Math.random() * 2147483646) + 1;
-    prefetchedPuzzle = generateAcceptedPuzzle(seed);
+    prefetchedPuzzle = generateAcceptedPuzzle(seed, MAX_PUZZLE_SCORE_FREE);
     prefetchInProgress = false;
   }, 0);
 }
@@ -851,7 +900,8 @@ async function buildGame(mode) {
       prefetchedPuzzle = null;
     } else {
       const seed = mode === 'daily' ? getDaySeed() : Math.floor(Math.random() * 2147483646) + 1;
-      puzzle = generateAcceptedPuzzle(seed);
+      const maxScore = mode === 'daily' ? MAX_PUZZLE_SCORE_DAILY : MAX_PUZZLE_SCORE_FREE;
+      puzzle = generateAcceptedPuzzle(seed, maxScore);
     }
   }
   const { answer, guesses, results } = puzzle;

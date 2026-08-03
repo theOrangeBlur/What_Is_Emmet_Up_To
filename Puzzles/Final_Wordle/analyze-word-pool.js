@@ -20,10 +20,17 @@ function readJson(file) {
 const WORDS = readJson('words.json');
 const VALID_GUESSES = new Set(readJson('valid-guesses.json'));
 
-const SCORE_DARK = 1;
-const SCORE_YELLOW = 5;
+const SCORE_DARK = 0.1;
+const SCORE_DARK_VOWEL = 3;
 const SCORE_GREEN = 15;
-const MAX_PUZZLE_SCORE = 40;
+const SCORE_YELLOW = 5;
+const SCORE_YELLOW_VOWEL = 8;
+const SCORE_YELLOW_EXTRA = 3;
+const SCORE_ALL_REVEALED = 50;
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
+// This script simulates the DAILY sticky-retry flow specifically, so it uses the daily
+// ceiling. Free play uses a separate, looser MAX_PUZZLE_SCORE_FREE=60 in final-wordle.js.
+const MAX_PUZZLE_SCORE = 35;
 const MAX_TRIES_PER_WORD = 1500;
 
 // --- copied verbatim (logic-wise) from final-wordle.js ---
@@ -92,11 +99,13 @@ function generatePuzzle(seed, forcedAnswer) {
   // Solve against the full valid-guess pool so uniqueness is guaranteed by construction,
   // not just among WORDS.
   let remaining = ALL_WORDS;
+  // Free-mode guessing, not hard-mode: guesses can be ANY valid word, not just ones
+  // consistent with clues revealed so far.
+  const freeGuessPool = ALL_WORDS.filter(w => w !== answer);
   const guesses = [], results = [];
   let attempts = 0;
   while (remaining.length > 1) {
-    const guessPool = remaining.filter(w => w !== answer);
-    const g = attempts === 0 ? firstGuess : bestGuess(remaining, guessPool, rng);
+    const g = attempts === 0 ? firstGuess : bestGuess(remaining, freeGuessPool, rng);
     const r = scoreGuess(g, answer);
     guesses.push(g); results.push(r);
     remaining = filterWords(remaining, g, r);
@@ -106,18 +115,49 @@ function generatePuzzle(seed, forcedAnswer) {
   return { answer, guesses, results, uniqueAcrossAll };
 }
 
-function scorePuzzle(results) {
-  return results.flat().reduce((sum, s) => {
-    if (s === 'green') return sum + SCORE_GREEN;
-    if (s === 'yellow') return sum + SCORE_YELLOW;
-    return sum + SCORE_DARK;
-  }, 0);
+// Scored per distinct letter (matching the keyboard's aggregated state), not per tile.
+// Green escalates board-wide across confirmed positions: 1st=15, 2nd=30, 3rd=45, ... (triangular).
+function scorePuzzle(guesses, results, answer) {
+  const letterStatus = {};
+  const yellowCounts = {};
+  const greenColumns = {};
+  for (let r = 0; r < guesses.length; r++) {
+    for (let c = 0; c < 5; c++) {
+      const l = guesses[r][c], s = results[r][c];
+      if (s === 'yellow') yellowCounts[l] = (yellowCounts[l] || 0) + 1;
+      if (s === 'green') (greenColumns[l] || (greenColumns[l] = new Set())).add(c);
+      if (!letterStatus[l] || letterStatus[l] === 'dark' || (letterStatus[l] === 'yellow' && s === 'green')) {
+        letterStatus[l] = s;
+      }
+    }
+  }
+  let total = 0;
+  let revealedLetterCount = 0;
+  const allGreenColumns = new Set();
+  for (const l in letterStatus) {
+    const isVowel = VOWELS.has(l);
+    const status = letterStatus[l];
+    if (status === 'green') {
+      for (const c of greenColumns[l]) allGreenColumns.add(c);
+      revealedLetterCount++;
+    } else if (status === 'dark') {
+      total += isVowel ? SCORE_DARK_VOWEL : SCORE_DARK;
+    } else {
+      const extra = (yellowCounts[l] || 1) - 1;
+      total += (isVowel ? SCORE_YELLOW_VOWEL : SCORE_YELLOW) + extra * SCORE_YELLOW_EXTRA;
+      revealedLetterCount++;
+    }
+  }
+  const n = allGreenColumns.size;
+  total += SCORE_GREEN * n * (n + 1) / 2;
+  if (revealedLetterCount >= new Set(answer).size) total += SCORE_ALL_REVEALED;
+  return total;
 }
 
 function isPuzzleAccepted(puzzle) {
   return puzzle.uniqueAcrossAll &&
     !(puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer) &&
-    scorePuzzle(puzzle.results) <= MAX_PUZZLE_SCORE;
+    scorePuzzle(puzzle.guesses, puzzle.results, puzzle.answer) <= MAX_PUZZLE_SCORE;
 }
 
 // classify why a generated puzzle would be rejected, matching the || short-circuit
@@ -126,7 +166,7 @@ function classify(puzzle) {
   if (!puzzle.uniqueAcrossAll) return 'not_unique';
   const last = puzzle.guesses.length > 0 && puzzle.guesses[puzzle.guesses.length - 1] === puzzle.answer;
   if (last) return 'last_guess_is_answer';
-  if (scorePuzzle(puzzle.results) > MAX_PUZZLE_SCORE) return 'too_easy';
+  if (scorePuzzle(puzzle.guesses, puzzle.results, puzzle.answer) > MAX_PUZZLE_SCORE) return 'too_easy';
   return 'accepted';
 }
 
@@ -182,7 +222,7 @@ for (let d = 0; d < numDays; d++) {
     verdict = record(puzzle);
   }
   acceptCounts.set(puzzle.answer, (acceptCounts.get(puzzle.answer) || 0) + 1);
-  acceptedScores.push(scorePuzzle(puzzle.results));
+  acceptedScores.push(scorePuzzle(puzzle.guesses, puzzle.results, puzzle.answer));
   acceptedRows.push(puzzle.guesses.length);
 
   totalRetries += retries;
