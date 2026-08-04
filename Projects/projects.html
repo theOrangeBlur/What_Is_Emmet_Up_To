@@ -27,6 +27,7 @@
                     <button class="tag-filter active" data-tag="all">All</button>
                     <button class="tag-filter" data-tag="3D Modeling">3D Modeling</button>
                     <button class="tag-filter" data-tag="3D Print">3D Print</button>
+                    <button class="tag-filter" data-tag="Gotham">Gotham</button>
                     <button class="tag-filter" data-tag="Home">Home</button>
                     <button class="tag-filter" data-tag="Puzzle">Puzzle</button>
                     <button class="tag-filter" data-tag="Robotics">Robotics</button>
@@ -40,6 +41,46 @@
             </div>
 
             <div class="project-list" id="project-list">
+
+        <article class="project-card"
+                 id="soma-cube"
+                 data-tags="3D Print,3D Modeling,Puzzle,Gotham"
+                 data-status="completed"
+                 data-date="2026-06-24">
+            <div class="project-card__preview" onclick="toggleProject('soma-cube')">
+                <img src="SOMA Cube/images/final.jpg" alt="SOMA Puzzle Cube" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>SOMA Puzzle Cube</h3>
+                    <div class="project-meta">
+                        <span class="date">Jun 8, 2026 - Jun 24, 2026</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span><span class="tag">Puzzle</span><span class="tag">Gotham</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="soma-cube-details">
+                <h3>Problem</h3>
+Gotham Immersive Labs asked me to adapt my Rune Cube puzzle for a corporate event. They asked for it to be smaller, and solve in 10-15 mins on average. Essentially, design and build a 3d puzzle where solvers will assemble pieces into a cube, where then a ball bearing can run through the entire assembly.
+<h3>Process</h3>
+Well I watched a few teams take around an hour assembling the Rune Cube, so I knew I was going to have to dramatically change the design. Instead of redesigning pieces completely, I decided to play with the idea of a <a href="https://en.wikipedia.org/wiki/Soma_cube" target="_blank">SOMA Cube</a>. These suckers can be constructed in a grand total of two hundred and forty unique ways! Using some lessons I had learned making the Rune Cube, I quickly modeled the SOMA pieces and designed the circular path meandering through all seven of the pieces.
+<p><video src="SOMA Cube/images/Printing.mp4" class="project-image" controls loop playsinline></video></p>
+<p>Gotham came up with the symbols for me to put on the pieces. "FAMOUSEIGHTHST" with "CUBE" on the base clued the solvers in to the 'famous' 'cube' on 'eighth' 'st,' the <a href="https://en.wikipedia.org/wiki/Alamo_%28sculpture%29" target="_blank">Alamo</a>! Letters were far easier to emboss into these cubes than the hand drawn shapes on the rune cube. After doing some testing and finding that people were still taking a while to assemble the cube, I embossed the bottom shapes of the pieces onto the base. This proved to get people to assemble the cube in perfect time! The base also helps give the players something to build on, and keeps the cube packed nicely together so the ball bearing doesn't get stuck.</p>
+<p><img src="SOMA Cube/images/number.jpg" alt="The number 4 embossed into a soma cube piece" class="project-image" loading="lazy"> <img src="SOMA Cube/images/Base.jpg" alt="A base for the cube with indents showing the bottom configuration" class="project-image" loading="lazy"></p>
+<p>Due to a very tight turnaround for this event, I also provided printing services for this puzzle. My Bambu X1-C was running non-stop for two weeks to build 36 cubes!</p>
+<p><img src="SOMA Cube/images/Assembly_line.jpg" alt="Many colorful soma cube puzzles being assembled" class="project-image" loading="lazy"></p>
+<p>I also generated an assembly video to add to their hint section, which should give you a great idea of how the puzzle works!</p>
+<p><video src="SOMA Cube/images/Assembly.mp4" class="project-image" controls loop playsinline></video></p>
+<h3>Result</h3>
+Since I got to fab this myself, I got to pick out some wonderful colors for all of the pieces. And watch how smoothly it runs!
+<video src="SOMA Cube/images/Marble_Run.mp4" class="project-image" controls loop playsinline></video>
+I got the cubes shipped up to NYC, and they were very much enjoyed!
+After the fact I printed another one just for me to puzzle my friends with, of course.
+                <button class="collapse-btn" onclick="toggleProject('soma-cube')">▲ Collapse</button>
+            </div>
+        </article>
 
         <article class="project-card"
                  id="floor-ramp"
@@ -74,7 +115,7 @@ These ramps lasted for about a year until someone stepped on them just right and
 <h3>Result</h3>
 The ramp has functioned perfectly so far!
 Someone asked if it's a bar-code... I'll have to keep that in mind if I ever make another!
-<video src="Floor_Ramp/images/in-action.mp4" class="project-image" controls loop muted playsinline></video>
+<video src="Floor_Ramp/images/in-action.mp4" class="project-image" controls loop playsinline></video>
                 <button class="collapse-btn" onclick="toggleProject('floor-ramp')">▲ Collapse</button>
             </div>
         </article>
@@ -132,7 +173,7 @@ I planned for runes to be inscribed on each tunnel opening. These runes would co
     </div>
 </div>
 <h3>Result</h3>
-<video src="Rune_Cube/images/marble_run.mp4" class="project-image" controls loop muted playsinline></video>
+<video src="Rune_Cube/images/marble_run.mp4" class="project-image" controls loop playsinline></video>
 <p>I'm quite, quite pleased with this puzzle. I can think of many fun variations to try, with even more complex pathways for a smaller marble to run, with loop de loops and corkscrews and lots of fun! Maybe a version where the whole cube must be picked up and rotated! Hiding magnets in the pieces to make them snap together would also be hugely satisfying.</p>
 
                 <button class="collapse-btn" onclick="toggleProject('rune-cube')">▲ Collapse</button>
@@ -196,7 +237,6 @@ The final version holds that bag no problem! Cypher even had a record breaking t
             <div class="project-card__details" id="liquer-cabinet-details">
                 <h3>Problem</h3>
 The shelves in the liquor cabinet bow in the middle, and may possibly collapse!
-HEYEYEYEYEY
 <h3>Process</h3>
 Let's knock another task off the HoneyDo list and fix up the liquor cabinet! 
 If I find a picture of how the shelves looked before, I'll add it here.
@@ -272,7 +312,7 @@ At a friend's house recently, I saw that they had printed (on paper) a qr code f
 Food bits fall between the cracks on each side of the oven and are very difficult to remove.
 <h3>Process</h3>
 Plan is to print spacers to fit in the cracks - they need to handle warmth from the oven.
-<p><img src="Oven_Skirt/images/V1-Right.jpg" alt="V1 Draft Right" class="project-image" loading="lazy"> <img src="Oven_Skirt/images/V1-Left.jpg" alt="V1 Draft Left" class="project-image" loading="lazy"></p>
+<p><img src="Oven_Skirt/images/V1-Left.jpg" alt="V1 Draft Left" class="project-image" loading="lazy"> <img src="Oven_Skirt/images/V1-Right.jpg" alt="V1 Draft Right" class="project-image" loading="lazy"></p>
 <p>The counter is at a different height on the left side, so I needed slightly different parts. V1 worked well on the right, so I tweaked it for the left.</p>
 <p>V2 worked well, but Julia requested the pieces not slide left/right. V3 has a larger, tapered shim.</p>
 <p><img src="Oven_Skirt/images/All-Versions.jpg" alt="A few versions" class="project-image" loading="lazy"></p>
@@ -459,6 +499,7 @@ The design is inspired by the Septagram Society, and made for a pretty piece!
 I also had to dig out a flat area for the door to be able to swing open, and set stones at the right angle so the autonomous mower can climb it.
 <h3>Result</h3>
 I think the result is eye-catching, and the gate works perfectly!
+<p><img src="Septagram_Gate/images/septigate.jpg" alt="Gate with septagram inscribed" class="project-image" loading="lazy"></p>
                 <button class="collapse-btn" onclick="toggleProject('septagram-gate')">▲ Collapse</button>
             </div>
         </article>
@@ -490,7 +531,7 @@ After doing much research, I landed on the Worx Landroid. I placed a "boundary w
 <img src="Autonomous_Mower/images/boundary_wire.jpg" alt="Black boundary wire" class="project-image" loading="lazy">
 The robot follows this wire to each "zone" and mows according to a set schedule. Most of the time, the robot mows in a straight line until it senses the wire, and then it picks a new heading randomly and goes in that direction! It's not that smart of an algorithm but it hits all of the spots eventually and makes a great looking yard.
 <h3>Result</h3>
-<video src="Autonomous_Mower/images/mower_vid.mp4" class="project-image" controls loop muted playsinline></video>
+<video src="Autonomous_Mower/images/mower_vid.mp4" class="project-image" controls loop playsinline></video>
                 <button class="collapse-btn" onclick="toggleProject('autonomous-mower')">▲ Collapse</button>
             </div>
         </article>
@@ -662,7 +703,7 @@ Will the changing radius of the winch make it hard to control height precicely? 
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-05-15</p>
+            <p>Last updated: 2026-08-04</p>
         </footer>
 
         <!-- Improvements Section -->

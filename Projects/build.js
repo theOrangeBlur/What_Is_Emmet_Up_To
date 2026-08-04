@@ -7,9 +7,56 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const PROJECTS_DIR = __dirname;
 const OUTPUT_FILE = path.join(PROJECTS_DIR, 'projects.html');
+
+// Chrome/Firefox on Windows and Linux won't play HEVC (h265) <video>, so any
+// mp4 that isn't H.264 gets transcoded in place. Runs on every build so newly
+// added project videos (e.g. straight off an iPhone, which shoots HEVC by
+// default) can't reintroduce the compatibility problem.
+function ensureH264(absPath) {
+    if (!fs.existsSync(absPath)) return;
+
+    let codec;
+    try {
+        codec = execFileSync('ffprobe', [
+            '-v', 'error',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=codec_name',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            absPath
+        ], { encoding: 'utf-8' }).trim();
+    } catch (err) {
+        console.warn(`  Warning: could not probe ${absPath} (${err.message})`);
+        return;
+    }
+
+    if (codec === 'h264') return;
+
+    console.log(`  Re-encoding ${path.basename(absPath)} (${codec} -> h264) for browser compatibility...`);
+    const tmpPath = `${absPath}.tmp.mp4`;
+    try {
+        execFileSync('ffmpeg', [
+            '-y', '-i', absPath,
+            '-c:v', 'libx264', '-crf', '20', '-preset', 'medium', '-pix_fmt', 'yuv420p',
+            '-c:a', 'aac', '-b:a', '160k',
+            '-movflags', '+faststart',
+            tmpPath
+        ], { stdio: 'ignore' });
+        // fs.renameSync onto an existing path reliably EPERMs here because
+        // this repo lives inside a OneDrive-synced folder and OneDrive holds
+        // a lock that Windows' rename/replace call trips over. Overwriting
+        // via copy + unlink uses plain read/write handles instead and isn't
+        // affected.
+        fs.copyFileSync(tmpPath, absPath);
+        fs.unlinkSync(tmpPath);
+    } catch (err) {
+        console.warn(`  Warning: failed to re-encode ${absPath} (${err.message})`);
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    }
+}
 
 // Find all process.md files
 function findProjectFiles() {
@@ -72,7 +119,8 @@ function markdownToHtml(md, projectFolder) {
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
         const mediaPath = `${projectFolder}/${src}`;
         if (src.match(/\.mp4$/i)) {
-            return `<video src="${mediaPath}" class="project-image" controls loop muted playsinline></video>`;
+            ensureH264(path.join(PROJECTS_DIR, projectFolder, src));
+            return `<video src="${mediaPath}" class="project-image" controls loop playsinline></video>`;
         }
         return `<img src="${mediaPath}" alt="${alt}" class="project-image" loading="lazy">`;
     });
