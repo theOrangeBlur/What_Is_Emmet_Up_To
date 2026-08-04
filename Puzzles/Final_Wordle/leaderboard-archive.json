@@ -86,5 +86,12 @@
       "time_ms": 10522,
       "guesses": 1
     }
+  ],
+  "20260804": [
+    {
+      "name": "CASS",
+      "time_ms": 107185,
+      "guesses": 1
+    }
   ]
 }
