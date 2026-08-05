@@ -75,13 +75,14 @@ jobs:
                       best = g
               return best
 
-          def generate_puzzle(seed, forced_answer=None):
+          def generate_puzzle(seed, forced_answer=None, word_pool=None):
               rng = seeded_rng(seed)
+              pool = word_pool if word_pool else words
               # Always draw this, even when forced_answer overrides it: skipping it would
               # shift first_guess into the position of a seed's near-frozen first draw
               # (seeded_rng's first output barely moves for seed+1), collapsing sticky
               # retries onto the same guess path instead of varying it.
-              drawn_answer = words[int(rng() * len(words))]
+              drawn_answer = pool[int(rng() * len(pool))]
               answer = forced_answer or drawn_answer
               starters = ['crane','slate','audio','raise','stare','stern','cloud','plant']
               first_guess = starters[int(rng() * len(starters))]
@@ -124,12 +125,34 @@ jobs:
           seed = (day_key * 48271) % 2147483647
           if seed <= 0: seed += 2147483646
 
+          REPEAT_AVOID_DAYS = 90  # don't reuse an answer word that appeared in the last N days
+
+          def fetch_recent_words():
+              cutoff = today - datetime.timedelta(days=REPEAT_AVOID_DAYS)
+              cutoff_key = cutoff.year * 10000 + cutoff.month * 100 + cutoff.day
+              req = urllib.request.Request(
+                  f"{url}/rest/v1/daily_words?select=word&date=gte.{cutoff_key}",
+                  headers={'apikey': key, 'Authorization': f'Bearer {key}'},
+              )
+              with urllib.request.urlopen(req) as r:
+                  rows = json.loads(r.read().decode())
+              return {row['word'].lower() for row in rows}
+
+          try:
+              recent_words = fetch_recent_words()
+          except Exception as e:
+              print(f"Warning: could not fetch recent words, skipping repeat check: {e}")
+              recent_words = set()
+
+          word_pool = [w for w in words if w.lower() not in recent_words] or words
+          print(f"Excluding {len(words) - len(word_pool)} word(s) used in the last {REPEAT_AVOID_DAYS} days")
+
           # Keeps retrying the SAME answer word (new guess path each time, since seed+1
           # barely shifts the RNG's first draw but reshuffles everything after it) for up
           # to MAX_TRIES_PER_WORD attempts before giving up and letting the next unforced
           # draw pick a new word — by then the seed has advanced well past one answer
           # word's ~124-wide RNG bucket, so a new word is all but guaranteed.
-          puzzle = generate_puzzle(seed)
+          puzzle = generate_puzzle(seed, word_pool=word_pool)
           sticky_answer = puzzle['answer']
           tries_on_word = 1
           words_tried = [sticky_answer]
@@ -138,7 +161,7 @@ jobs:
               seed = (seed % 2147483646) + 1
               total_attempts += 1
               if tries_on_word >= MAX_TRIES_PER_WORD:
-                  puzzle = generate_puzzle(seed)
+                  puzzle = generate_puzzle(seed, word_pool=word_pool)
                   sticky_answer = puzzle['answer']
                   tries_on_word = 1
                   words_tried.append(sticky_answer)
