@@ -4,7 +4,7 @@ status: "completed"
 tags: ["3D Print", "3D Modeling", "Puzzle", "Gotham"]
 start_date: "2026-06-08"
 end_date: "2026-06-24"
-thumbnail: "images/final.jpg"
+thumbnail: "images/Final.jpg"
 ---
 
 ## Problem
@@ -16,7 +16,7 @@ Well I watched a few teams take around an hour assembling the Rune Cube, so I kn
 
 Gotham came up with the symbols for me to put on the pieces. "FAMOUSEIGHTHST" with "CUBE" on the base clued the solvers in to the 'famous' 'cube' on 'eighth' 'st,' the [Alamo](https://en.wikipedia.org/wiki/Alamo_%28sculpture%29)! Letters were far easier to emboss into these cubes than the hand drawn shapes on the rune cube. After doing some testing and finding that people were still taking a while to assemble the cube, I embossed the bottom shapes of the pieces onto the base. This proved to get people to assemble the cube in perfect time! The base also helps give the players something to build on, and keeps the cube packed nicely together so the ball bearing doesn't get stuck.
 
-![The number 4 embossed into a soma cube piece](images/number.jpg)
+![The number 4 embossed into a soma cube piece](images/Number.jpg)
 ![A base for the cube with indents showing the bottom configuration](images/Base.jpg)
 
 Due to a very tight turnaround for this event, I also provided printing services for this puzzle. My Bambu X1-C was running non-stop for two weeks to build 36 cubes!
