@@ -21,6 +21,7 @@ html, body {
   color: var(--text);
   font-family: 'Space Mono', monospace;
   min-height: 100vh;
+  touch-action: manipulation;
 }
 body {
   display: flex;
