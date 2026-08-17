@@ -963,3 +963,39 @@ body {
         clear: both;
     }
 }
+
+/* ── Correspondence / Contact Strip ── */
+.contact-strip {
+    max-width: 1200px;
+    margin: 24px auto 40px;
+    padding: 0 20px;
+}
+
+.contact-box {
+    border: 2px solid var(--ink);
+    background: var(--paper-dark);
+    padding: 18px 24px;
+    text-align: center;
+}
+
+.contact-box .section-label {
+    text-align: center;
+    border-bottom: none;
+    margin-bottom: 6px;
+}
+
+.contact-text {
+    font-family: 'IM Fell English', serif;
+    font-size: 0.95rem;
+    color: var(--ink-mid);
+}
+
+.contact-link {
+    color: var(--red-accent);
+    text-decoration: underline;
+    font-style: italic;
+}
+
+.contact-link:hover {
+    color: var(--sepia-accent);
+}
