@@ -357,7 +357,13 @@ async function fetchDeviceScore() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
   try {
     const date = String(getDayKey());
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&device_id=eq.${getDeviceId()}&limit=1`;
+    // Match by user_id too (not just device_id) so a puzzle solved on one signed-in
+    // device shows as solved on any other device signed into the same account.
+    const userId = await getUserId();
+    const idFilter = userId
+      ? `or=(device_id.eq.${getDeviceId()},user_id.eq.${userId})`
+      : `device_id=eq.${getDeviceId()}`;
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&${idFilter}&limit=1`;
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
@@ -403,7 +409,13 @@ async function fetchFreeScores() {
 async function fetchDeviceFreeScore() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
   try {
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}&limit=1`;
+    // Match by user_id too (not just device_id) so a best score set on one signed-in
+    // device is recognized on any other device signed into the same account.
+    const userId = await getUserId();
+    const idFilter = userId
+      ? `or=(device_id.eq.${getDeviceId()},user_id.eq.${userId})`
+      : `device_id=eq.${getDeviceId()}`;
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?${idFilter}&limit=1`;
     const res = await fetch(url, {
       headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
@@ -421,8 +433,10 @@ async function submitFreeScore(name, score) {
     const cleanName = (name || '---').toUpperCase().slice(0, 6);
     const userId = await getUserId();
     if (existing) {
+      // Update the row that was actually found — it may belong to a different
+      // device_id than this one if it was matched via user_id.
       const res = await fetch(
-        `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}`,
+        `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${existing.device_id}`,
         {
           method: 'PATCH',
           headers: {
