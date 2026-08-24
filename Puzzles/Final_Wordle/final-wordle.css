@@ -507,6 +507,22 @@ body {
 }
 .arcade-input:focus { border-color: var(--green); }
 .arcade-input.invalid { border-color: #e05555; animation: shake .3s ease; }
+.arcade-input-text {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+}
+.auth-link-row {
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color .15s;
+}
+.auth-link-row:hover { color: var(--text); }
 .arcade-btns {
   display: flex;
   gap: 8px;

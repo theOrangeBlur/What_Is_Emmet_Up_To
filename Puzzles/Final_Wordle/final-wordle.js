@@ -229,6 +229,21 @@ function isFamilyUnlocked() {
   return localStorage.getItem('wordle_family') === '1';
 }
 
+async function authHeader() {
+  if (window.Auth) {
+    try { return await window.Auth.getAuthHeader(); } catch {}
+  }
+  return `Bearer ${window.SUPABASE_ANON_KEY}`;
+}
+
+async function getUserId() {
+  if (!window.Auth) return null;
+  try {
+    const session = await window.Auth.getSession();
+    return session ? session.user.id : null;
+  } catch { return null; }
+}
+
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
@@ -237,7 +252,7 @@ async function fetchTodayScores() {
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+        'Authorization': await authHeader()
       }
     });
     return res.ok ? await res.json() : [];
@@ -255,7 +270,7 @@ async function fetchFamilyScores(dayKey, membersMap) {
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+        'Authorization': await authHeader()
       }
     });
     return res.ok ? await res.json() : [];
@@ -272,7 +287,7 @@ async function getFamilyMembers() {
   try {
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?select=device_id,display_name`;
     const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
     if (res.ok) (await res.json()).forEach(r => familyMembersCache.set(r.device_id, r.display_name));
   } catch {}
@@ -286,7 +301,7 @@ async function getFamilyPoints() {
   try {
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_points?select=display_name,total_points`;
     const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
     if (res.ok) (await res.json()).forEach(r => familyPointsCache.set(r.display_name, r.total_points));
   } catch {}
@@ -331,7 +346,7 @@ async function fetchFamilySubmitCounts(membersMap) {
     const idsParam = deviceIds.map(id => `"${id}"`).join(',');
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?select=device_id&device_id=in.(${idsParam})&date=gte.${MIN_FAMILY_DAY_KEY}`;
     const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
     if (res.ok) (await res.json()).forEach(r => counts.set(r.device_id, (counts.get(r.device_id) || 0) + 1));
   } catch {}
@@ -346,7 +361,7 @@ async function fetchDeviceScore() {
     const res = await fetch(url, {
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+        'Authorization': await authHeader()
       }
     });
     if (!res.ok) return null;
@@ -363,11 +378,11 @@ async function insertScore(name, timeMs, guesses) {
       keepalive: true,
       headers: {
         'apikey': window.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+        'Authorization': await authHeader(),
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked() })
+      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked(), user_id: await getUserId() })
     });
     if (!res.ok) { console.error('insertScore failed:', res.status, await res.text()); return false; }
     return true;
@@ -379,7 +394,7 @@ async function fetchFreeScores() {
   try {
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?order=score.desc&limit=10`;
     const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
     return res.ok ? await res.json() : [];
   } catch { return []; }
@@ -390,7 +405,7 @@ async function fetchDeviceFreeScore() {
   try {
     const url = `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}&limit=1`;
     const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` }
+      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
     if (!res.ok) return null;
     const rows = await res.json();
@@ -404,6 +419,7 @@ async function submitFreeScore(name, score) {
     const existing = await fetchDeviceFreeScore();
     if (existing && existing.score >= score) return;
     const cleanName = (name || '---').toUpperCase().slice(0, 6);
+    const userId = await getUserId();
     if (existing) {
       const res = await fetch(
         `${window.SUPABASE_URL}/rest/v1/wordle_freeplay_scores?device_id=eq.${getDeviceId()}`,
@@ -411,11 +427,11 @@ async function submitFreeScore(name, score) {
           method: 'PATCH',
           headers: {
             'apikey': window.SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+            'Authorization': await authHeader(),
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal'
           },
-          body: JSON.stringify({ name: cleanName, score })
+          body: JSON.stringify({ name: cleanName, score, user_id: userId })
         }
       );
       if (!res.ok) console.error('updateFreeScore failed:', res.status, await res.text());
@@ -424,11 +440,11 @@ async function submitFreeScore(name, score) {
         method: 'POST',
         headers: {
           'apikey': window.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+          'Authorization': await authHeader(),
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({ device_id: getDeviceId(), name: cleanName, score })
+        body: JSON.stringify({ device_id: getDeviceId(), name: cleanName, score, user_id: userId })
       });
       if (!res.ok) console.error('insertFreeScore failed:', res.status, await res.text());
     }
@@ -687,6 +703,137 @@ function showFamilyCodeModal() {
   setTimeout(() => codeInp.focus(), 50);
 }
 
+async function renderAuthLink() {
+  const el = document.getElementById('auth-link');
+  if (!el || !window.Auth) return;
+  const session = await window.Auth.getSession();
+  if (session) {
+    el.textContent = session.user.email + ' · sign out';
+    el.onclick = () => window.Auth.signOut();
+  } else {
+    el.textContent = 'sign in';
+    el.onclick = () => showAuthModal('login');
+  }
+}
+
+function showAuthModal(initialMode) {
+  let mode = initialMode || 'login';
+  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
+  const card = document.createElement('div'); card.className = 'arcade-card';
+  const heading = document.createElement('div'); heading.className = 'arcade-heading';
+  const emailInp = document.createElement('input');
+  emailInp.className = 'arcade-input arcade-input-text'; emailInp.type = 'email'; emailInp.placeholder = 'email';
+  emailInp.autocomplete = 'email'; emailInp.spellcheck = false;
+  const passInp = document.createElement('input');
+  passInp.className = 'arcade-input arcade-input-text'; passInp.type = 'password'; passInp.placeholder = 'password';
+  passInp.spellcheck = false;
+  const msg = document.createElement('div'); msg.className = 'arcade-error-text'; msg.style.display = 'none';
+  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
+  const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary';
+  const cancelBtn = document.createElement('button'); cancelBtn.className = 'arcade-btn'; cancelBtn.textContent = 'cancel';
+  const forgotLink = document.createElement('div'); forgotLink.className = 'auth-link-row'; forgotLink.textContent = 'forgot password?';
+  const toggleLink = document.createElement('div'); toggleLink.className = 'auth-link-row';
+
+  function render() {
+    heading.textContent = mode === 'login' ? 'sign in' : 'create account';
+    submitBtn.textContent = mode === 'login' ? 'sign in' : 'sign up';
+    passInp.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+    toggleLink.textContent = mode === 'login' ? 'need an account? sign up' : 'have an account? sign in';
+    msg.style.display = 'none';
+  }
+  render();
+
+  function showMsg(text) { msg.textContent = text; msg.style.display = 'block'; }
+
+  async function doSubmit() {
+    const email = emailInp.value.trim();
+    const password = passInp.value;
+    if (!email || !password) { showMsg('enter email and password'); return; }
+    submitBtn.disabled = true;
+    const { error } = mode === 'login'
+      ? await window.Auth.signIn(email, password)
+      : await window.Auth.signUp(email, password);
+    submitBtn.disabled = false;
+    if (error) { showMsg(error.message); return; }
+    if (mode === 'signup') { showMsg('check your email to confirm your account'); return; }
+    overlay.remove();
+    await renderAuthLink();
+    await checkClaimableData();
+  }
+
+  submitBtn.addEventListener('click', doSubmit);
+  passInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
+  cancelBtn.addEventListener('click', () => overlay.remove());
+  toggleLink.addEventListener('click', () => { mode = mode === 'login' ? 'signup' : 'login'; render(); });
+  forgotLink.addEventListener('click', async () => {
+    const email = emailInp.value.trim();
+    if (!email) { showMsg('enter your email first'); return; }
+    const { error } = await window.Auth.resetPasswordForEmail(email);
+    showMsg(error ? error.message : 'password reset email sent');
+  });
+
+  btnRow.appendChild(submitBtn); btnRow.appendChild(cancelBtn);
+  card.appendChild(heading); card.appendChild(emailInp); card.appendChild(passInp);
+  card.appendChild(msg); card.appendChild(btnRow);
+  card.appendChild(forgotLink); card.appendChild(toggleLink);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  setTimeout(() => emailInp.focus(), 50);
+}
+
+// Once per session, right after sign-in: if this browser's device_id matches an
+// unlinked family-member row, offer to attach the new account to it so future
+// family-standings computation can eventually count this person's account.
+async function checkClaimableData() {
+  if (!window.Auth || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+  const session = await window.Auth.getSession();
+  if (!session) return;
+  const deviceId = getDeviceId();
+  if (localStorage.getItem('wordle_claim_dismissed_' + deviceId)) return;
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?device_id=eq.${deviceId}&user_id=is.null&select=device_id,display_name`;
+    const res = await fetch(url, { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() } });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (rows.length) showClaimModal(rows[0], session);
+  } catch {}
+}
+
+function showClaimModal(row, session) {
+  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
+  const card = document.createElement('div'); card.className = 'arcade-card';
+  const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'link your scores?';
+  const msg = document.createElement('div'); msg.className = 'arcade-inscribe-text';
+  msg.textContent = `we found existing scores for ${row.display_name} on this device — link them to your account?`;
+  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
+  const confirmBtn = document.createElement('button'); confirmBtn.className = 'arcade-btn arcade-btn-primary'; confirmBtn.textContent = 'link';
+  const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
+  function dismiss() {
+    localStorage.setItem('wordle_claim_dismissed_' + row.device_id, '1');
+    overlay.remove();
+  }
+  confirmBtn.addEventListener('click', async () => {
+    try {
+      await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_family_members?device_id=eq.${row.device_id}&user_id=is.null`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': window.SUPABASE_ANON_KEY,
+          'Authorization': await authHeader(),
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ user_id: session.user.id })
+      });
+    } catch {}
+    dismiss();
+  });
+  skipBtn.addEventListener('click', dismiss);
+  btnRow.appendChild(confirmBtn); btnRow.appendChild(skipBtn);
+  card.appendChild(heading); card.appendChild(msg); card.appendChild(btnRow);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
 function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
   const card = document.createElement('div'); card.className = 'arcade-card';
@@ -886,7 +1033,7 @@ async function buildGame(mode) {
     try {
       const res = await fetch(
         `${window.SUPABASE_URL}/rest/v1/daily_words?date=eq.${getDayKey()}&select=word,guesses,results`,
-        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` } }
+        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() } }
       );
       const data = await res.json();
       if (data?.[0]?.guesses) {
@@ -1146,6 +1293,12 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
     familyLink.addEventListener('click', showFamilyCodeModal);
   }
 
+  renderAuthLink();
+  checkClaimableData();
+  if (window.Auth) {
+    window.Auth.onAuthStateChange(() => { renderAuthLink(); checkClaimableData(); });
+  }
+
   const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
   const yKey = yDate.getUTCFullYear() * 10000 + (yDate.getUTCMonth() + 1) * 100 + yDate.getUTCDate();
   let word = null;
@@ -1153,7 +1306,7 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
     try {
       const res = await fetch(
         `${window.SUPABASE_URL}/rest/v1/daily_words?date=eq.${yKey}&select=word`,
-        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}` } }
+        { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() } }
       );
       const data = await res.json();
       if (data && data[0]) word = data[0].word;
