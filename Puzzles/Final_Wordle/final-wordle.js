@@ -708,10 +708,10 @@ async function renderAuthLink() {
   if (!el || !window.Auth) return;
   const session = await window.Auth.getSession();
   if (session) {
-    el.textContent = session.user.email + ' · sign out';
+    el.textContent = session.user.email + ' · slip out the back';
     el.onclick = () => window.Auth.signOut();
   } else {
-    el.textContent = 'sign in';
+    el.textContent = 'knock knock';
     el.onclick = () => showAuthModal('login');
   }
 }
@@ -720,25 +720,46 @@ function showAuthModal(initialMode) {
   let mode = initialMode || 'login';
   const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
   const card = document.createElement('div'); card.className = 'arcade-card';
+  const peephole = document.createElement('div'); peephole.className = 'peephole-wrap';
+  peephole.innerHTML = `<svg class="peephole-svg" viewBox="0 0 84 56" width="84" height="56" role="img" aria-label="a wary eye peers through the door slit">
+    <defs>
+      <clipPath id="peephole-eye-clip">
+        <path d="M16,28 C16,18.5 28,12 42,12 C56,12 68,18.5 68,28 C68,37.5 56,44 42,44 C28,44 16,37.5 16,28 Z"/>
+      </clipPath>
+    </defs>
+    <rect x="2" y="4" width="80" height="48" rx="6" fill="var(--surface)" stroke="var(--border2)" stroke-width="1.5"/>
+    <path d="M16,28 C16,18.5 28,12 42,12 C56,12 68,18.5 68,28 C68,37.5 56,44 42,44 C28,44 16,37.5 16,28 Z" fill="var(--bg)" stroke="var(--text2)" stroke-width="1.25"/>
+    <g clip-path="url(#peephole-eye-clip)">
+      <g class="peephole-iris">
+        <circle cx="42" cy="28" r="10" fill="var(--green-light)"/>
+        <circle cx="42" cy="28" r="4.5" fill="var(--bg)"/>
+        <circle cx="39.5" cy="25" r="1.4" fill="var(--text)"/>
+      </g>
+    </g>
+    <rect x="6" y="4" width="4" height="48" fill="var(--border2)"/>
+    <rect x="20" y="4" width="4" height="48" fill="var(--border2)"/>
+    <rect x="60" y="4" width="4" height="48" fill="var(--border2)"/>
+    <rect x="74" y="4" width="4" height="48" fill="var(--border2)"/>
+  </svg>`;
   const heading = document.createElement('div'); heading.className = 'arcade-heading';
   const emailInp = document.createElement('input');
-  emailInp.className = 'arcade-input arcade-input-text'; emailInp.type = 'email'; emailInp.placeholder = 'email';
+  emailInp.className = 'arcade-input arcade-input-text'; emailInp.type = 'email'; emailInp.placeholder = 'whatsit.tooya@yahoo.com';
   emailInp.autocomplete = 'email'; emailInp.spellcheck = false;
   const passInp = document.createElement('input');
-  passInp.className = 'arcade-input arcade-input-text'; passInp.type = 'password'; passInp.placeholder = 'password';
+  passInp.className = 'arcade-input arcade-input-text'; passInp.type = 'password'; passInp.placeholder = 'secret knock';
   passInp.spellcheck = false;
   const msg = document.createElement('div'); msg.className = 'arcade-error-text'; msg.style.display = 'none';
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary';
-  const cancelBtn = document.createElement('button'); cancelBtn.className = 'arcade-btn'; cancelBtn.textContent = 'cancel';
-  const forgotLink = document.createElement('div'); forgotLink.className = 'auth-link-row'; forgotLink.textContent = 'forgot password?';
+  const cancelBtn = document.createElement('button'); cancelBtn.className = 'arcade-btn'; cancelBtn.textContent = "i'll pass";
+  const forgotLink = document.createElement('div'); forgotLink.className = 'auth-link-row'; forgotLink.textContent = 'i misplaced my info!';
   const toggleLink = document.createElement('div'); toggleLink.className = 'auth-link-row';
 
   function render() {
-    heading.textContent = mode === 'login' ? 'sign in' : 'create account';
-    submitBtn.textContent = mode === 'login' ? 'sign in' : 'sign up';
+    heading.textContent = mode === 'login' ? 'who are you?' : 'state your business';
+    submitBtn.textContent = mode === 'login' ? "let's boogy" : "i'm new here";
     passInp.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
-    toggleLink.textContent = mode === 'login' ? 'need an account? sign up' : 'have an account? sign in';
+    toggleLink.textContent = mode === 'login' ? 'how do i join?' : 'already in? let me back';
     msg.style.display = 'none';
   }
   render();
@@ -748,14 +769,14 @@ function showAuthModal(initialMode) {
   async function doSubmit() {
     const email = emailInp.value.trim();
     const password = passInp.value;
-    if (!email || !password) { showMsg('enter email and password'); return; }
+    if (!email || !password) { showMsg("you'll need an email and a secret knock to get in"); return; }
     submitBtn.disabled = true;
     const { error } = mode === 'login'
       ? await window.Auth.signIn(email, password)
       : await window.Auth.signUp(email, password);
     submitBtn.disabled = false;
     if (error) { showMsg(error.message); return; }
-    if (mode === 'signup') { showMsg('check your email to confirm your account'); return; }
+    if (mode === 'signup') { showMsg("check your email — we slipped a note under the door to confirm it's you"); return; }
     overlay.remove();
     await renderAuthLink();
     await checkClaimableData();
@@ -767,13 +788,13 @@ function showAuthModal(initialMode) {
   toggleLink.addEventListener('click', () => { mode = mode === 'login' ? 'signup' : 'login'; render(); });
   forgotLink.addEventListener('click', async () => {
     const email = emailInp.value.trim();
-    if (!email) { showMsg('enter your email first'); return; }
+    if (!email) { showMsg('the doorman needs your email first'); return; }
     const { error } = await window.Auth.resetPasswordForEmail(email);
-    showMsg(error ? error.message : 'password reset email sent');
+    showMsg(error ? error.message : 'new key slipped under the door — check your email');
   });
 
   btnRow.appendChild(submitBtn); btnRow.appendChild(cancelBtn);
-  card.appendChild(heading); card.appendChild(emailInp); card.appendChild(passInp);
+  card.appendChild(peephole); card.appendChild(heading); card.appendChild(emailInp); card.appendChild(passInp);
   card.appendChild(msg); card.appendChild(btnRow);
   card.appendChild(forgotLink); card.appendChild(toggleLink);
   overlay.appendChild(card);

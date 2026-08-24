@@ -477,6 +477,27 @@ body {
   gap: 16px;
   width: 300px;
 }
+.peephole-wrap {
+  width: 84px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.peephole-iris {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: peephole-glance 6s ease-in-out infinite;
+}
+@keyframes peephole-glance {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  50%      { transform: translateX(0); }
+  75%      { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peephole-iris { animation: none; }
+}
 .arcade-heading {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
