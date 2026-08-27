@@ -9,14 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../shared/auth-widget.css">
+    <link rel="stylesheet" href="../../shared/auth-widget.css">
     <script>
       window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
       window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="../shared/auth.js"></script>
-    <script src="../shared/auth-widget.js"></script>
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/auth-widget.js"></script>
 </head>
 <body>
     <nav class="top-nav">
@@ -76,7 +76,7 @@
             <h2>Stats</h2>
             <div class="stat-grid">
                 <div class="stat-item">
-                    <span class="stat-value">60</span>
+                    <span class="stat-value">61</span>
                     <span class="stat-label">Movies Watched</span>
                 </div>
                 <div class="stat-item">
@@ -84,11 +84,11 @@
                     <span class="stat-label">Average Rating</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">9</span>
+                    <span class="stat-value">10</span>
                     <span class="stat-label">5-Star Films</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value">58</span>
+                    <span class="stat-value">59</span>
                     <span class="stat-label">With Reviews</span>
                 </div>
             </div>
@@ -148,6 +148,7 @@
                     <option value="Kristoffer Borgli">Kristoffer Borgli</option>
                     <option value="Kyle Balda">Kyle Balda</option>
                     <option value="Luc Besson">Luc Besson</option>
+                    <option value="Matt Johnson">Matt Johnson</option>
                     <option value="Michael Philippou">Michael Philippou</option>
                     <option value="Norman Panama">Norman Panama</option>
                     <option value="Parker Finn">Parker Finn</option>
@@ -170,8 +171,42 @@
 
             <div class="movie-grid" id="movie-grid">
                 
+            <article class="movie-card expandable five-star" id="tony"
+                     data-rating="5.0"
+                     data-date="2026-08-25"
+                     data-name="Tony"
+                     data-director="Matt Johnson">
+                <div class="movie-card__header">
+                    <div class="movie-card__info">
+                        <h3>Tony <span class="year">(2026)</span></h3>
+                        <div class="movie-meta">
+                            <span class="rating"><span class="star star-1 star-full">★</span><span class="star star-2 star-full">★</span><span class="star star-3 star-full">★</span><span class="star star-4 star-full">★</span><span class="star star-5 star-full">★</span></span>
+                            <span class="director">Dir: Matt Johnson</span>
+                            <span class="date">Aug 25, 2026</span>
+                            
+                        </div>
+                    </div>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="movie-card__details">
+                    <div class="movie-card__content">
+                        <div class="movie-card__poster">
+                            <img src="https://image.tmdb.org/t/p/w300/3WN0JWwRI7oGH7Ni2R6poVWej05.jpg" alt="Tony poster" class="movie-poster" loading="lazy">
+                        </div>
+                        <div class="movie-card__text">
+                            <div class="movie-card__review">
+                        <p>I've never seen a biopic this raw. Phenomenal acting, fantastic direction, a beautiful and real piece of art.One of those movies that makes me so grateful that A24 still does films that are full of gold, even if they won't make a billion dollars.</p>
+                    </div>
+                            <div class="movie-card__footer">
+                                <a href="https://letterboxd.com/theorangeblur/film/tony-2026/" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
             <article class="movie-card expandable " id="the-end-of-oak-street"
-                     data-rating="2.0"
+                     data-rating="2.5"
                      data-date="2026-08-24"
                      data-name="The End of Oak Street"
                      data-director="David Robert Mitchell">
@@ -179,7 +214,7 @@
                     <div class="movie-card__info">
                         <h3>The End of Oak Street <span class="year">(2026)</span></h3>
                         <div class="movie-meta">
-                            <span class="rating"><span class="star star-1 star-full">★</span><span class="star star-2 star-full">★</span><span class="star star-3 star-empty">★</span><span class="star star-4 star-empty">★</span><span class="star star-5 star-empty">★</span></span>
+                            <span class="rating"><span class="star star-1 star-full">★</span><span class="star star-2 star-full">★</span><span class="star star-3 star-half">★</span><span class="star star-4 star-empty">★</span><span class="star star-5 star-empty">★</span></span>
                             <span class="director">Dir: David Robert Mitchell</span>
                             <span class="date">Aug 24, 2026</span>
                             
@@ -194,7 +229,7 @@
                         </div>
                         <div class="movie-card__text">
                             <div class="movie-card__review">
-                        <p>Poopy poo poo</p>
+                        <p>We're child actors better when I was a kid, or was I just... a child? Probably the latter.This movie is weird, man. It feels in some ways too scary for young kids, but far too goofy for adults. A lot of that comes from the direction of the film. JJ, what the heck.I'm glad there are movies doing some cool dinosaur action that doesn't require us "going back to the island," at least.</p>
                     </div>
                             <div class="movie-card__footer">
                                 <a href="https://letterboxd.com/theorangeblur/film/the-end-of-oak-street/" target="_blank" class="letterboxd-link" title="View on Letterboxd">View on Letterboxd</a>
@@ -2225,7 +2260,7 @@
 
         <!-- Footer -->
         <footer class="page-footer">
-            <p>Last updated: 2026-08-26</p>
+            <p>Last updated: 2026-08-27</p>
             <p>Data synced from <a href="https://letterboxd.com/THEORANGEBLUR/" target="_blank">Letterboxd</a></p>
         </footer>
     </div>
