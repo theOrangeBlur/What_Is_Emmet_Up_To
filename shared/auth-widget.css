@@ -1,0 +1,153 @@
+/* Site-wide "knock on the door" login widget. Deliberately self-contained
+   (hardcoded colors, not the host page's CSS variables) so it looks the same
+   at the top-right of every page regardless of that page's own theme. Lives
+   in normal document flow (not fixed) as the very first thing in <body>, so
+   it scrolls away with the rest of the page instead of hovering over
+   whatever else is up there. */
+.authw-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  align-self: stretch;
+  flex-shrink: 0;
+  padding: 10px 14px 0;
+  box-sizing: border-box;
+}
+.authw-link {
+  background: #1c1c1c;
+  border: 1px solid #3d3d3d;
+  color: #e5e0d8;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: lowercase;
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color .15s, color .15s;
+}
+.authw-link:hover { border-color: #538d4e; color: #6aaf63; }
+
+.authw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.authw-card {
+  background: #0f0f0f;
+  border: 1px solid #538d4e;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 300px;
+  max-width: 100%;
+  font-family: 'Space Mono', monospace;
+}
+.authw-peephole-wrap {
+  width: 84px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.authw-peephole-iris {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: authw-peephole-glance 6s ease-in-out infinite;
+}
+@keyframes authw-peephole-glance {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  50%      { transform: translateX(0); }
+  75%      { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .authw-peephole-iris { animation: none; }
+}
+.authw-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: #6aaf63;
+  text-align: center;
+}
+.authw-input {
+  width: 100%;
+  background: #1c1c1c;
+  border: 1px solid #3d3d3d;
+  color: #e5e0d8;
+  font-family: 'Space Mono', monospace;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: normal;
+  text-align: left;
+  padding: 10px 12px;
+  outline: none;
+}
+.authw-input:focus { border-color: #538d4e; }
+.authw-input.authw-invalid { border-color: #e05555; animation: authw-shake .3s ease; }
+@keyframes authw-shake {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.authw-link-row {
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #7a7670;
+  cursor: pointer;
+  transition: color .15s;
+  text-align: center;
+}
+.authw-link-row:hover { color: #e5e0d8; }
+.authw-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.authw-btn {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #3d3d3d;
+  color: #7a7670;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 9px 0;
+  cursor: pointer;
+  transition: all .15s;
+}
+.authw-btn:hover { border-color: #7a7670; color: #e5e0d8; }
+.authw-btn:disabled { opacity: .5; cursor: not-allowed; }
+.authw-btn-primary {
+  background: #538d4e;
+  border-color: #538d4e;
+  color: #fff;
+}
+.authw-btn-primary:hover { opacity: .85; border-color: #538d4e; color: #fff; }
+.authw-msg {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #e05555;
+  text-align: center;
+  line-height: 1.6;
+}
+
+@media (max-width: 400px) {
+  .authw-card { width: 260px; }
+}
