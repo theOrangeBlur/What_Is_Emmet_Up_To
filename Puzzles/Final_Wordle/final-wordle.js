@@ -23,12 +23,13 @@ const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — n
 const SHARE_PHRASES = [
   "I scored {score} today, eat my dust!",
   "{score}. Beat that, and I'll eat my shoe.",
-  "{score}; a time you could only dream of.",
+  "{score}; which makes me Emmet's favorite.",
   "The legends are true. I got it in {score}.",
-  "{score} suckerrrrrrrrrr",
+  "{score}, suckerrrrrrrrrr",
   "{score}; if ya ain't first, yer last.",
   "Look, ma, no hands! {score}",
-  "{score}. Put that in your pipe and smoke it."
+  "{score}. Put that in your pipe and smoke it.",
+  "{score}!! I'm so 3000 and 8, you're so 2000 and lateeeeee"
 ];
 
 function buildShareText(scoreText) {
@@ -737,6 +738,15 @@ async function applyFamilyUnlock() {
   updateFamilyLeaderboard(familySolvedToday);
 }
 
+async function recheckDailySolved() {
+  if (currentMode !== 'daily' || familySolvedToday) return;
+  const deviceScore = await fetchDeviceScore();
+  if (deviceScore) {
+    familySolvedToday = true;
+    buildGame('daily');
+  }
+}
+
 function showFamilyCodeModal() {
   const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
   const card = document.createElement('div'); card.className = 'arcade-card';
@@ -1289,7 +1299,7 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
 
   checkClaimableData();
   if (window.Auth) {
-    window.Auth.onAuthStateChange(() => { checkClaimableData(); });
+    window.Auth.onAuthStateChange(() => { checkClaimableData(); recheckDailySolved(); });
   }
 
   const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
