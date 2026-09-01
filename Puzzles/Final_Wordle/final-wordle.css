@@ -487,6 +487,13 @@ body {
   text-transform: uppercase;
   color: var(--text2);
 }
+.next-word-timer {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
 
 /* Arcade name modal */
 .arcade-overlay {

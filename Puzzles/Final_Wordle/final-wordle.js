@@ -870,7 +870,9 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     await renderLeaderboard(true);
     if (isFamilyUnlocked()) await updateFamilyLeaderboard(true);
     const lbEl = document.getElementById('leaderboard');
-    lbEl.insertAdjacentElement('afterend', createShareButton(() => formatTime(timeMs)));
+    const shareBtn = createShareButton(() => formatTime(timeMs));
+    lbEl.insertAdjacentElement('afterend', shareBtn);
+    shareBtn.insertAdjacentElement('afterend', createNextWordCountdown());
     lbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   async function attemptSubmit(name) {
@@ -936,6 +938,28 @@ function showFreeNameModal(score) {
   setTimeout(() => nameInp.focus(), 50);
 }
 
+function createNextWordCountdown() {
+  const el = document.createElement('div'); el.className = 'next-word-timer';
+  let intervalId;
+  function update() {
+    const nextBoundary = dayKeyToDate(addDays(getDayKey(), 1)).getTime() + 5 * 60 * 60 * 1000;
+    const remaining = nextBoundary - Date.now();
+    if (remaining <= 0) {
+      el.textContent = 'new challenge available — refresh this page!';
+      clearInterval(intervalId);
+      return;
+    }
+    const totalSec = Math.floor(remaining / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    el.textContent = `incoming challenge: ${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  update();
+  intervalId = setInterval(update, 1000);
+  return el;
+}
+
 function showDailyRecap(saved, root) {
   const msg = document.createElement('div'); msg.className = 'daily-recap';
   const line1 = document.createElement('div'); line1.className = 'recap-solved'; line1.textContent = 'already solved today';
@@ -943,6 +967,7 @@ function showDailyRecap(saved, root) {
   const timeMs = saved.time_ms !== undefined ? saved.time_ms : saved.timeMs;
   line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs);
   msg.appendChild(line1); msg.appendChild(line2);
+  msg.appendChild(createNextWordCountdown());
   msg.appendChild(createShareButton(() => formatTime(timeMs)));
   root.appendChild(msg);
 }
