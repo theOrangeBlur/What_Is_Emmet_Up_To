@@ -18,6 +18,24 @@ const MAX_TRIES_PER_WORD = 1500; // guess-path attempts on one answer before giv
 const FAMILY_CODE = 'COOPERSTUPOR';
 const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — no is_family rows exist before this
 
+// Templates for the "copy score" share button — {score} is replaced with a mode-appropriate
+// formatted string (a time like "1:23.4" for Daily, "N words" for Free Play). Add more freely.
+const SHARE_PHRASES = [
+  "I scored {score} today, eat my dust!",
+  "{score}. Beat that, and I'll eat my shoe.",
+  "{score}; a time you could only dream of.",
+  "The legends are true. I got it in {score}.",
+  "{score} suckerrrrrrrrrr",
+  "{score}; if ya ain't first, yer last.",
+  "Look, ma, no hands! {score}",
+  "{score}. Put that in your pipe and smoke it."
+];
+
+function buildShareText(scoreText) {
+  const template = SHARE_PHRASES[Math.floor(Math.random() * SHARE_PHRASES.length)];
+  return template.replace('{score}', scoreText) + '\n' + location.href;
+}
+
 const POINTS_TABLE = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3];
 function pointsForPlace(place) { return place <= POINTS_TABLE.length ? POINTS_TABLE[place - 1] : 3; }
 
@@ -214,6 +232,37 @@ function formatTime(ms) {
   const s = Math.floor(ms / 1000);
   const t = Math.floor((ms % 1000) / 100);
   return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + '.' + t;
+}
+
+// getScoreText is a function, not a plain string, so the share text (and its randomly
+// picked phrase) is generated fresh on every click rather than frozen at button-creation time.
+function createShareButton(getScoreText) {
+  const btn = document.createElement('button');
+  btn.className = 'share-btn';
+  btn.textContent = 'copy score';
+  let resetTimer = null;
+  let fallbackEl = null;
+  btn.addEventListener('click', async () => {
+    const text = buildShareText(getScoreText());
+    clearTimeout(resetTimer);
+    if (fallbackEl) { fallbackEl.remove(); fallbackEl = null; }
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      resetTimer = setTimeout(() => { btn.textContent = 'copy score'; btn.classList.remove('copied'); }, 2000);
+    } catch (e) {
+      fallbackEl = document.createElement('textarea');
+      fallbackEl.className = 'share-fallback';
+      fallbackEl.value = text;
+      fallbackEl.readOnly = true;
+      btn.insertAdjacentElement('afterend', fallbackEl);
+      fallbackEl.focus(); fallbackEl.select();
+      btn.textContent = 'select & copy below';
+      btn.classList.add('copied');
+    }
+  });
+  return btn;
 }
 
 function getDeviceId() {
@@ -810,7 +859,9 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
     familySolvedToday = true;
     await renderLeaderboard(true);
     if (isFamilyUnlocked()) await updateFamilyLeaderboard(true);
-    document.getElementById('leaderboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const lbEl = document.getElementById('leaderboard');
+    lbEl.insertAdjacentElement('afterend', createShareButton(() => formatTime(timeMs)));
+    lbEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   async function attemptSubmit(name) {
     showInscribingState();
@@ -860,7 +911,10 @@ function showFreeNameModal(score) {
     await submitFreeScore(name, score);
     await renderFreeLeaderboard();
     const lb = document.getElementById('leaderboard');
-    if (lb) lb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (lb) {
+      lb.insertAdjacentElement('afterend', createShareButton(() => score + ' word' + (score === 1 ? '' : 's')));
+      lb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
   submitBtn.addEventListener('click', () => doSave(nameInp.value));
   nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(nameInp.value); });
@@ -879,6 +933,7 @@ function showDailyRecap(saved, root) {
   const timeMs = saved.time_ms !== undefined ? saved.time_ms : saved.timeMs;
   line2.textContent = (saved.name ? saved.name + ' — ' : '') + formatTime(timeMs);
   msg.appendChild(line1); msg.appendChild(line2);
+  msg.appendChild(createShareButton(() => formatTime(timeMs)));
   root.appendChild(msg);
 }
 
@@ -924,7 +979,9 @@ function endFreeSession() {
     if (qualifiesForBoard || beatPersonalBest) {
       showFreeNameModal(score);
     } else {
-      renderFreeLeaderboard();
+      await renderFreeLeaderboard();
+      const lb = document.getElementById('leaderboard');
+      if (lb) lb.insertAdjacentElement('afterend', createShareButton(() => score + ' word' + (score === 1 ? '' : 's')));
     }
   }, 800);
 }
@@ -1139,6 +1196,7 @@ async function buildGame(mode) {
       if (mode === 'daily') {
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
+        winMsg.insertAdjacentElement('afterend', createShareButton(() => formatTime(timeMs)));
         setTimeout(() => showNameModal(timeMs, guessCount, dayKey, t => { nameTarget = t; }), 800);
       } else if (mode === 'free') {
         freeSession.wordsSolved++;

@@ -201,6 +201,37 @@ body {
   transition: all .15s;
 }
 .reveal-btn:hover { border-color: var(--text2); color: var(--text); }
+.share-btn {
+  display: block;
+  width: 340px;
+  max-width: 100%;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+  margin: 8px auto;
+  transition: all .15s;
+}
+.share-btn:hover { border-color: var(--text2); color: var(--text); }
+.share-btn.copied { border-color: var(--green); color: var(--green-light); }
+.share-fallback {
+  display: block;
+  width: 340px;
+  max-width: 100%;
+  margin: 6px auto 0;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 8px;
+  resize: none;
+}
 .revealed {
   display: none;
   font-family: 'Syne', sans-serif;
