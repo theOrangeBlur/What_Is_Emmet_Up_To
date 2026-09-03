@@ -3,17 +3,39 @@
  * Handles filtering by tags, sorting, and expanding project details
  */
 
+// Set the details panel's max-height to fit its content exactly, so the
+// reveal isn't capped by a guessed pixel value (long write-ups got clipped)
+// or left at 0 forever (a sliver of text peeking through when collapsed).
+function measureDetails(details) {
+    details.style.maxHeight = details.scrollHeight + 'px';
+}
+
 // Toggle project details visibility
 function toggleProject(slug) {
     const details = document.getElementById(`${slug}-details`);
     const card = document.getElementById(slug);
+    const expand = !details.classList.contains('expanded');
 
-    if (details.classList.contains('expanded')) {
-        details.classList.remove('expanded');
-        card.classList.remove('expanded');
+    details.classList.toggle('expanded', expand);
+    card.classList.toggle('expanded', expand);
+
+    if (expand) {
+        measureDetails(details);
+        // Images/videos in the write-up can finish loading after this
+        // measurement and grow the card, so re-measure once they're in.
+        details.querySelectorAll('img, video').forEach(el => {
+            const ready = el.tagName === 'VIDEO' ? el.readyState >= 1 : el.complete;
+            if (!ready) {
+                const evt = el.tagName === 'VIDEO' ? 'loadedmetadata' : 'load';
+                el.addEventListener(evt, () => {
+                    if (details.classList.contains('expanded')) {
+                        measureDetails(details);
+                    }
+                }, { once: true });
+            }
+        });
     } else {
-        details.classList.add('expanded');
-        card.classList.add('expanded');
+        details.style.maxHeight = '0px';
     }
 }
 

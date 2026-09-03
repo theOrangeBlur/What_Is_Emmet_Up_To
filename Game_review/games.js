@@ -17,12 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
         game.dataset.originalIndex = index;
     });
 
+    // Set the details panel's max-height to fit its content exactly, so the
+    // reveal isn't capped by a guessed pixel value (long reviews got clipped)
+    // or left at 0 forever (a sliver of text peeking through when collapsed).
+    function setCardExpanded(card, expand) {
+        const details = card.querySelector('.game-card__details');
+        card.classList.toggle('expanded', expand);
+        if (!details) return;
+        details.style.maxHeight = expand ? details.scrollHeight + 'px' : '0px';
+    }
+
     // Click to expand/collapse reviews
     gameList.addEventListener('click', (e) => {
         const card = e.target.closest('.game-card.expandable');
         if (!card) return;
         if (e.target.tagName === 'A') return;
-        card.classList.toggle('expanded');
+        setCardExpanded(card, !card.classList.contains('expanded'));
     });
 
     function applyFiltersAndSort() {
@@ -34,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const status = game.dataset.status;
             const visible = filterStatus === 'all' || status === filterStatus;
             game.style.display = visible ? '' : 'none';
-            game.classList.remove('expanded');
+            setCardExpanded(game, false);
         });
 
         // Get visible games for sorting

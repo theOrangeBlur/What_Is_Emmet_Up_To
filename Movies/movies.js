@@ -76,6 +76,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // EXPAND/COLLAPSE FUNCTIONALITY
     // ============================================
 
+    // Set the details panel's max-height to fit its content exactly, so the
+    // reveal isn't capped by a guessed pixel value (long reviews got clipped)
+    // or left at 0 forever (a sliver of text peeking through when collapsed).
+    function setCardExpanded(card, expand) {
+        const details = card.querySelector('.movie-card__details');
+        card.classList.toggle('expanded', expand);
+        if (!details) return;
+
+        if (expand) {
+            details.style.maxHeight = details.scrollHeight + 'px';
+            // Lazy-loaded posters can finish loading after this measurement
+            // and grow the card, so re-measure once they're in.
+            details.querySelectorAll('img').forEach(img => {
+                if (!img.complete) {
+                    img.addEventListener('load', () => {
+                        if (card.classList.contains('expanded')) {
+                            details.style.maxHeight = details.scrollHeight + 'px';
+                        }
+                    }, { once: true });
+                }
+            });
+        } else {
+            details.style.maxHeight = '0px';
+        }
+    }
+
     // Add click handlers to expandable cards
     movieGrid.addEventListener('click', (e) => {
         const card = e.target.closest('.movie-card.expandable');
@@ -84,8 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Don't toggle if clicking a link
         if (e.target.tagName === 'A') return;
 
-        // Toggle expanded state
-        card.classList.toggle('expanded');
+        setCardExpanded(card, !card.classList.contains('expanded'));
     });
 
     // ============================================
@@ -158,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.display = visible ? '' : 'none';
 
             // Collapse when filtering/sorting
-            card.classList.remove('expanded');
+            setCardExpanded(card, false);
 
             movieGrid.appendChild(card);
         });

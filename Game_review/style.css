@@ -488,7 +488,6 @@ section h2 {
 }
 
 .game-card.expanded .game-card__details {
-    max-height: 8000px;
     transition: max-height 0.5s ease-in;
 }
 

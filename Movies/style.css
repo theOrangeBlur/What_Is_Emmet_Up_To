@@ -456,7 +456,6 @@ section h2 {
 }
 
 .movie-card.expanded .movie-card__details {
-    max-height: 1000px;
     transition: max-height 0.5s ease-in;
 }
 
