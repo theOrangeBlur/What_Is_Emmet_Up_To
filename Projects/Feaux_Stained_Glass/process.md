@@ -12,7 +12,7 @@ Bathroom light is too bright... and not nearly whimsical enough!
 ## Process
 I've really loved playing with translucent PETG in the past. I've made gorgeous lamps and cool vases, but it's a tricky material to get really translucent! I thought it would be fun to experiment with using that material to make the light feel more like a stained glass skylight.
 
-I began by drafting out a geometric design featuring a checkerboard shape with a septagon in the center. What an underrated polygon. I then added a shell cage that would act like the solder in a stained glass piece.
+I began by drafting out a geometric design featuring a checkerboard shape with a hexagon in the center. What an underrated polygon. I then added a shell cage that would act like the solder in a stained glass piece.
 
 ![CAD screenshot 1](images/Screenshot%202026-09-18%20165438.png)
 ![CAD screenshot 2](images/Screenshot%202026-09-18%20165409.png)
