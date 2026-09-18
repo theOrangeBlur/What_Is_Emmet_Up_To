@@ -138,5 +138,126 @@
       "time_ms": 45490,
       "guesses": 1
     }
+  ],
+  "20260904": [
+    {
+      "name": "TAMMY",
+      "time_ms": 6290,
+      "guesses": 1
+    }
+  ],
+  "20260905": [
+    {
+      "name": "BRYT",
+      "time_ms": 14854,
+      "guesses": 1
+    }
+  ],
+  "20260907": [
+    {
+      "name": "KEVIN",
+      "time_ms": 31111,
+      "guesses": 1
+    }
+  ],
+  "20260908": [
+    {
+      "name": "KEVIN",
+      "time_ms": 9864,
+      "guesses": 1
+    }
+  ],
+  "20260909": [
+    {
+      "name": "TAMMY",
+      "time_ms": 27832,
+      "guesses": 1
+    },
+    {
+      "name": "KEVIN",
+      "time_ms": 35684,
+      "guesses": 1
+    }
+  ],
+  "20260910": [
+    {
+      "name": "TAMMY",
+      "time_ms": 8782,
+      "guesses": 1
+    },
+    {
+      "name": "JIMBO",
+      "time_ms": 47553,
+      "guesses": 1
+    }
+  ],
+  "20260911": [
+    {
+      "name": "KEVIN",
+      "time_ms": 19738,
+      "guesses": 1
+    },
+    {
+      "name": "JIMBO",
+      "time_ms": 61812,
+      "guesses": 1
+    },
+    {
+      "name": "TAMMY",
+      "time_ms": 199303,
+      "guesses": 1
+    }
+  ],
+  "20260912": [
+    {
+      "name": "TAMMY",
+      "time_ms": 74317,
+      "guesses": 1
+    }
+  ],
+  "20260913": [
+    {
+      "name": "JIMBO",
+      "time_ms": 5922,
+      "guesses": 1
+    },
+    {
+      "name": "TAMMY",
+      "time_ms": 40908,
+      "guesses": 1
+    }
+  ],
+  "20260914": [
+    {
+      "name": "TAMMY",
+      "time_ms": 8782,
+      "guesses": 1
+    },
+    {
+      "name": "KEVIN",
+      "time_ms": 55779,
+      "guesses": 1
+    }
+  ],
+  "20260915": [
+    {
+      "name": "JIMBO",
+      "time_ms": 22248,
+      "guesses": 1
+    }
+  ],
+  "20260916": [
+    {
+      "name": "JIMBO",
+      "time_ms": 94216,
+      "guesses": 1
+    }
+  ],
+  "20260918": [
+    {
+      "name": "KEVIN",
+      "time_ms": 57800,
+      "guesses": 1
+    }
   ]
 }
