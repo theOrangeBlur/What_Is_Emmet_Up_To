@@ -6,17 +6,6 @@
     <title>Projects | Emmet</title>
     <meta name="description" content="Emmet's projects - 3D printing, robotics, and more">
     <link rel="stylesheet" href="./style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../shared/auth-widget.css">
-    <script>
-      window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
-      window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="../shared/auth.js"></script>
-    <script src="../shared/auth-widget.js"></script>
 </head>
 <body>
     <nav class="top-nav">
@@ -52,6 +41,42 @@
             </div>
 
             <div class="project-list" id="project-list">
+
+        <article class="project-card"
+                 id="feaux-stained-glass"
+                 data-tags="3D Print,3D Modeling"
+                 data-status="completed"
+                 data-date="2026-09">
+            <div class="project-card__preview" onclick="toggleProject('feaux-stained-glass')">
+                <img src="Feaux_Stained_Glass/images/light_on.jpg" alt="Faux Stained Glass" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Faux Stained Glass</h3>
+                    <div class="project-meta">
+                        <span class="date">Sep 2026</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="feaux-stained-glass-details">
+                <h3>Problem</h3>
+Bathroom light is too bright... and not nearly whimsical enough!
+<h3>Process</h3>
+I've really loved playing with translucent PETG in the past. I've made gorgeous lamps and cool vases, but it's a tricky material to get really translucent! I thought it would be fun to experiment with using that material to make the light feel more like a stained glass skylight.
+<p>I began by drafting out a geometric design featuring a checkerboard shape with a septagon in the center. What an underrated polygon. I then added a shell cage that would act like the solder in a stained glass piece.</p>
+<p><img src="Feaux_Stained_Glass/images/Screenshot%202026-09-18%20165438.png" alt="CAD screenshot 1" class="project-image" loading="lazy"> <img src="Feaux_Stained_Glass/images/Screenshot%202026-09-18%20165409.png" alt="CAD screenshot 2" class="project-image" loading="lazy"></p>
+<p>Getting a 3d printed material to be transparent is very tricky! If you're going to try it, I found best results by cranking up the heat, slowing the nozzle way down, turning off the fan, and -most importantly- keeping 100% infill. That sucker has to be <em>solid</em>. Any air in there makes the piece foggy.</p>
+<p>I ended up getting these random lines in my first batch job, from the toolhead dripping extra material as it slowly traversed to its next piece. I fixed that for the second (green) batch by increasing the travel speed in between extrusions. I think it adds to the stained glass effect though, so I didn't reprint the blues. I hot glued the pieces right into the frame!</p>
+<p><img src="Feaux_Stained_Glass/images/glued_pic.jpg" alt="Assembled sheet pic" class="project-image" loading="lazy"> <video src="Feaux_Stained_Glass/images/glued_vid.mp4" class="project-image" controls loop playsinline></video></p>
+<h3>Result</h3>
+After using more hot glue to fix the sheet to my fan light, I think the effect works quite well! I wish it cast colored light around the room more, but it still looks lovely and is pleasantly eye catching. My house is a little less normal, hooray!
+<p><video src="Feaux_Stained_Glass/images/light_vid.mp4" class="project-image" controls loop playsinline></video></p>
+                <button class="collapse-btn" onclick="toggleProject('feaux-stained-glass')">▲ Collapse</button>
+            </div>
+        </article>
 
         <article class="project-card"
                  id="soma-cube"
@@ -197,7 +222,7 @@ I planned for runes to be inscribed on each tunnel opening. These runes would co
                  data-status="completed"
                  data-date="2026-04">
             <div class="project-card__preview" onclick="toggleProject('poop-clip')">
-                <img src="Poop_Clip/images/prototypes.jpg" alt="Poop Clip" class="project-thumbnail" loading="lazy">
+                <img src="Poop_Clip/images/TrevPoopClip.jpg" alt="Poop Clip" class="project-thumbnail" loading="lazy">
                 <div class="project-card__info">
                     <h3>Poop Clip</h3>
                     <div class="project-meta">
@@ -214,14 +239,17 @@ I planned for runes to be inscribed on each tunnel opening. These runes would co
                 <h3>Problem</h3>
 I broke the old dog poop bag holder! Now I have to carry a stinky poop bag!
 <h3>Process</h3>
-I modeled Cypher's face after looking at a lot of line art of dog faces online. 
-It was trickier than I thought it would be to make a good channel for the poop bag not to slip out of, so it took a few tries. I ended up testing with a bag I filled with some gravel.
+A while ago, I found a yorkie face model online and made my mom a poop bag to look like her dog, Blaise:
+<p><img src="Poop_Clip/images/Blaise.jpg" alt="Mom's dog, Blaise" class="project-image" loading="lazy"> <img src="Poop_Clip/images/Blaise_Clip.jpg" alt="Blaise poop bag clip" class="project-image" loading="lazy"></p>
+<p>This time, I modeled Cypher's face after looking at a lot of line art of dog faces online.  It was trickier than I thought it would be to make a good channel for the poop bag not to slip out of, so it took a few tries. I ended up testing with a bag I filled with some gravel.</p>
 <p><img src="Poop_Clip/images/prototypes.jpg" alt="V1 Draft Right" class="project-image" loading="lazy"></p>
+<p>In September 0f 2026, I decided to make a nice one of these for Megan's birthday, modeled after her dog Trev. I found a sketch online of a very geometrical husky, and changed it to look just like Trev:</p>
+<p><img src="Poop_Clip/images/TrevAndCy.jpg" alt="Megan's dog, Trev" class="project-image" loading="lazy"> <img src="Poop_Clip/images/TrevPoopClip.jpg" alt="Trev based poop bag clip" class="project-image" loading="lazy"></p>
+<p><span class="splash-text">I would love taking a commision to make some for you and your dog!</span></p>
 <h3>Result</h3>
 The final version holds that bag no problem! Cypher even had a record breaking three poop walk recently, which the holder handled with no drops. Hooray!
 <p><img src="Poop_Clip/images/on_leash.jpg" alt="final Cypher poop clip on leash" class="project-image" loading="lazy"></p>
-<p>I've also made one for my mom and her dog! If you want me to make one of your dog... let me know!</p>
-<p><img src="Poop_Clip/images/Blaise.jpg" alt="Mom's dog, Blaise" class="project-image" loading="lazy"> <img src="Poop_Clip/images/Blaise_Clip.jpg" alt="Blaise poop bag clip" class="project-image" loading="lazy"></p>
+
                 <button class="collapse-btn" onclick="toggleProject('poop-clip')">▲ Collapse</button>
             </div>
         </article>
@@ -714,7 +742,7 @@ Will the changing radius of the winch make it hard to control height precicely? 
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-08-07</p>
+            <p>Last updated: 2026-09-18</p>
         </footer>
 
         <!-- Improvements Section -->

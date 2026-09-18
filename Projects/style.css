@@ -508,3 +508,22 @@ hr {
     color: #60a5fa;
     font-style: italic;
 }
+
+/* Minecraft-style splash text */
+.splash-text {
+    display: inline-block;
+    color: #ffd700;
+    font-weight: bold;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+    animation: splash-undulate 0.7s ease-in-out infinite alternate;
+    transform-origin: center;
+}
+
+@keyframes splash-undulate {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.1);
+    }
+}
