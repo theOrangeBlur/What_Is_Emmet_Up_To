@@ -331,26 +331,28 @@ body {
     display: block;
 }
 
-/* Image Gallery - multiple images in a row */
-.project-card__details p:has(img) {
+/* Media rows - consecutive images/videos sit side by side */
+.media-row {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
     margin: 20px 0;
-    align-items: flex-start;
+    align-items: center;
 }
 
-.project-card__details p img {
-    max-width: calc(50% - 10px);
+.media-row > .project-image {
+    max-width: calc(50% - 8px);
     max-height: 350px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
     margin: 0;
 }
 
-/* Single image should be larger */
-.project-card__details p img:only-child {
+/* Three across when there are exactly three */
+.media-row--3 > .project-image {
+    max-width: calc(33.333% - 10px);
+}
+
+/* A lone image/video should be larger */
+.media-row--1 > .project-image {
     max-width: 100%;
     max-height: 500px;
 }
@@ -411,7 +413,7 @@ body {
         justify-content: center;
     }
 
-    .project-card__details p img {
+    .media-row > .project-image {
         max-width: 100%;
     }
 }

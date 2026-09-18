@@ -148,14 +148,42 @@ function markdownToHtml(md, projectFolder) {
 
     // Paragraphs - split by double newlines
     const blocks = html.split(/\n\n+/);
+    const isMediaLine = line => /^(<img [^>]*>|<video [^>]*><\/video>)$/.test(line);
     html = blocks.map(block => {
         block = block.trim();
         if (!block) return '';
-        // Don't wrap structural tags; do wrap img/video so side-by-side CSS applies
+        // Don't wrap structural tags
         if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<div')) {
             return block;
         }
-        return `<p>${block.replace(/\n/g, ' ')}</p>`;
+
+        // Group runs of consecutive img/video lines into a .media-row so they
+        // sit side by side; text lines around them become ordinary paragraphs
+        const out = [];
+        let media = [];
+        let text = [];
+        const flushMedia = () => {
+            if (!media.length) return;
+            out.push(`<div class="media-row media-row--${Math.min(media.length, 4)}">${media.join('')}</div>`);
+            media = [];
+        };
+        const flushText = () => {
+            if (!text.length) return;
+            out.push(`<p>${text.join(' ')}</p>`);
+            text = [];
+        };
+        for (const line of block.split('\n').map(l => l.trim()).filter(Boolean)) {
+            if (isMediaLine(line)) {
+                flushText();
+                media.push(line);
+            } else {
+                flushMedia();
+                text.push(line);
+            }
+        }
+        flushMedia();
+        flushText();
+        return out.join('\n');
     }).join('\n');
 
     return html;

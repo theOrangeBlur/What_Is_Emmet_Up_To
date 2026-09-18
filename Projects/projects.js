@@ -3,11 +3,10 @@
  * Handles filtering by tags, sorting, and expanding project details
  */
 
-// Set the details panel's max-height to fit its content exactly, so the
-// reveal isn't capped by a guessed pixel value (long write-ups got clipped)
-// or left at 0 forever (a sliver of text peeking through when collapsed).
-function measureDetails(details) {
-    details.style.maxHeight = details.scrollHeight + 'px';
+// Full rendered height of the details panel (content + padding + border),
+// which is what max-height means under border-box sizing.
+function fullHeight(details) {
+    return details.scrollHeight + (details.offsetHeight - details.clientHeight);
 }
 
 // Toggle project details visibility
@@ -16,27 +15,40 @@ function toggleProject(slug) {
     const card = document.getElementById(slug);
     const expand = !details.classList.contains('expanded');
 
-    details.classList.toggle('expanded', expand);
     card.classList.toggle('expanded', expand);
 
     if (expand) {
-        measureDetails(details);
-        // Images/videos in the write-up can finish loading after this
-        // measurement and grow the card, so re-measure once they're in.
-        details.querySelectorAll('img, video').forEach(el => {
-            const ready = el.tagName === 'VIDEO' ? el.readyState >= 1 : el.complete;
-            if (!ready) {
-                const evt = el.tagName === 'VIDEO' ? 'loadedmetadata' : 'load';
-                el.addEventListener(evt, () => {
-                    if (details.classList.contains('expanded')) {
-                        measureDetails(details);
-                    }
-                }, { once: true });
-            }
-        });
+        // The vertical padding transitions in with the panel, so measuring
+        // mid-transition misses it and clips the bottom (the collapse
+        // button). Snap the padding to its final value before measuring.
+        details.style.transition = 'none';
+        details.classList.add('expanded');
+        const height = fullHeight(details);
+        details.offsetHeight; // flush styles so the snap takes effect
+        details.style.transition = '';
+        details.style.maxHeight = height + 'px';
     } else {
+        // Coming from max-height: none, so pin the current height first or
+        // there's nothing to animate from.
+        details.style.maxHeight = fullHeight(details) + 'px';
+        details.offsetHeight;
+        details.classList.remove('expanded');
         details.style.maxHeight = '0px';
     }
+}
+
+// Once the reveal finishes, drop the fixed max-height so the panel tracks
+// its content: late-loading images/videos and window resizes (which re-wrap
+// the media rows) can't leave the bottom clipped.
+function initDetailsRelease() {
+    document.querySelectorAll('.project-card__details').forEach(details => {
+        details.addEventListener('transitionend', e => {
+            if (e.target === details && e.propertyName === 'max-height' &&
+                details.classList.contains('expanded')) {
+                details.style.maxHeight = 'none';
+            }
+        });
+    });
 }
 
 function initSteppers() {
@@ -68,6 +80,7 @@ function initSteppers() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initSteppers();
+    initDetailsRelease();
     const projectList = document.getElementById('project-list');
     const sortSelect = document.getElementById('sort-by');
     const tagFilters = document.querySelectorAll('.tag-filter');
