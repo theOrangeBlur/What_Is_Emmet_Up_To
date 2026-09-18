@@ -1,5 +1,5 @@
 ---
-title: "SOMA Puzzle Cube"
+title: "Soma Puzzle Cube"
 status: "completed"
 tags: ["3D Print", "3D Modeling", "Puzzle", "Gotham"]
 start_date: "2026-06-08"
