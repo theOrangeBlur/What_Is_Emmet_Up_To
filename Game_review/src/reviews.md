@@ -1,5 +1,5 @@
 
-# *Another Crab’s Treasure*
+# Another Crab’s Treasure
 
 
 Another Crab’s Treasure
@@ -11,7 +11,7 @@ A soulslike that’s colorful?? Another Crab’s Treasure was a pleasure every m
  Level design was also quite fun. Platforming was generally quite easy, but still felt rewarding to explore and find things. I love being able to swim through the water briefly and zipping to grapples and enemies! It was also very fun when you would pop in and out of the water. I will buy any game this studio (Angry Crab) makes in the future!
 
 
-# *Nine Sols*
+# Nine Sols
 
 
 Nine Sols
@@ -25,7 +25,7 @@ Good music and great visuals, though at times a bit buggy. I once had to un-down
  The final boss … wow. What a step up in difficulty! She took me four hours. Reading online, I see people claim weeks even. And yeah, sure she’s hard. But once you learn the moves… it feels pretty great. I think the parry system makes you feel like you understand the boss so well, in a way that’s different than clunky dark souls bosses. Nailing parry after parry after charged parry and slicing off a huge chunk of health is soooo satisfying.
 
 
-# *Rogue Prince of Persia*
+# Rogue Prince of Persia
 
 
 The Rogue Prince of Persia
@@ -41,7 +41,7 @@ The game still suffered from long run-backs, though what made me keep playing wa
 I did one final run of the game with a challenge modifier - and made it all the way through! I felt the temptation to keep running and running, and to do it all… and with a final breath I resisted the temptation and uninstalled the game. Well done, Bethesda!
 
 
-# *Haiku the Robot*
+# Haiku the Robot
 
 
 Haiku the Robot
@@ -53,7 +53,7 @@ You know me, I can’t resist a good metroidvania! From the outset I was thinkin
 The game feels very much like a light version of hollow knight. There is a slight story, some cute characters, and similar metroidvania elements. Maybe I’m remembering hollow knight with too much fondness… I’ll have to do it again! But this just felt like a watered down version. Even the DLC was similar, with a boss rush zone with difficulty settings. That’s not to say this isn’t a good game - it is! I enjoyed my eight hours scouring every corner. I even enjoyed the boss rush section, where I grew to even appreciate the overheating mechanic. I started using bombs a lot more to beat the bosses more quickly, so I was using my specials in a measured way, which felt unique to this metroidvania.
 
 
-# *Unsighted*
+# Unsighted
 
 
 Unsighted
@@ -71,7 +71,7 @@ I had an interesting experience while fighting an incredibly robust miniboss. I 
  Many of the best powerups came from giving npcs meteor dust, which often felt quite satisfying. By the end of the game, I had that wonderful metroidvania feeling of being very powerful. The devs also clearly had speedrunning at top of mind, I’d love to watch a speedrun; there’s lots of sequence break potential.
 
 
-# *Silksong*
+# Silksong
 
 
 Silksong
@@ -83,21 +83,21 @@ It’s finally here!! I’m finally playing it!! The sequel to one of my favorit
  Five hours in, and I’m loving it. It definitely feels harder than Hollow Knight, so I get what people have been commiserating about. There are enemies and hazards that do two masks of damage right off the bat! I feel incredibly frail. And I need to have my new version of my soul meter (Hornet converts Soul to Silk) completely full to heal, which gives me three masks back. This makes me not want to use my spells for damage because of how urgently I might need the Silk to heal. Luckily, there is a secondary way of doing damage, called “tools.” These are awesome. Every enemy drops a little currency to help make more, and you craft them automatically at benches. I feel like all of the systems that made Hollow Knight great have been pushed up a notch. The “charm” system is overhauled, the “spell” system is more challenging… even pogoing off enemies is more challenging, with Hornets downward attack going at an angle. Except actually, you can change how all of her attacks move and feel with different modes!! There is so much to play around with, and it's just so darn fun and beautiful. I was irked about how slow moving I was until finally getting the dash, and oh boy even the dash is more grown up. Tapping still makes Hornet dash, but holding it will make her run, which feels fantastic. Her momentum in all regards is thrilling. My only complaint so far is how darn frail I am and feel, making me not want to use cool spells… but maybe this will change as I get better and get more items!
 
 
-# *Time Flies*
+# Time Flies
 
 
 Time Flies
 
 These days I find myself musing over my mortality quite often. What do I want to achieve before I die? What will I do with the gift of today that I have been blessed with? These questions are frightening to face, and I find people are doing it less and less thanks to how easily we can distract ourselves in the modern age. 
 
- Time Flies does not impose these or any ideas of mortality, but rather invites us to ask ourselves these questions by shortening our lifespan from years to seconds (literally! You choose a country and it converts WHO lifespan data from years to seconds for your run). You are then challenged to achieve the things on your bucket list in those short few precious seconds. You fill them with meaning by helping a friend, making someone laugh, listening to music, exploring sexuality, and many other wholesome and worthwhile endeavors. Or, you know, you could just run into a lightbulb. 
+ *Time Flies *does not impose these or any ideas of mortality, but rather invites us to ask ourselves these questions by shortening our lifespan from years to seconds (literally! You choose a country and it converts WHO lifespan data from years to seconds for your run). You are then challenged to achieve the things on your bucket list in those short few precious seconds. You fill them with meaning by helping a friend, making someone laugh, listening to music, exploring sexuality, and many other wholesome and worthwhile endeavors. Or, you know, you could just run into a lightbulb. 
 
  This metaphor perhaps isn’t perfect, as in game you start again immediately as a new fly - but with the memories of the last. Or maybe this is commentary on how we must stand on the shoulders of those who came before us to achieve something great? 
 
- These ponderings and many more - plus an enormous dose of whimsy and cleverness - make Time Flies a delicious and impactful two hour treat. Check it out!
+ These ponderings and many more - plus an enormous dose of whimsy and cleverness - make *Time Flies* a delicious and impactful two hour treat. Check it out!
 
 
-# *Split Fiction*
+# Split Fiction
 
 
 Split Fiction
@@ -109,7 +109,7 @@ Jumping between sci-fi and fantasy worlds was quite enjoyable. The side stories 
 I did wish for more of a challenge on the puzzle side, and being able to always see my partner’s screen kept us from having to communicate to solve puzzles often. But, I understand that the target audience here isn’t for hardened puzzlers or even long time gamers. This is a game you can pick up with anyone who is comfortable moving a character with one stick and a camera with the other, and having a grand old time. It does fall in a slightly strange zone where I can’t really play it with someone who isn’t video game literate, but it’s quite easy for any real gamer. Oh well, it was cute and fun!
 
 
-# *Elden Ring*
+# Elden Ring
 
 
 Elden Ring
@@ -125,7 +125,7 @@ More and more bosses also have delayed, super strong attacks that reward players
 Bye bye for now, Elden Ring. At least you’re why I played Dark Souls.
 
 
-# *Windswept*
+# Windswept
 
 
 Windswept
@@ -137,7 +137,7 @@ There are cracks for sure - the small screen and fast baddies can lead to offscr
  Yeah actually I don’t think this game is worth completing after all XD The super secret crazy hard post-game levels get to the point of being far more annoying and time consuming than fun for me, which is a huge shame. It feels very much like a Kaizo Mario game.
 
 
-# *Marvel's Spider-Man: Miles Morales*
+# Marvel's Spider-Man: Miles Morales
 
 
 Marvel’s Spider-Man: Miles Morales
@@ -147,7 +147,7 @@ This second entry in the series feels like the younger brother in a number of wa
 Something I want to highlight about these games are the radio stations you pick up on while swinging through New York. It adds just the right amount of fun and character to the game that makes swinging around even more fun - way better than fast travelling! A large part of what makes Spider-Man in general so wonderful is that the city is peopled with real souls. I love you, Spider-Man!
 
 
-# *Marvel's Spider-Man 2*
+# Marvel's Spider-Man 2
 
 
 Spider-Man 2
@@ -165,7 +165,7 @@ I hope the third major installment shakes up the formula for combat and stealth.
 I have many more specific thoughts about this one, but I don’t want to spoil anything! Hit me up if you want to talk!
 
 
-# *Horizon Forbidden West*
+# Horizon Forbidden West
 
 
 Horizon Forbidden West
@@ -187,7 +187,7 @@ Okay, time for some gripes. The climbing system felt majorly outdated. I was nev
 This game was a wonderful bit of escapism for me during a tough time. I’m sad to let it go, but I’m ready to focus on my world more intently again. What a wonderfully crafted experience!
 
 
-# *Mina the Hollower*
+# Mina the Hollower
 
 
 Mina the Hollower
