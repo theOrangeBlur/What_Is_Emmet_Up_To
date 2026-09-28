@@ -1,7 +1,3 @@
-
-# Another Crab’s Treasure
-
-
 Another Crab’s Treasure
 
 A soulslike that’s colorful?? Another Crab’s Treasure was a pleasure every minute. The undersea world was fantastical and creative, with enemies and friends alike using trash in clever and interesting ways. The message of the game felt to me like how we are all personally dealing with the destruction of our planet. Anger may very well be the most powerful and useful tool to help prevent total disaster, and yet it is a dangerous thing to give in to. 
@@ -9,10 +5,6 @@ A soulslike that’s colorful?? Another Crab’s Treasure was a pleasure every m
  I totally enjoyed the gameplay, especially after learning spell shells and adaptations that really made combat feel interesting. In dark souls proper, I felt like I was approaching each and every enemy basically the same way… and just learning patterns and hitting them. With Kril, I felt much more free to zoom around the map with my hook and line, shoot spells at enemies, get good at parrying, even rolling was still fun. Maybe this is what playing a mage is like in dark souls. Probably not this fun. Getting magic (or Umami, lol) in this game requires you to hit enemies with your fork (main weapon), so you’re still constantly forced to engage. Enemies hit quite hard though, it’s not an easy game. Blocking is quite strong, though your shell may quickly break… so grab another! Zipping between different shells during a boss battle and using their different mechanics was so refreshing. 
 
  Level design was also quite fun. Platforming was generally quite easy, but still felt rewarding to explore and find things. I love being able to swim through the water briefly and zipping to grapples and enemies! It was also very fun when you would pop in and out of the water. I will buy any game this studio (Angry Crab) makes in the future!
-
-
-# Nine Sols
-
 
 Nine Sols
 
@@ -23,10 +15,6 @@ Oh boy, now this is a game!! Combat is quite simple, but fun. It is based largel
 Good music and great visuals, though at times a bit buggy. I once had to un-download the game to resolve a weird issue that made a layer invisible! Enemy (and frankly boss) AI is quite simple, letting them be easily cheesed. The charm-like system was enjoyable and led me to trying a few different builds when challenging bosses.
 
  The final boss … wow. What a step up in difficulty! She took me four hours. Reading online, I see people claim weeks even. And yeah, sure she’s hard. But once you learn the moves… it feels pretty great. I think the parry system makes you feel like you understand the boss so well, in a way that’s different than clunky dark souls bosses. Nailing parry after parry after charged parry and slicing off a huge chunk of health is soooo satisfying.
-
-
-# Rogue Prince of Persia
-
 
 The Rogue Prince of Persia
 
@@ -40,10 +28,6 @@ The game still suffered from long run-backs, though what made me keep playing wa
 
 I did one final run of the game with a challenge modifier - and made it all the way through! I felt the temptation to keep running and running, and to do it all… and with a final breath I resisted the temptation and uninstalled the game. Well done, Bethesda!
 
-
-# Haiku the Robot
-
-
 Haiku the Robot
 
 You know me, I can’t resist a good metroidvania! From the outset I was thinking it looked a little too easy for me, and it hasn’t posed much of a challenge. But it has been pretty fun! No moments have blown my mind, but there are some novel ideas I want to talk about. Any special move (including dashes) increases Haiku’s temperature pretty significantly. Like you can only dash four times in a row before overheating. This feels kind of annoying to me from the outset, because I wanna go fast!! But this opens up the possibility for more restrictive platforming. And at least rolling into a ball makes you a bit faster (or even faster with a “chip”), so rolling around is quite fun. What has been by far the most interesting thing to me is my ability to cheese lots of sections. I do sometimes wonder “was this intended?”, like realizing the ball bounces when landing, and I can jump out of the bounce for a tiny bit of extra height! This let me get to a few places for goodies before I unlocked the double jump. I also did a few sections that required a novel take on the grappling hook by being pretty sick with my platforming. This is the kind of thing that I just know the devs allowed for, and makes me feel awesome. Well done, devs.
@@ -51,10 +35,6 @@ You know me, I can’t resist a good metroidvania! From the outset I was thinkin
  There is a particularly novel section of the map that’s super hot, preventing you from using many of your moves, complete with a powerful boss. Another section makes all the enemies much more difficult when you destroy a hive. Yet another has you turn on the machinery so many gears change the platforms and such.
 
 The game feels very much like a light version of hollow knight. There is a slight story, some cute characters, and similar metroidvania elements. Maybe I’m remembering hollow knight with too much fondness… I’ll have to do it again! But this just felt like a watered down version. Even the DLC was similar, with a boss rush zone with difficulty settings. That’s not to say this isn’t a good game - it is! I enjoyed my eight hours scouring every corner. I even enjoyed the boss rush section, where I grew to even appreciate the overheating mechanic. I started using bombs a lot more to beat the bosses more quickly, so I was using my specials in a measured way, which felt unique to this metroidvania.
-
-
-# Unsighted
-
 
 Unsighted
 
@@ -70,10 +50,6 @@ I had an interesting experience while fighting an incredibly robust miniboss. I 
 
  Many of the best powerups came from giving npcs meteor dust, which often felt quite satisfying. By the end of the game, I had that wonderful metroidvania feeling of being very powerful. The devs also clearly had speedrunning at top of mind, I’d love to watch a speedrun; there’s lots of sequence break potential.
 
-
-# Silksong
-
-
 Silksong
 
 It’s finally here!! I’m finally playing it!! The sequel to one of my favorite games of all time!! 
@@ -81,10 +57,6 @@ It’s finally here!! I’m finally playing it!! The sequel to one of my favorit
  A quick aside - upon Silksong’s release, Jon and I made a deal that one of us had to beat Pantheon of Hallownest in Hollow Knight before we could play it, so we got together for a weekend and threw ourselves at it as hard as we could. And oh man was it difficult. I feel that I could without much trouble beat each boss individually without taking a single hit… except for absolute radiance, the “perfect” version of the final boss. It took me two days of practice before I felt confident that I could beat her at the top of the pantheon. Sunday evening, I booted it up for one last attempt and finally beat her! What makes her so much more difficult than the rest is that she’s more like an ever-changing platforming challenge, where you must be patient about when you can get your hits in… but then you need to absolutely wail on her.
 
  Five hours in, and I’m loving it. It definitely feels harder than Hollow Knight, so I get what people have been commiserating about. There are enemies and hazards that do two masks of damage right off the bat! I feel incredibly frail. And I need to have my new version of my soul meter (Hornet converts Soul to Silk) completely full to heal, which gives me three masks back. This makes me not want to use my spells for damage because of how urgently I might need the Silk to heal. Luckily, there is a secondary way of doing damage, called “tools.” These are awesome. Every enemy drops a little currency to help make more, and you craft them automatically at benches. I feel like all of the systems that made Hollow Knight great have been pushed up a notch. The “charm” system is overhauled, the “spell” system is more challenging… even pogoing off enemies is more challenging, with Hornets downward attack going at an angle. Except actually, you can change how all of her attacks move and feel with different modes!! There is so much to play around with, and it's just so darn fun and beautiful. I was irked about how slow moving I was until finally getting the dash, and oh boy even the dash is more grown up. Tapping still makes Hornet dash, but holding it will make her run, which feels fantastic. Her momentum in all regards is thrilling. My only complaint so far is how darn frail I am and feel, making me not want to use cool spells… but maybe this will change as I get better and get more items!
-
-
-# Time Flies
-
 
 Time Flies
 
@@ -96,10 +68,6 @@ These days I find myself musing over my mortality quite often. What do I want to
 
  These ponderings and many more - plus an enormous dose of whimsy and cleverness - make Time Flies a delicious and impactful two hour treat. Check it out!
 
-
-# Split Fiction
-
-
 Split Fiction
 
 I played this gem with my buddy David over the course of a few days, and we had a lovely time! Gameplay was easy enough that anyone with video game literacy can sit down and have a good time, while the action sequences, story, and beautiful settings are so immersive as to engage all players. I will admit to shedding a tear over some of the more personal moments in the characters' journeys.
@@ -107,10 +75,6 @@ I played this gem with my buddy David over the course of a few days, and we had 
 Jumping between sci-fi and fantasy worlds was quite enjoyable. The side stories were perfect bite sized chucks of novelty and joy. David and I both were anticipating some craziness with mingling of the genres at the climax, and what we got even surprised us! *spoiler warning* the game until this point features a split screen where you can see what your partner is up to, which suddenly starts to warp so that characters can move between, and other quick, fun novelties like that. *spoiler over*
 
 I did wish for more of a challenge on the puzzle side, and being able to always see my partner’s screen kept us from having to communicate to solve puzzles often. But, I understand that the target audience here isn’t for hardened puzzlers or even long time gamers. This is a game you can pick up with anyone who is comfortable moving a character with one stick and a camera with the other, and having a grand old time. It does fall in a slightly strange zone where I can’t really play it with someone who isn’t video game literate, but it’s quite easy for any real gamer. Oh well, it was cute and fun!
-
-
-# Elden Ring
-
 
 Elden Ring
 
@@ -124,10 +88,6 @@ More and more bosses also have delayed, super strong attacks that reward players
 
 Bye bye for now, Elden Ring. At least you’re why I played Dark Souls.
 
-
-# Windswept
-
-
 Windswept
 
 This game scratches that old Donkey Kong Country itch. You’ve got two characters with very diverse moves that play together in an interesting way. With them together, I feel like Mario in Odyssey, able to throw a character up, dash through the air, jump, and dash again! With a moveset as complex as this one, the game loves to throw devastating challenges at you in the midst of its easier levels. This freedom in movement makes each level feel like a playground. There is just the right amount of puzzle solving and searching through the levels for secrets, as well as wonderful diversity from level to level. This is a game I’m going to complete for sure - unless it gets too hard even for me!
@@ -136,19 +96,11 @@ There are cracks for sure - the small screen and fast baddies can lead to offscr
 
  Yeah actually I don’t think this game is worth completing after all XD The super secret crazy hard post-game levels get to the point of being far more annoying and time consuming than fun for me, which is a huge shame. It feels very much like a Kaizo Mario game.
 
-
-# Marvel's Spider-Man: Miles Morales
-
-
 Marvel’s Spider-Man: Miles Morales
 
 This second entry in the series feels like the younger brother in a number of ways. It uses the same beautiful map as the first (but in charming Christmas-time!), and many of the same characters. It’s gorgeous and fun to play (I zipped through it in two days while sick!), feeling just as quick as the first in combat and traversal. Miles’ kit feels fun to play with, a bite sized chunk of spider-manly goodness. The cast of characters is vaguely heartwarming, and the message that “anyone can be a hero; be yourself!” gave me warm fuzzies on a few occasions.
 
 Something I want to highlight about these games are the radio stations you pick up on while swinging through New York. It adds just the right amount of fun and character to the game that makes swinging around even more fun - way better than fast travelling! A large part of what makes Spider-Man in general so wonderful is that the city is peopled with real souls. I love you, Spider-Man!
-
-
-# Marvel's Spider-Man 2
-
 
 Spider-Man 2
 
@@ -163,10 +115,6 @@ The city is even more vast this time, but our spiders have great new abilities t
 I hope the third major installment shakes up the formula for combat and stealth. One of the things I really love about both Batman and Spider-man is how they use their brain to get themselves out of tough challenges. I don’t want to be the guy begging for my super heroes to be more adult… but you really can make a game that works for kids and adults. 
 
 I have many more specific thoughts about this one, but I don’t want to spoil anything! Hit me up if you want to talk!
-
-
-# Horizon Forbidden West
-
 
 Horizon Forbidden West
 
@@ -185,10 +133,6 @@ I was suspicious that the story in this game would feel interesting after how sa
 Okay, time for some gripes. The climbing system felt majorly outdated. I was never excited to do any climbing, as it consisted of pointing the stick in a direction and occasionally pressing a jump button. It was a little inconsistent as well, and so any impatience of mine was met with having to start all over again and progress through the same linear path. Physical combat was majorly expanded and feels satisfying to land hits on people, though it is almost never a good option on machines. I’m considering trying the arena again, but it feels tailored to a normal difficulty level and feels unfair on the higher level I enjoy playing on (maybe I’ll bump it down?). I’m also not a fan of how objects (firegleam and metal flowers in this case) are spread around the map long before I have access to the story-locked items I need to access them, as this makes me feel punished for exploring. A better use of my time would be to rush through the story and then explore… but once I’m done with the story, I am always ready to put the game down. Metroidvanias do this better!
 
 This game was a wonderful bit of escapism for me during a tough time. I’m sad to let it go, but I’m ready to focus on my world more intently again. What a wonderfully crafted experience!
-
-
-# Mina the Hollower
-
 
 Mina the Hollower
 
