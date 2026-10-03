@@ -366,5 +366,22 @@
       "time_ms": 31349,
       "guesses": 1
     }
+  ],
+  "20261003": [
+    {
+      "name": "TAMMY",
+      "time_ms": 4774,
+      "guesses": 1
+    },
+    {
+      "name": "JIMBO",
+      "time_ms": 15274,
+      "guesses": 1
+    },
+    {
+      "name": "BIGRED",
+      "time_ms": 53019,
+      "guesses": 1
+    }
   ]
 }
