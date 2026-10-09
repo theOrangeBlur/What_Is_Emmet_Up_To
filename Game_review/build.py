@@ -39,12 +39,17 @@ else:
     print("  Create Game_review/config.json with: {\"rawg_api_key\": \"YOUR_KEY\"}")
 
 
-def fetch_reviews_from_gdoc() -> bool:
+def fetch_reviews_from_gdoc(known_slugs: set = None) -> bool:
     """Fetch reviews from Google Doc (HTML export) and convert to reviews.md.
 
-    Google Docs uses 'title'-class paragraphs for game names rather than
-    proper heading tags, so we parse the HTML and convert to markdown with
-    # headers that load_reviews() expects.
+    Google Docs *used* to mark game-name headings with a 'title'-class
+    paragraph, but it only exports that class when the paragraph uses the
+    built-in "Title" style; plain centered/bold text exports as an opaque
+    class like "c1" instead, and that mapping can change (or go missing
+    entirely) any time the doc is edited. So instead of trusting formatting,
+    we recognize a heading by checking whether the paragraph's text matches
+    a known game title from games.csv (via known_slugs). This is robust to
+    whatever style the heading happens to have.
 
     Returns True if successful, False otherwise (falls back to local file).
     """
@@ -54,13 +59,13 @@ def fetch_reviews_from_gdoc() -> bool:
         with urllib.request.urlopen(req, timeout=15) as resp:
             html = resp.read().decode('utf-8')
 
-        return _convert_gdoc_html_to_md(html)
+        return _convert_gdoc_html_to_md(html, known_slugs or set())
     except Exception as e:
         print(f"  Warning: Could not fetch reviews from Google Doc: {e}")
         return False
 
 
-def _convert_gdoc_html_to_md(html: str) -> bool:
+def _convert_gdoc_html_to_md(html: str, known_slugs: set) -> bool:
     """Convert Google Doc HTML export to markdown reviews file."""
     import html as html_module
 
@@ -96,7 +101,8 @@ def _convert_gdoc_html_to_md(html: str) -> bool:
         if not text:
             continue
 
-        if 'title' in classes:
+        is_heading = 'title' in classes or slugify(text) in known_slugs
+        if is_heading:
             # This is a game title heading
             md_lines.append(f'\n# {text}\n')
         else:
@@ -609,7 +615,8 @@ def main():
         print(f"  Found summary stats: {summary_stats}")
 
     print("\nFetching reviews from Google Doc...")
-    if fetch_reviews_from_gdoc():
+    known_slugs = {g['id'] for g in games}
+    if fetch_reviews_from_gdoc(known_slugs):
         print("  Successfully fetched reviews from Google Doc")
     else:
         print("  Using local reviews.md as fallback")
