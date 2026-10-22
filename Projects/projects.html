@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects | Emmet</title>
     <meta name="description" content="Emmet's projects - 3D printing, robotics, and more">
-    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
-    <link rel="manifest" href="/media/favicon/site.webmanifest">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -47,6 +43,47 @@
             <div class="project-list" id="project-list">
 
         <article class="project-card"
+                 id="stanley-cup-cryptex"
+                 data-tags="3D Print,3D Modeling,Gotham,Puzzle"
+                 data-status="completed"
+                 data-date="2026-10">
+            <div class="project-card__preview" onclick="toggleProject('stanley-cup-cryptex')">
+                <img src="Stanley Cup Cryptex/images/final.jpg" alt="Stanley Cup Cryptex" class="project-thumbnail" loading="lazy">
+                <div class="project-card__info">
+                    <h3>Stanley Cup Cryptex</h3>
+                    <div class="project-meta">
+                        <span class="date">Aug 2026 - Oct 2026</span>
+                        <span class="status-badge status-completed">completed</span>
+                    </div>
+                    <div class="project-tags">
+                        <span class="tag">3D Print</span><span class="tag">3D Modeling</span><span class="tag">Gotham</span><span class="tag">Puzzle</span>
+                    </div>
+                </div>
+                <span class="expand-icon">▼</span>
+            </div>
+            <div class="project-card__details" id="stanley-cup-cryptex-details">
+                <h3>Problem</h3>
+Gotham Immersive Labs contracted me to build them a puzzle involving the Stanley Cup for <a href="https://midnightmadness.nyc/" target="_blank">Midnight Madness</a>, a charity event that last year raised $818K!
+<h3>Process</h3>
+After staring at pictures of the Stanley Cup for a bit, I became enraptured with the idea of making the entire thing into a gigantic <a href="https://fr.wikipedia.org/wiki/Cryptex" target="_blank">cryptex</a>. This idea evolved into having a second puzzle on the inside, where the player must unscramble the discs again to form another phrase. I was also challenged to make the design work without other hardware being installed, and be toleranced well enough that print farm prints would still function.
+<p>Getting the discs to snap together and still rotate with the right amount of friction was the largest hurdle. A few days of rapidly prototyping different tolerances and mechanisms were required to nail that function down. I studied existing crypteces (I've decided that's what the plural should be) to understand how the mechanism traditionally works, and adapted it easily for the cup. I used steel dowels as teeth to the "key" to prevent players from snapping the key by over-pulling.</p>
+<div class="media-row media-row--2"><img src="Stanley Cup Cryptex/images/scraps.jpg" alt="Multicolored 3d print scraps of discs" class="project-image" loading="lazy"><video src="Stanley Cup Cryptex/images/sliding_open_vid.mp4" class="project-image" controls loop playsinline></video></div>
+<p>I used many images of the real Stanley Cup to make this version as accurate as possible, down to detailing on the bowl. After some research, I found a metallic silver Rust-Oleum spray paint to match the color of the original as well.</p>
+<p>After printing out a working copy, I sent off for 17 cups to be printed by a large print farm. To be honest, I was not thrilled by the results. Some misprints, damage, and major pitting marred the pieces, as well as major seams that needed to be sanded.</p>
+<div class="media-row media-row--3"><img src="Stanley Cup Cryptex/images/zits.jpg" alt="zits on 3d printed disc" class="project-image" loading="lazy"><img src="Stanley Cup Cryptex/images/bad_print.jpg" alt="a poorly printed disc center" class="project-image" loading="lazy"><img src="Stanley Cup Cryptex/images/seams.jpg" alt="seams the size of your mom" class="project-image" loading="lazy"></div>
+<p>Repairing and sanding the pieces down took a few days of boring labor, but the finished painted results were worth the effort.</p>
+<div class="media-row media-row--2"><video src="Stanley Cup Cryptex/images/filled_house_vid.mp4" class="project-image" controls loop playsinline></video><img src="Stanley Cup Cryptex/images/drying.jpg" alt="many pieces drying" class="project-image" loading="lazy"></div>
+<p>Meanwhile, Ryan from Gotham Immersive Labs developed the stickers that would act as the puzzle for the cup. On the outside, winning teams and player names would be spaced such that a key phrase could be read down the entire assembly when the discs have been aligned correctly. The phrase 'the metal inside that makes a champion' would be given as the result to the previous puzzle. On the inside, the support pillars would be arranged to form three different hockey sayings, followed by the player who said them. 10 letters had been replaced with numbers, which when put in order, spelled out the name of the next location for players to go to.</p>
+<div class="media-row media-row--4"><img src="Stanley Cup Cryptex/images/stickers.jpg" alt="A large pile of unused stickers for the project" class="project-image" loading="lazy"><img src="Stanley Cup Cryptex/images/stickered_discs.jpg" alt="The players aligned" class="project-image" loading="lazy"><img src="Stanley Cup Cryptex/images/center_puzzle.jpg" alt="The outer ring aligned inside" class="project-image" loading="lazy"><video src="Stanley Cup Cryptex/images/peer_inside_vid.mp4" class="project-image" controls loop playsinline></video></div>
+<h3>Result</h3>
+Midnight Madness 2026 was an absolute smash hit. We haven't heard the total for charity yet, but 21 teams participated at $24K a pop. The whole hockey puzzle was much loved, with at least one team running off with their prize for their own collection!
+<p>I'll donate one tower to the VT Hunt, maybe they'll do something cool with the idea.</p>
+<div class="media-row media-row--3"><img src="Stanley Cup Cryptex/images/tower_of_fun.jpg" alt="tower" class="project-image" loading="lazy"><img src="Stanley Cup Cryptex/images/office_boxes.jpg" alt="packed up" class="project-image" loading="lazy"><video src="Stanley Cup Cryptex/images/King_Puzzler.mp4" class="project-image" controls loop playsinline></video></div>
+                <button class="collapse-btn" onclick="toggleProject('stanley-cup-cryptex')">▲ Collapse</button>
+            </div>
+        </article>
+
+        <article class="project-card"
                  id="feaux-stained-glass"
                  data-tags="3D Print,3D Modeling"
                  data-status="completed"
@@ -70,7 +107,7 @@
 Bathroom light is too bright... and not nearly whimsical enough!
 <h3>Process</h3>
 I've really loved playing with translucent PETG in the past. I've made gorgeous lamps and cool vases, but it's a tricky material to get really translucent! I thought it would be fun to experiment with using that material to make the light feel more like a stained glass skylight.
-<p>I began by drafting out a geometric design featuring a checkerboard shape with a septagon in the center. What an underrated polygon. I then added a shell cage that would act like the solder in a stained glass piece.</p>
+<p>I began by drafting out a geometric design featuring a checkerboard shape with a hexagon in the center. What an underrated polygon. I then added a shell cage that would act like the solder in a stained glass piece.</p>
 <div class="media-row media-row--2"><img src="Feaux_Stained_Glass/images/Screenshot%202026-09-18%20165438.png" alt="CAD screenshot 1" class="project-image" loading="lazy"><img src="Feaux_Stained_Glass/images/Screenshot%202026-09-18%20165409.png" alt="CAD screenshot 2" class="project-image" loading="lazy"></div>
 <p>Getting a 3d printed material to be transparent is very tricky! If you're going to try it, I found best results by cranking up the heat, slowing the nozzle way down, turning off the fan, and -most importantly- keeping 100% infill. That sucker has to be <em>solid</em>. Any air in there makes the piece foggy.</p>
 <p>I ended up getting these random lines in my first batch job, from the toolhead dripping extra material as it slowly traversed to its next piece. I fixed that for the second (green) batch by increasing the travel speed in between extrusions. I think it adds to the stained glass effect though, so I didn't reprint the blues. I hot glued the pieces right into the frame!</p>
@@ -838,7 +875,7 @@ Will the changing radius of the winch make it hard to control height precicely? 
         </section>
 
         <footer class="page-footer">
-            <p>Last updated: 2026-09-18</p>
+            <p>Last updated: 2026-10-22</p>
         </footer>
 
         <!-- Improvements Section -->

@@ -34,6 +34,8 @@ function toggleProject(slug) {
         details.offsetHeight;
         details.classList.remove('expanded');
         details.style.maxHeight = '0px';
+        // Hidden videos keep playing (and looping) otherwise.
+        details.querySelectorAll('video').forEach(v => v.pause());
     }
 }
 
