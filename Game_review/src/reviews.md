@@ -190,4 +190,12 @@ While I’m being whiney, I despise the combat in this game (which… is basical
 
 
 
-I understand why so many people like this game. It’s addictive as Hell (hehe)! But I would so much rather pay full price for a game that respects my time, and gives me a wonderfully crafted, if far shorter, experience.
+I understand why so many people like this game. It’s addictive as Hell (hehe)! But I would so much rather pay full price for a game that respects my time, and gives me a wonderfully crafted, if far shorter, experience. I can understand the appeal of wanting to ‘just do one run tonight’ after a long day of work and having other responsibilities, but I really can’t get behind this style of game for me. I’m so compelled to complete games, and this game isn’t remotely worth that. It’s barely worth beating one time. It does so little with the formula, and each run ends up feeling almost exactly like a run you’ve done before. It’s just not for me, thanks.
+
+
+# Logic Bombs
+
+
+There are quite a few puzzle games that I have never finished because they grow tiresome and aggravating. Tilepushing games that add so many mechanics that I get a headache trying to hold all of the pieces in my mind. Mechanics that begin as fascinating but become maddening and boring when expanded to the nth degree - but not so with logic bombs. (so far!)
+
+ This logic game feels cozy. There are a few simple mechanics, and just a good old bunch of puzzles to sit down and hack through. It scratches a similar itch as a sudoku, but each puzzle is so clearly and lovingly hand crafted. I’m biting through a few of these a day, and feeling inspired each time to make my own lovely logic puzzles.
