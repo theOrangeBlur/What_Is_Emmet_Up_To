@@ -451,6 +451,52 @@ body {
     color: var(--red-accent);
 }
 
+/* ── Commissions lead article ── */
+.commission-article {
+    border-top: 3px double var(--ink);
+    border-bottom: 3px double var(--ink);
+    padding: 10px 0 12px;
+}
+
+.commission-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 16px;
+    margin-top: 12px;
+}
+
+.commission-btn {
+    display: inline-block;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-variant: small-caps;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    padding: 6px 18px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.commission-btn:hover,
+.commission-btn:focus-visible {
+    background: var(--red-accent);
+    border-color: var(--red-accent);
+    color: var(--paper);
+}
+
+.commission-alt {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--sepia-accent);
+}
+
 .article-divider {
     border: none;
     border-top: 1px solid var(--rule);
@@ -961,6 +1007,11 @@ body {
 
     .page-ref {
         clear: both;
+    }
+
+    .commission-btn {
+        width: 100%;
+        text-align: center;
     }
 }
 

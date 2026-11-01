@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared/auth-widget.css">
     <script>
@@ -107,6 +107,30 @@
 
             <!-- Columns 2+3: Center Spread -->
             <section class="col col-center">
+
+                <!-- Lead article: Commissions -->
+                <div class="commission-article">
+                    <span class="section-label">Emmet Loves Commissions</span>
+                    <h2 class="article-headline">I'd like a word with you.</h2>
+                    <p class="article-subheadline">Arrange a Chat With an Engineer of Wonder</p>
+                    <div class="byline">By E. C. Eckman IV &nbsp;&middot;&nbsp; Designer of Curiosities</div>
+                    <p class="article-body">It is my mission to inspire more wonder and awe for the world. I do this by designing puzzling, 
+                        strange, and/or intersting mechanisms, events, and experiences in general. I find puzzle hunts to be a particularly
+                        lovely way of getting people to see the world in a new light - to see the world as again full of mystery, secrets, and magic.
+                    </p>
+                    <p class="article-body">If you are interested in having a puzzling experience designed, want to work together on a project,
+                        or otherwise want to talk with me - let's do it!
+                    </p>
+                    <div class="commission-cta">
+                        <a href="https://cal.com/emmet-eckman-kmbihk/intro" target="_blank" rel="noopener" class="commission-btn"
+                           data-cal-link="emmet-eckman-kmbihk/intro"
+                           data-cal-namespace="intro"
+                           data-cal-config='{"layout":"month_view","theme":"light"}'>Book a Consultation</a>
+                        <span class="commission-alt">or <a href="mailto:ChillRiddler@gmail.com?subject=Commission%20inquiry" class="contact-link">write to the editor</a></span>
+                    </div>
+                </div>
+
+                <hr class="article-divider">
 
                 <!-- Sub-article A: Daily Snapshots -->
                 <span class="section-label">Emmet Sightings</span>
@@ -260,6 +284,22 @@
         </div>
     </footer>
 
+    <!-- Cal.com booking popup (element-click embed) -->
+    <script type="text/javascript">
+      (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
+      Cal("init", "intro", { origin: "https://cal.com" });
+      Cal.ns.intro("ui", { theme: "light", hideEventTypeDetails: false, cssVarsPerTheme: { light: { "cal-brand": "#8b1a1a" } } });
+
+      // Once the embed has loaded, show only the popup; until then, the plain link still works as a fallback
+      (function () {
+        var calReady = false;
+        var embedScript = document.querySelector('script[src="https://app.cal.com/embed/embed.js"]');
+        if (embedScript) embedScript.addEventListener('load', function () { calReady = true; });
+        document.querySelectorAll('a[data-cal-link]').forEach(function (link) {
+          link.addEventListener('click', function (e) { if (calReady) e.preventDefault(); });
+        });
+      })();
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
