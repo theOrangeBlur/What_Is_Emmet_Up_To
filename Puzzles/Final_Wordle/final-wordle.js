@@ -441,8 +441,22 @@ async function insertScore(name, timeMs, guesses) {
       body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked(), user_id: await getUserId() })
     });
     if (!res.ok) { console.error('insertScore failed:', res.status, await res.text()); return false; }
+    reportDailySolveCount();
     return true;
   } catch (e) { console.error('insertScore error:', e); return false; }
+}
+
+// Feeds "The Regular" award: how many daily puzzles this account has solved.
+async function reportDailySolveCount() {
+  const userId = await getUserId();
+  if (!userId || !window.Awards) return;
+  try {
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?select=date&user_id=eq.${userId}`;
+    const res = await fetch(url, { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() } });
+    if (!res.ok) return;
+    const days = new Set((await res.json()).map(r => r.date));
+    Awards.progress('wordle_regular', days.size, 10);
+  } catch {}
 }
 
 async function fetchFreeScores() {
@@ -1229,6 +1243,7 @@ async function buildGame(mode) {
       ct.textContent = '';
       gbtn.disabled = true; inp.disabled = true; revBtn.style.display = 'none';
       if (mode === 'daily') {
+        if (window.Awards) Awards.unlock('wordle_daily');
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
         winMsg.insertAdjacentElement('afterend', createShareButton(() => formatTime(timeMs)));
@@ -1237,6 +1252,7 @@ async function buildGame(mode) {
         freeSession.wordsSolved++;
         const scoreEl = document.getElementById('fp-score');
         if (scoreEl) scoreEl.textContent = freeSession.wordsSolved + ' solved';
+        if (freeSession.wordsSolved >= 10 && window.Awards) Awards.unlock('wordle_free10');
         if (!freeSession.sessionDone) {
           setTimeout(() => { if (!freeSession.sessionDone) buildGame('free'); }, 1000);
         }

@@ -31,3 +31,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Hidden award seeds (keep the secrets secret)
+supabase/awards-hidden.sql

@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="styles.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared/auth-widget.css">
+    <link rel="stylesheet" href="shared/awards.css">
     <script>
       window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
       window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
@@ -22,6 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="shared/auth.js"></script>
     <script src="shared/auth-widget.js"></script>
+    <script src="shared/awards.js"></script>
 </head>
 <body>
 
@@ -289,6 +291,10 @@
       (function (C, A, L) { let p = function (a, ar) { a.q.push(ar); }; let d = C.document; C.Cal = C.Cal || function () { let cal = C.Cal; let ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { const api = function () { p(api, arguments); }; const namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
       Cal("init", "intro", { origin: "https://cal.com" });
       Cal.ns.intro("ui", { theme: "light", hideEventTypeDetails: false, cssVarsPerTheme: { light: { "cal-brand": "#8b1a1a" } } });
+      // "A Word With You" award once a booking goes through in the popup.
+      ["bookingSuccessful", "bookingSuccessfulV2"].forEach(function (action) {
+        Cal.ns.intro("on", { action: action, callback: function () { if (window.Awards) Awards.unlock("booked_chat"); } });
+      });
 
       // Once the embed has loaded, show only the popup; until then, the plain link still works as a fallback
       (function () {

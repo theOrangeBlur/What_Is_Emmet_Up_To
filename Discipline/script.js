@@ -313,6 +313,8 @@ function updateStreakDisplay() {
     document.getElementById('spiritStreak').textContent = spiritStreak;
     // document.getElementById('spanishStreak').textContent = spanishStreak;
     document.getElementById('perfectStreak').textContent = perfectStreak;
+
+    if (perfectStreak >= 7 && window.Awards) Awards.unlock('discipline_seven');
 }
 
 // Create a single day cell

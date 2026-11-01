@@ -1,0 +1,183 @@
+/* Trophy case — dark, in the same palette as the login widget so the
+   members-only corner of the site reads as one place. */
+:root {
+  --bg: #0b0b0b;
+  --panel: #141414;
+  --panel-2: #1c1c1c;
+  --line: #2e2e2e;
+  --text: #e5e0d8;
+  --muted: #7a7670;
+  --soft: #a8a39b;
+  --green: #538d4e;
+  --green-hi: #6aaf63;
+  --gold: #c9a227;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  min-height: 100vh;
+}
+
+.top-nav { padding: 14px 16px 0; }
+.top-nav a {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+.top-nav a:hover { color: var(--green-hi); }
+
+.case-header {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 8px;
+  text-align: center;
+}
+.case-kicker {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--green-hi);
+}
+.case-title {
+  font-family: 'UnifrakturMaguntia', serif;
+  font-weight: 400;
+  font-size: clamp(38px, 9vw, 60px);
+  margin: 10px 0 6px;
+}
+.case-sub { color: var(--muted); font-size: 12px; margin: 0; }
+
+.case-body {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+.case-loading { text-align: center; color: var(--muted); font-size: 12px; padding: 40px 0; }
+
+/* Summary bar */
+.case-summary {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px;
+  margin-bottom: 28px;
+}
+.case-summary-text { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.case-bar {
+  height: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  flex: 1;
+}
+.case-bar-fill { height: 100%; background: var(--green); transition: width .4s ease; }
+
+/* Sections */
+.case-section { margin-bottom: 32px; }
+.case-section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin: 0 0 12px;
+}
+
+/* One award row */
+.award {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.award-unlocked { border-left: 3px solid var(--green); }
+.award-icon {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.award-locked .award-icon { filter: grayscale(1); opacity: .45; }
+.award-secret .award-icon { opacity: .7; }
+.award-body { flex: 1; min-width: 0; }
+.award-title { font-size: 14px; font-weight: 700; margin: 0 0 3px; }
+.award-locked .award-title { color: var(--soft); }
+.award-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.award-desc { font-size: 11px; color: var(--soft); margin: 0; line-height: 1.5; }
+.award-hint { font-size: 11px; color: var(--gold); font-style: italic; margin: 0; line-height: 1.5; }
+.award-progress { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.award-progress-text { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+.award-meta { flex-shrink: 0; text-align: right; font-size: 10px; color: var(--muted); line-height: 1.7; }
+.award-date { color: var(--green-hi); }
+.award-rare { color: var(--gold); }
+
+/* Signed-out card */
+.case-locked {
+  max-width: 380px;
+  margin: 24px auto;
+  background: var(--panel);
+  border: 1px solid var(--green);
+  padding: 28px 24px;
+  text-align: center;
+}
+.case-locked-icon { font-size: 34px; }
+.case-locked-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .35em;
+  text-transform: uppercase;
+  color: var(--green-hi);
+  margin: 12px 0;
+}
+.case-locked-text { font-size: 12px; color: var(--soft); line-height: 1.6; margin: 0 0 20px; }
+.case-btn {
+  background: var(--green);
+  border: 1px solid var(--green);
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+.case-btn:hover { opacity: .85; }
+
+@media (max-width: 520px) {
+  .award { flex-wrap: wrap; }
+  .award-icon { width: 44px; height: 44px; font-size: 22px; }
+  .award-body { flex-basis: calc(100% - 58px); }
+  .award-meta { flex-basis: 100%; text-align: left; padding-left: 58px; display: flex; gap: 12px; }
+}

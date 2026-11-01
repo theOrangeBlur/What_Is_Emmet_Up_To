@@ -30,6 +30,12 @@
   transition: border-color .15s, color .15s;
 }
 .authw-link:hover { border-color: #538d4e; color: #6aaf63; }
+.authw-awards-link {
+  display: block;
+  margin-right: 8px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
 
 .authw-overlay {
   position: fixed;
@@ -71,8 +77,14 @@
   50%      { transform: translateX(0); }
   75%      { transform: translateX(3px); }
 }
+/* The eye blinks shut when poked. */
+.authw-poked svg { animation: authw-blink .35s ease; transform-origin: center; }
+@keyframes authw-blink {
+  50% { transform: scaleY(.15); }
+}
 @media (prefers-reduced-motion: reduce) {
   .authw-peephole-iris { animation: none; }
+  .authw-poked svg { animation: none; }
 }
 .authw-heading {
   font-family: 'Syne', sans-serif;

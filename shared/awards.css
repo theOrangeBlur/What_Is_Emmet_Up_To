@@ -1,0 +1,92 @@
+/* Award unlock toasts. Self-contained like auth-widget.css (hardcoded colors,
+   not the host page's variables) so they look the same on every page. */
+.awd-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1100; /* above the login modal overlay */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  width: 320px;
+  pointer-events: none;
+}
+.awd-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #0f0f0f;
+  border: 1px solid #538d4e;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+  padding: 12px 14px;
+  font-family: 'Space Mono', monospace;
+  color: #e5e0d8;
+  cursor: pointer;
+  position: relative;
+  animation: awd-slide-in .35s ease-out;
+}
+.awd-toast.awd-leaving { animation: awd-slide-out .3s ease-in forwards; }
+@keyframes awd-slide-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes awd-slide-out {
+  to { transform: translateX(110%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .awd-toast, .awd-toast.awd-leaving { animation: none; }
+}
+.awd-nudge { cursor: default; border-color: #c9a227; }
+.awd-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: #1c1c1c;
+  border: 1px solid #3d3d3d;
+}
+.awd-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.awd-label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: #6aaf63;
+}
+.awd-nudge .awd-label { color: #c9a227; }
+.awd-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.awd-desc { font-size: 10px; color: #a8a39b; line-height: 1.5; }
+.awd-btn {
+  align-self: flex-start;
+  margin-top: 6px;
+  background: #538d4e;
+  border: 1px solid #538d4e;
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.awd-btn:hover { opacity: .85; }
+.awd-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #7a7670;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.awd-close:hover { color: #e5e0d8; }

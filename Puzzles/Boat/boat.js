@@ -254,6 +254,7 @@ function checkConstraints() {
 function showLossOverlay() {
     state.gameOver = true;
     document.getElementById('overlay-loss').classList.remove('hidden');
+    if (window.Awards) Awards.unlock('h_q7');
 }
 
 function playAttackAnimation(bankSide) {
@@ -437,6 +438,7 @@ function checkWin() {
     if (state.right.travelers === TRAVELERS && state.right.cannibals === CANNIBALS) {
         state.gameOver = true;
         document.getElementById('overlay-win').classList.remove('hidden');
+        if (window.Awards) Awards.unlock('ferryman');
     }
 }
 

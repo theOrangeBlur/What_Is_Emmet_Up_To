@@ -928,7 +928,7 @@ function updateFish() {
 }
 
 // ============================================================
-// SWARM ATTACK — 20 rapid clicks triggers a 30-second assault
+// SWARM ATTACK — 10 clicks within 3 seconds triggers a 5-second assault
 // ============================================================
 
 const SWARM_EMOJIS = ['🐟', '🐠', '🐡', '🦈', '🐬', '🦐', '🦞', '🦑', '🐙', '🦀'];
@@ -1061,6 +1061,24 @@ function endSwarm() {
         sf.fleeTargetY = sf.y + ndy * (window.innerHeight + 300);
     });
     setTimeout(() => { swarmFishList.length = 0; }, 4000);
+    awardAfterSwarm();
+}
+
+// "Neptune's Fury" award: wait until every swarm fish has left the screen
+// (capped at 15s in case a straggler lingers), then unlock 2s later so the
+// toast doesn't step on the show.
+let swarmAwardPending = false;
+function awardAfterSwarm() {
+    if (swarmAwardPending || !window.Awards) return;
+    swarmAwardPending = true;
+    const started = Date.now();
+    (function waitForCalm() {
+        if (document.querySelector('.swarm-fish') && Date.now() - started < 15000) {
+            setTimeout(waitForCalm, 250);
+            return;
+        }
+        setTimeout(() => { swarmAwardPending = false; Awards.unlock('h_n5'); }, 2000);
+    })();
 }
 
 // Event listeners

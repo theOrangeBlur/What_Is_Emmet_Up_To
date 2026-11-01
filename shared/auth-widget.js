@@ -5,6 +5,7 @@
 // including page.
 window.AuthWidget = (function () {
   let linkEl = null;
+  let awardsEl = null;
 
   async function renderLink() {
     if (!linkEl || !window.Auth) return;
@@ -16,6 +17,7 @@ window.AuthWidget = (function () {
       linkEl.textContent = 'knock on the door';
       linkEl.onclick = () => showAuthModal('login');
     }
+    if (awardsEl) awardsEl.style.display = session ? '' : 'none';
   }
 
   function showAuthModal(initialMode) {
@@ -43,6 +45,10 @@ window.AuthWidget = (function () {
       <rect x="60" y="4" width="4" height="48" fill="#3d3d3d"/>
       <rect x="74" y="4" width="4" height="48" fill="#3d3d3d"/>
     </svg>`;
+    peephole.addEventListener('click', () => {
+      peephole.classList.remove('authw-poked'); void peephole.offsetWidth; peephole.classList.add('authw-poked');
+      if (window.Awards) window.Awards.unlock('h_k9');
+    });
     const heading = document.createElement('div'); heading.className = 'authw-heading';
     const emailInp = document.createElement('input');
     emailInp.className = 'authw-input'; emailInp.type = 'email'; emailInp.placeholder = 'whatsit.tooya@yahoo.com';
@@ -111,6 +117,12 @@ window.AuthWidget = (function () {
     linkEl = document.createElement('div');
     linkEl.className = 'authw-link';
     linkEl.id = 'site-auth-link';
+    awardsEl = document.createElement('a');
+    awardsEl.className = 'authw-link authw-awards-link';
+    awardsEl.href = '/Awards/awards.html';
+    awardsEl.textContent = '🏆 awards';
+    awardsEl.style.display = 'none';
+    row.appendChild(awardsEl);
     row.appendChild(linkEl);
     // Pages that already have something at the top of the page (e.g. a
     // dateline) can add an empty <div id="authw-mount"></div> wherever the

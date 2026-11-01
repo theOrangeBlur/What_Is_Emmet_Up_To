@@ -130,6 +130,14 @@ function handleCoinAccuse(coinId) {
     document.getElementById('accusation-modal').classList.remove('hidden');
 }
 
+// Consecutive correct accusations, kept across reloads for the "Prove It" award.
+function loadStreak() {
+    try { return parseInt(localStorage.getItem('balance_streak'), 10) || 0; } catch { return 0; }
+}
+function saveStreak(n) {
+    try { localStorage.setItem('balance_streak', String(n)); } catch {}
+}
+
 function resolveAccusation(type) {
     document.getElementById('accusation-modal').classList.add('hidden');
     const correct = state.accusedCoin === state.oddCoin && type === state.oddType;
@@ -143,7 +151,15 @@ function resolveAccusation(type) {
             : `Correct! It took ${w} weighings — you can get it in three!!`;
         document.getElementById('win-weighings').textContent = msg;
         document.getElementById('overlay-win').classList.remove('hidden');
+        if (window.Awards) {
+            Awards.unlock('scales');
+            if (w <= 3) Awards.unlock('scales_perfect');
+        }
+        const streak = loadStreak() + 1;
+        saveStreak(streak);
+        if (window.Awards) Awards.progress('scales_streak', streak, 3);
     } else {
+        saveStreak(0);
         const rightCoinWrongWeight = state.accusedCoin === state.oddCoin;
         document.getElementById('loss-info').innerHTML = rightCoinWrongWeight
             ? `So close! That's the right coin, but it's actually <strong><em>${state.oddType}!</em></strong>`

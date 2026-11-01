@@ -110,7 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Don't toggle if clicking a link
         if (e.target.tagName === 'A') return;
 
-        setCardExpanded(card, !card.classList.contains('expanded'));
+        const expanding = !card.classList.contains('expanded');
+        setCardExpanded(card, expanding);
+
+        // 0 means unrated, not zero stars
+        const rating = parseFloat(card.dataset.rating) || 0;
+        if (expanding && rating > 0 && rating < 3 && window.Awards) Awards.unlock('b_t3');
     });
 
     // ============================================

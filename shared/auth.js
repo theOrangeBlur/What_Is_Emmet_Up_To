@@ -55,5 +55,11 @@ window.Auth = (function () {
     return `Bearer ${session ? session.access_token : window.SUPABASE_ANON_KEY}`;
   }
 
-  return { getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader };
+  async function rpc(name, args) {
+    const c = getClient();
+    if (!c) return { error: { message: 'auth unavailable' } };
+    return c.rpc(name, args);
+  }
+
+  return { getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc };
 })();

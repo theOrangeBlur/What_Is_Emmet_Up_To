@@ -690,6 +690,10 @@ function checkAnswers(levelIdx) {
     resultEl.textContent = 'All correct!';
     resultEl.className = 'check-result correct';
     levelSolved[levelIdx] = true;
+    if (window.Awards) {
+      Awards.unlock('hex_one');
+      Awards.progress('hex_all', levelSolved.filter(Boolean).length, 3);
+    }
     if (levelSolved.every(Boolean)) {
       launchConfetti(450, 5000);
       playZeldaFanfare();
