@@ -1,7 +1,8 @@
 // Public profile page: /Profile/profile.html?u=<username>. Anyone can view
 // one via the get_public_profile RPC (supabase/public_profiles.sql); the
-// owner also gets an edit form for their name, bio, avatar and trivia answers.
-// With no ?u, signed-in visitors are sent to their own profile.
+// owner also gets an edit form for their name, bio, avatar and question
+// answers, each with a public/private toggle. Visitors only ever receive the
+// public ones. With no ?u, signed-in visitors are sent to their own profile.
 
 const root = document.getElementById('profile-root');
 const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
@@ -9,6 +10,7 @@ const USERNAME_RULES = '3–16 letters, numbers or underscores';
 const BIO_MAX = 140;
 const ANSWER_MAX = 140;
 const AVATAR_SIZE = 256;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 let profile = null;   // last get_public_profile result
 let editing = false;
@@ -24,11 +26,71 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+const ALWAYS_PRIVATE = new Set((window.PROFILE_QUESTIONS || []).filter(q => q.private).map(q => q.id));
+
+// The owner sees every field; these are the ones nobody else can.
+function isPrivate(p, id) {
+  return p.is_me && (ALWAYS_PRIVATE.has(id) || !(p.public_fields || []).includes(id));
+}
+
+function withPrivateTag(node, p, id) {
+  if (isPrivate(p, id)) {
+    node.appendChild(document.createTextNode(' '));
+    node.appendChild(el('span', 'profile-private', 'only you can see this'));
+  }
+  return node;
+}
+
 function requestedName() {
   return (new URLSearchParams(window.location.search).get('u') || '').trim();
 }
 
+// ── Theme ───────────────────────────────────────────────────────────────
+// A profile's three favorite colors repaint the page's tokens (Awards/
+// awards.css): first = the background, kept deep and dark in that color's
+// hue so it always looks good; second = all the text and third = the accent
+// (--green), both exactly as picked. Dimmer text is a blend of text and
+// background.
+// The answers themselves stay private; the server sends the colors to every
+// visitor as profile.theme.
+const THEME_COLORS = ['color1', 'color2', 'color3'];
+const THEME_VARS = ['--bg', '--panel', '--panel-2', '--line', '--text', '--soft', '--muted', '--green', '--green-hi'];
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+
+function applyTheme(hexes) {
+  const style = document.documentElement.style;
+  THEME_VARS.forEach(v => style.removeProperty(v));
+  const [background, text, accent] = (hexes || []).map(c => HEX_RE.test(c || '') ? c : null);
+  const bg = background && window.ColorWheel.hexToHsl(background);
+  if (bg) {
+    const [h, s] = bg;
+    const hsl = (sat, l) => `hsl(${h.toFixed(1)} ${(sat * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%)`;
+    style.setProperty('--bg', hsl(s, 0.12));
+    style.setProperty('--panel', hsl(s, 0.16));
+    style.setProperty('--panel-2', hsl(s, 0.2));
+    style.setProperty('--line', hsl(s * 0.8, 0.32));
+  }
+  if (text) style.setProperty('--text', text);
+  if (bg || text) {
+    const mix = pct => `color-mix(in srgb, var(--text) ${pct}%, var(--bg))`;
+    style.setProperty('--soft', mix(75));
+    style.setProperty('--muted', mix(55));
+  }
+  if (accent) {
+    style.setProperty('--green', accent);
+    style.setProperty('--green-hi', `color-mix(in srgb, ${accent} 80%, white)`);
+  }
+}
+
+// The owner's own answers hold the colors too, so their page still themes if
+// the server's theme is missing.
+function themeOf(p) {
+  if (p.theme) return p.theme;
+  return THEME_COLORS.map(id => (p.answers || {})[id]);
+}
+
 function card(icon, heading, text, button) {
+  applyTheme(null);
   root.innerHTML = '';
   const c = el('div', 'case-locked');
   c.appendChild(el('div', 'case-locked-icon', icon));
@@ -63,7 +125,7 @@ function renderHeader(p) {
   head.appendChild(avatarEl(p));
   const info = el('div', 'profile-info');
   info.appendChild(el('h1', 'profile-name', p.username));
-  if (p.bio) info.appendChild(el('p', 'profile-bio', p.bio));
+  if (p.bio) info.appendChild(withPrivateTag(el('p', 'profile-bio', p.bio), p, 'bio'));
   if (p.member_since) info.appendChild(el('div', 'profile-since', 'resident since ' + formatDate(p.member_since)));
   if (p.is_me) {
     const btn = el('button', 'case-btn profile-edit-btn', 'edit profile');
@@ -74,6 +136,31 @@ function renderHeader(p) {
   return head;
 }
 
+// An answer as it reads on the page, by question type. Anything that doesn't
+// parse is shown as typed.
+function formatAnswer(q, value) {
+  const wrap = el('div', 'profile-a');
+  if (q.type === 'color' && /^#[0-9a-f]{6}$/i.test(value)) {
+    const sw = el('span', 'profile-swatch');
+    sw.style.background = value;
+    wrap.appendChild(sw);
+    wrap.appendChild(document.createTextNode(value));
+    return wrap;
+  }
+  let text = value;
+  const n = Number(value);
+  if (q.type === 'date' && DATE_RE.test(value) && !isNaN(Date.parse(value))) {
+    text = new Date(value + 'T00:00:00Z').toLocaleDateString('en-US',
+      { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  } else if (q.type === 'number' && value !== '' && Number.isFinite(n)) {
+    text = q.money
+      ? '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : n.toLocaleString('en-US');
+  }
+  wrap.textContent = text;
+  return wrap;
+}
+
 function renderTrivia(p) {
   const answers = p.answers || {};
   const answered = (window.PROFILE_QUESTIONS || []).filter(q => answers[q.id]);
@@ -81,15 +168,15 @@ function renderTrivia(p) {
     if (!p.is_me) return null;
     const section = el('section', 'case-section');
     section.appendChild(el('h2', 'case-section-title', 'Getting to know you'));
-    section.appendChild(el('p', 'profile-empty', "nothing here yet — hit “edit profile” and answer a question or two"));
+    section.appendChild(el('p', 'profile-empty', "nothing here yet — hit “edit profile” and fill in a field or two"));
     return section;
   }
   const section = el('section', 'case-section');
   section.appendChild(el('h2', 'case-section-title', 'Getting to know ' + p.username));
   answered.forEach(q => {
     const row = el('div', 'profile-qa');
-    row.appendChild(el('div', 'profile-q', q.q));
-    row.appendChild(el('div', 'profile-a', answers[q.id]));
+    row.appendChild(withPrivateTag(el('div', 'profile-q', q.q), p, q.id));
+    row.appendChild(formatAnswer(q, answers[q.id]));
     section.appendChild(row);
   });
   return section;
@@ -176,14 +263,89 @@ async function shrinkImage(file) {
   }
 }
 
-function field(labelText, input, note) {
-  // Only wrap real inputs in a <label>: a label around buttons clicks them.
+let fieldCount = 0;
+
+// A labelled form row. The label points at real inputs with `for` rather than
+// wrapping them, so the privacy toggle beside it isn't clicked along with it.
+function field(labelText, input, note, toggle) {
+  const wrap = el('div', 'profile-field');
+  const head = el('div', 'profile-field-head');
   const isInput = input.matches('input, textarea');
-  const wrap = el(isInput ? 'label' : 'div', 'profile-field');
-  wrap.appendChild(el('span', 'record-label', labelText));
+  const label = el(isInput ? 'label' : 'span', 'record-label', labelText);
+  if (isInput) {
+    input.id = input.id || 'profile-field-' + (++fieldCount);
+    label.htmlFor = input.id;
+  }
+  head.appendChild(label);
+  if (toggle) head.appendChild(toggle);
+  wrap.appendChild(head);
   wrap.appendChild(input);
   if (note) wrap.appendChild(note);
   return wrap;
+}
+
+// Flips one field id in or out of publicSet; saved along with the form.
+function privacyToggle(id, publicSet) {
+  const btn = el('button', 'profile-privacy');
+  btn.type = 'button';
+  const sync = () => {
+    const on = publicSet.has(id);
+    btn.textContent = on ? '🌐 public' : '🔒 private';
+    btn.classList.toggle('is-public', on);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = on ? 'anyone can see this — click to hide it' : 'only you can see this — click to share it';
+  };
+  btn.addEventListener('click', () => {
+    if (publicSet.has(id)) publicSet.delete(id); else publicSet.add(id);
+    sync();
+  });
+  sync();
+  return btn;
+}
+
+function charCounter(inp, max) {
+  const count = el('span', 'profile-note');
+  const update = () => { count.textContent = `${inp.value.length} / ${max}`; };
+  inp.addEventListener('input', update); update();
+  return count;
+}
+
+// The control for one question, by type: { el, get(), note? }.
+function inputFor(q, value, onChange) {
+  const type = q.type || 'text';
+  if (type === 'color') return window.ColorWheel.create(value, onChange);
+  if (type === 'long') {
+    const inp = el('textarea', 'authw-input profile-textarea');
+    inp.value = value; inp.maxLength = q.max || ANSWER_MAX; inp.rows = 3;
+    return { el: inp, get: () => inp.value.trim(), note: charCounter(inp, inp.maxLength) };
+  }
+  const inp = el('input', 'authw-input');
+  inp.value = value;
+  if (type === 'number') {
+    inp.type = 'number'; inp.min = 0;
+    inp.step = q.integer ? 1 : q.money ? 0.01 : 'any';
+    inp.inputMode = q.integer ? 'numeric' : 'decimal';
+  } else if (type === 'date') {
+    inp.type = 'date';
+  } else {
+    inp.maxLength = q.max || ANSWER_MAX;
+  }
+  return { el: inp, get: () => inp.value.trim() };
+}
+
+// [cleanValue, null], or [null, message] when the answer doesn't fit its type.
+function checkAnswer(q, value) {
+  if (!value) return ['', null];
+  if (q.type === 'number') {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n < 0) return [null, `“${q.q}” needs a number, 0 or more`];
+    if (q.integer && !Number.isInteger(n)) return [null, `“${q.q}” takes whole numbers only`];
+    return [q.money ? n.toFixed(2) : String(n), null];
+  }
+  if (q.type === 'date' && (!DATE_RE.test(value) || isNaN(Date.parse(value)))) {
+    return [null, `“${q.q}” needs a real date`];
+  }
+  return [value, null];
 }
 
 async function renderEdit(p) {
@@ -241,23 +403,28 @@ async function renderEdit(p) {
   nameInp.value = p.username; nameInp.maxLength = 16; nameInp.spellcheck = false; nameInp.autocomplete = 'username';
   form.appendChild(field('name', nameInp, el('span', 'profile-note', USERNAME_RULES)));
 
+  // Which fields anyone can see. Ids for removed questions are kept as is.
+  const publicSet = new Set(p.public_fields || []);
+  form.appendChild(el('p', 'profile-note',
+    'Fill in as much or as little as you like. Everything stays 🔒 private until you flip it to 🌐 public. ' +
+    'Your favorite colors stay private, but they paint your page for everyone who visits.'));
+
   // Bio
   const bioInp = el('textarea', 'authw-input profile-textarea');
   bioInp.value = p.bio || ''; bioInp.maxLength = BIO_MAX; bioInp.rows = 3;
   bioInp.placeholder = 'a line about yourself';
-  const bioCount = el('span', 'profile-note');
-  const updateCount = () => { bioCount.textContent = `${bioInp.value.length} / ${BIO_MAX}`; };
-  bioInp.addEventListener('input', updateCount); updateCount();
-  form.appendChild(field('bio', bioInp, bioCount));
+  form.appendChild(field('bio', bioInp, charCounter(bioInp, BIO_MAX), privacyToggle('bio', publicSet)));
 
-  // Trivia
+  // Questions
   const answers = Object.assign({}, p.answers || {});
   const answerInps = {};
+  // Picking a favorite color previews the theme straight away.
+  const previewTheme = () => applyTheme(THEME_COLORS.map(id =>
+    answerInps[id] ? answerInps[id].control.get() : answers[id]));
   (window.PROFILE_QUESTIONS || []).forEach(q => {
-    const inp = el('input', 'authw-input');
-    inp.value = answers[q.id] || ''; inp.maxLength = ANSWER_MAX;
-    answerInps[q.id] = inp;
-    form.appendChild(field(q.q, inp));
+    const control = inputFor(q, answers[q.id] || '', previewTheme);
+    answerInps[q.id] = { q, control };
+    form.appendChild(field(q.q, control.el, control.note, q.private ? null : privacyToggle(q.id, publicSet)));
   });
 
   const msg = el('div', 'authw-msg'); msg.style.display = 'none';
@@ -274,6 +441,12 @@ async function renderEdit(p) {
   saveBtn.addEventListener('click', async () => {
     const name = nameInp.value.trim();
     if (!USERNAME_RE.test(name)) { showMsg('your name needs to be ' + USERNAME_RULES); return; }
+    // Answers to questions since removed from the list stay in `answers`.
+    for (const { q, control } of Object.values(answerInps)) {
+      const [value, problem] = checkAnswer(q, control.get());
+      if (problem) { showMsg(problem); return; }
+      answers[q.id] = value;
+    }
     saveBtn.disabled = true;
     try {
       if (name !== p.username) {
@@ -287,9 +460,7 @@ async function renderEdit(p) {
         history.replaceState(null, '', window.Auth.profileUrl(result.username));
         if (window.AuthWidget) window.AuthWidget.renderLink();
       }
-      // Keep answers to questions that have since been removed from the list.
-      Object.keys(answerInps).forEach(id => { answers[id] = answerInps[id].value.trim(); });
-      const saved = await window.Auth.updateProfile({ bio: bioInp.value.trim(), answers });
+      const saved = await window.Auth.updateProfile({ bio: bioInp.value.trim(), answers, publicFields: [...publicSet].filter(id => !ALWAYS_PRIVATE.has(id)) });
       if (!saved.ok) { showMsg(saved.reason === 'bio_too_long' ? 'that bio runs long — trim it a bit' : "couldn't save that — try again in a bit"); return; }
       if (newAvatar) {
         const up = await window.Auth.uploadAvatar(newAvatar);
@@ -312,6 +483,8 @@ async function renderEdit(p) {
 
 function render() {
   if (!profile) return;
+  // Re-applied on every render, so cancelling an edit drops the preview.
+  applyTheme(themeOf(profile));
   if (editing && profile.is_me) renderEdit(profile);
   else renderView(profile);
 }

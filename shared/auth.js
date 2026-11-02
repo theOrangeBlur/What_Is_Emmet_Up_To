@@ -132,8 +132,8 @@ window.Auth = (function () {
   }
 
   // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
-  async function updateProfile({ bio = null, answers = null, avatarPath = null } = {}) {
-    const { data, error } = await rpc('update_profile', { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath });
+  async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null } = {}) {
+    const { data, error } = await rpc('update_profile', { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath, p_public_fields: publicFields });
     if (error || !data) return { ok: false, reason: 'error' };
     if (data.ok) profileCache = null;   // avatar may have changed
     return data;

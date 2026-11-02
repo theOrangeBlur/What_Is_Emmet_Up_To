@@ -16,6 +16,20 @@ alter table public.profiles add column if not exists bio         text check (cha
 alter table public.profiles add column if not exists avatar_path text;
 alter table public.profiles add column if not exists answers     jsonb not null default '{}';
 
+-- Which profile fields anyone can see: 'bio' for the bio, otherwise a key in
+-- answers. Everything else is shown only to its owner. When the column is
+-- first added, whatever was already filled in stays public.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'profiles' and column_name = 'public_fields') then
+    alter table public.profiles add column public_fields text[] not null default '{}';
+    update public.profiles set public_fields =
+      array(select jsonb_object_keys(answers))
+      || case when bio is not null then array['bio'] else '{}'::text[] end;
+  end if;
+end $$;
+
 create unique index if not exists profiles_username_lower on public.profiles (lower(username));
 
 alter table public.profiles enable row level security;

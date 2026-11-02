@@ -1,11 +1,12 @@
 -- Public profile pages (Profile/profile.html). Paste into the Supabase SQL
 -- editor and run after profiles.sql, records.sql and awards.sql. Safe to re-run.
 --
--- Anyone can read a profile by username: name, bio, avatar, trivia answers,
--- member-since date, earned awards and personal records. Emails never leave
--- the database. Secret (hidden or buried) awards show up as just an icon so
+-- Anyone can read a profile by username: name, avatar, member-since date,
+-- earned awards, personal records, and whichever of the bio and question
+-- answers the owner has marked public (profiles.public_fields). Private
+-- fields and emails never leave the database for anyone but the owner. Secret (hidden or buried) awards show up as just an icon so
 -- profiles can't be used to spoil them. The bio/avatar/answers columns
--- themselves are added in profiles.sql.
+-- themselves (and public_fields) are added in profiles.sql.
 
 -- ── Avatars ───────────────────────────────────────────────────────────────
 -- One small image per account at avatars/<user id>/avatar.webp. The page
@@ -33,15 +34,24 @@ create policy "avatars: read own" on storage.objects for select to authenticated
 -- ── Reading ───────────────────────────────────────────────────────────────
 -- Everything a profile page shows, or null if nobody goes by that name.
 -- Visible awards come back in full; secret ones as { icon, secret, unlocked_at }.
+-- The owner gets every field plus public_fields, so the edit form can show
+-- the toggles; everyone else gets only the public ones. The favorite colors
+-- (color1-3) are never public answers, but always come back as `theme`, which
+-- repaints the page for every visitor.
 create or replace function public.get_public_profile(p_username text)
 returns json
 language sql stable security definer set search_path = public as $$
   select json_build_object(
     'username',     p.username,
-    'bio',          p.bio,
+    'bio',          case when p.user_id = auth.uid() or 'bio' = any (p.public_fields) then p.bio end,
     'avatar_path',  p.avatar_path,
     'updated_at',   p.updated_at,
-    'answers',      p.answers,
+    'answers',      (select coalesce(jsonb_object_agg(a.key, a.value), '{}'::jsonb)
+                     from jsonb_each(p.answers) a
+                     where p.user_id = auth.uid()
+                        or (a.key = any (p.public_fields) and a.key not in ('color1', 'color2', 'color3'))),
+    'theme',        json_build_array(p.answers->>'color1', p.answers->>'color2', p.answers->>'color3'),
+    'public_fields', case when p.user_id = auth.uid() then p.public_fields end,
     'member_since', (select u.created_at from auth.users u where u.id = p.user_id),
     'is_me',        p.user_id = auth.uid(),
     'awards', coalesce((
@@ -72,12 +82,14 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ── Writing ───────────────────────────────────────────────────────────────
--- Update the caller's bio, trivia answers and/or avatar. A null argument
--- leaves that field alone; '' clears the bio or avatar. Answers replace the
--- whole set, and blank answers are dropped. The username is changed through
+-- Update the caller's bio, question answers, public fields and/or avatar. A
+-- null argument leaves that field alone; '' clears the bio or avatar. Answers
+-- and public fields each replace the whole set, and blank answers are dropped. The username is changed through
 -- set_username() in profiles.sql.
+drop function if exists public.update_profile(text, jsonb, text);
 create or replace function public.update_profile(
-  p_bio text default null, p_answers jsonb default null, p_avatar_path text default null)
+  p_bio text default null, p_answers jsonb default null, p_avatar_path text default null,
+  p_public_fields text[] default null)
 returns json
 language plpgsql security definer set search_path = public as $$
 declare
@@ -101,7 +113,7 @@ begin
     end if;
     for v_key, v_val in select * from jsonb_each(p_answers) loop
       if v_key !~ '^[a-z0-9_]{1,32}$' or jsonb_typeof(v_val) <> 'string'
-         or char_length(v_val #>> '{}') > 140 then
+         or char_length(v_val #>> '{}') > 500 then
         return json_build_object('ok', false, 'reason', 'invalid');
       end if;
       if char_length(trim(v_val #>> '{}')) > 0 then
@@ -113,6 +125,12 @@ begin
     end if;
   end if;
 
+  if p_public_fields is not null and (
+       cardinality(p_public_fields) > 40
+       or exists (select 1 from unnest(p_public_fields) f where f is null or f !~ '^[a-z0-9_]{1,32}$')) then
+    return json_build_object('ok', false, 'reason', 'invalid');
+  end if;
+
   if p_avatar_path is not null and p_avatar_path <> ''
      and p_avatar_path not like v_uid::text || '/%' then
     return json_build_object('ok', false, 'reason', 'invalid');
@@ -122,6 +140,8 @@ begin
     bio         = case when p_bio is null then bio else nullif(trim(p_bio), '') end,
     answers     = case when p_answers is null then answers else v_clean end,
     avatar_path = case when p_avatar_path is null then avatar_path else nullif(p_avatar_path, '') end,
+    public_fields = case when p_public_fields is null then public_fields
+                         else array(select distinct unnest(p_public_fields)) end,
     updated_at  = now()
   where user_id = v_uid;
   return json_build_object('ok', true);
@@ -130,7 +150,7 @@ $$;
 
 revoke all on function public.get_public_profile(text) from public;
 revoke all on function public.usernames_for(uuid[]) from public;
-revoke all on function public.update_profile(text, jsonb, text) from public, anon;
+revoke all on function public.update_profile(text, jsonb, text, text[]) from public, anon;
 grant execute on function public.get_public_profile(text) to anon, authenticated;
 grant execute on function public.usernames_for(uuid[]) to anon, authenticated;
-grant execute on function public.update_profile(text, jsonb, text) to authenticated;
+grant execute on function public.update_profile(text, jsonb, text, text[]) to authenticated;
