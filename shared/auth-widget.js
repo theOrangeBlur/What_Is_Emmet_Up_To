@@ -141,7 +141,7 @@ window.AuthWidget = (function () {
     const card = document.createElement('div'); card.className = 'authw-card';
     const heading = document.createElement('div'); heading.className = 'authw-heading'; heading.textContent = 'what do we call you?';
     const hint = document.createElement('div'); hint.className = 'authw-msg';
-    hint.textContent = USERNAME_RULES + '. it goes on the records and fills in your wordle name.';
+    hint.textContent = USERNAME_RULES + '. Be unique.';
     const nameInp = document.createElement('input');
     nameInp.className = 'authw-input'; nameInp.placeholder = 'a name for the records';
     nameInp.maxLength = 16; nameInp.autocomplete = 'username'; nameInp.spellcheck = false;
