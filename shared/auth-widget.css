@@ -7,6 +7,7 @@
 .authw-row {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   width: 100%;
   align-self: stretch;
   flex-shrink: 0;
@@ -30,9 +31,20 @@
   transition: border-color .15s, color .15s;
 }
 .authw-link:hover { border-color: #538d4e; color: #6aaf63; }
-/* The name inside the signed-in link: opens the change-name popup. */
-.authw-username { text-transform: none; color: #e5e0d8; border-bottom: 1px dotted #7a7670; }
-.authw-username:hover { color: #6aaf63; border-bottom-color: #6aaf63; }
+/* Signed in: the box is your picture (or initial), linking to your profile. */
+.authw-avatar {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.authw-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .authw-awards-link {
   display: block;
   margin-right: 8px;
@@ -166,3 +178,8 @@
 @media (max-width: 400px) {
   .authw-card { width: 260px; }
 }
+
+/* A person's name anywhere on the site, linking to their profile
+   (AuthWidget.profileLink). Inherits the host page's look. */
+.name-link { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; }
+.name-link:hover { border-bottom-style: solid; }

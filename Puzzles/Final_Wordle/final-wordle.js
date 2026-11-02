@@ -339,6 +339,7 @@ async function fetchFamilyScores(dayKey, membersMap) {
 }
 
 let familyMembersCache = null; // Map<device_id, display_name>, fetched once per page load
+let familyUserByName = new Map(); // Map<display_name, user_id> for members who've signed in
 let familyPointsCache = null;  // Map<display_name, total_points>, fetched once per page load
 
 async function getFamilyMembers() {
@@ -346,11 +347,14 @@ async function getFamilyMembers() {
   familyMembersCache = new Map();
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return familyMembersCache;
   try {
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?select=device_id,display_name`;
+    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?select=device_id,display_name,user_id`;
     const res = await fetch(url, {
       headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
     });
-    if (res.ok) (await res.json()).forEach(r => familyMembersCache.set(r.device_id, r.display_name));
+    if (res.ok) (await res.json()).forEach(r => {
+      familyMembersCache.set(r.device_id, r.display_name);
+      if (r.user_id) familyUserByName.set(r.display_name, r.user_id);
+    });
   } catch {}
   return familyMembersCache;
 }
@@ -540,12 +544,27 @@ async function submitFreeScore(name, score) {
   } catch (e) { console.error('submitFreeScore error:', e); }
 }
 
+// Usernames for the signed-in players on a board, so their names can link
+// to their profiles. Scores posted while signed out stay plain text.
+async function fetchProfileNames(userIds) {
+  if (!window.Auth || !window.Auth.usernamesFor) return new Map();
+  try { return await window.Auth.usernamesFor(userIds); } catch { return new Map(); }
+}
+
+function nameCell(name, userId, usernames) {
+  const td = document.createElement('td');
+  const username = userId ? usernames.get(userId) : null;
+  td.appendChild(window.AuthWidget ? window.AuthWidget.profileLink(username, name) : document.createTextNode(name));
+  return td;
+}
+
 async function renderFreeLeaderboard() {
   const el = document.getElementById('leaderboard');
   if (!el) return;
   el.style.display = '';
   el.innerHTML = '<div class="lb-loading">loading scores...</div>';
   const scores = await fetchFreeScores();
+  const usernames = await fetchProfileNames(scores.map(s => s.user_id));
   el.innerHTML = '';
   const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'all-time best'; el.appendChild(title);
   if (!scores.length) {
@@ -557,7 +576,9 @@ async function renderFreeLeaderboard() {
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, s.score].forEach(v => { const td = document.createElement('td'); td.textContent = v; tr.appendChild(td); });
+    const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
+    tr.appendChild(nameCell(s.name, s.user_id, usernames));
+    const words = document.createElement('td'); words.textContent = s.score; tr.appendChild(words);
     table.appendChild(tr);
   });
   el.appendChild(table);
@@ -568,6 +589,7 @@ async function renderLeaderboard(solved = false) {
   if (!lb) return;
   lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
   const scores = await fetchTodayScores();
+  const usernames = await fetchProfileNames(scores.map(s => s.user_id));
   if (!scores.length) {
     lb.innerHTML = '<div class="lb-empty">no scores yet today</div>';
     return;
@@ -580,9 +602,9 @@ async function renderLeaderboard(solved = false) {
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, solved ? formatTime(s.time_ms) : '—'].forEach(v => {
-      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
-    });
+    const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
+    tr.appendChild(nameCell(s.name, s.user_id, usernames));
+    const time = document.createElement('td'); time.textContent = solved ? formatTime(s.time_ms) : '—'; tr.appendChild(time);
     table.appendChild(tr);
   });
   lb.innerHTML = '';
@@ -630,6 +652,7 @@ async function renderFamilyStandings() {
     fetchFamilyScores(getDayKey(), membersMap), getFamilyPoints(), fetchFamilySubmitCounts(membersMap)
   ]);
   const todayPointsByName = computeTodayPointsByName(todayScores, membersMap);
+  const usernames = await fetchProfileNames([...familyUserByName.values()]);
 
   const submitsByName = new Map();
   for (const [deviceId, count] of submitCounts) {
@@ -661,7 +684,8 @@ async function renderFamilyStandings() {
   table.appendChild(header);
   rows.forEach(r => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [r.name, r.today, r.submits, r.pts].forEach(v => {
+    tr.appendChild(nameCell(r.name, familyUserByName.get(r.name), usernames));
+    [r.today, r.submits, r.pts].forEach(v => {
       const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
     });
     table.appendChild(tr);
@@ -707,6 +731,7 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   ]);
   const showTimes = !isToday || solved;
   const pointsById = computeFamilyPoints(scores, membersMap);
+  const usernames = await fetchProfileNames(scores.map(s => s.user_id || familyUserByName.get(membersMap.get(s.device_id))));
 
   body.innerHTML = '';
   if (!scores.length) {
@@ -722,9 +747,9 @@ async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
   table.appendChild(header);
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
-    [i + 1, s.name, showTimes ? formatTime(s.time_ms) : '—'].forEach(v => {
-      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
-    });
+    const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
+    tr.appendChild(nameCell(s.name, s.user_id || familyUserByName.get(membersMap.get(s.device_id)), usernames));
+    const time = document.createElement('td'); time.textContent = showTimes ? formatTime(s.time_ms) : '—'; tr.appendChild(time);
     const ptsTd = document.createElement('td'); ptsTd.className = 'lb-pts-cell';
     const info = pointsById.get(s.id);
     const numSpan = document.createElement('span'); numSpan.className = 'lb-pts-num';

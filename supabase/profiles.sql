@@ -11,6 +11,11 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- Profile page fields (Profile/profile.html, supabase/public_profiles.sql).
+alter table public.profiles add column if not exists bio         text check (char_length(bio) <= 140);
+alter table public.profiles add column if not exists avatar_path text;
+alter table public.profiles add column if not exists answers     jsonb not null default '{}';
+
 create unique index if not exists profiles_username_lower on public.profiles (lower(username));
 
 alter table public.profiles enable row level security;
@@ -52,10 +57,19 @@ $$;
 create or replace function public.get_my_profile()
 returns json
 language sql stable security definer set search_path = public as $$
-  select json_build_object('username', p.username)
+  select json_build_object('username', p.username, 'avatar_path', p.avatar_path, 'updated_at', p.updated_at)
   from public.profiles p where p.user_id = auth.uid();
 $$;
 
+-- The caller's-choice username for an account, or null. Used by records.sql
+-- and public_profiles.sql to turn names into profile links.
+create or replace function public.profile_username(p_uid uuid)
+returns text
+language sql stable security definer set search_path = public as $$
+  select p.username from public.profiles p where p.user_id = p_uid;
+$$;
+
+revoke all on function public.profile_username(uuid) from public, anon, authenticated;
 revoke all on function public.username_available(text) from public;
 revoke all on function public.set_username(text) from public, anon;
 revoke all on function public.get_my_profile() from public, anon;

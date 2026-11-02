@@ -1,0 +1,76 @@
+/* Profile page. Builds on Awards/awards.css (same tokens, award and record
+   rows), adding the header card, trivia answers and the edit form. */
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--green);
+  padding: 20px;
+  margin-bottom: 32px;
+}
+.profile-avatar {
+  flex-shrink: 0;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  font-family: 'UnifrakturMaguntia', serif;
+  font-size: 56px;
+  color: var(--green-hi);
+  overflow: hidden;
+}
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-avatar-small { width: 64px; height: 64px; font-size: 32px; }
+
+.profile-info { flex: 1; min-width: 0; }
+.profile-name {
+  font-family: 'UnifrakturMaguntia', serif;
+  font-weight: 400;
+  font-size: clamp(30px, 7vw, 44px);
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+.profile-bio { font-size: 13px; color: var(--text); line-height: 1.6; margin: 0 0 8px; overflow-wrap: anywhere; }
+.profile-since { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+.profile-edit-btn { margin-top: 14px; }
+
+.profile-empty { font-size: 12px; color: var(--muted); margin: 0; }
+
+.profile-qa {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.profile-q { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.profile-a { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+
+/* Edit form */
+.profile-edit {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.profile-edit .case-section-title { margin-bottom: 0; }
+.profile-field { display: flex; flex-direction: column; gap: 6px; }
+.profile-field .record-label { margin-right: 0; letter-spacing: .12em; text-transform: none; font-size: 11px; color: var(--soft); }
+.profile-note { font-size: 10px; color: var(--muted); }
+.profile-email { font-size: 13px; overflow-wrap: anywhere; }
+.profile-textarea { resize: vertical; font-family: 'Space Mono', monospace; }
+.profile-avatar-row { display: flex; align-items: center; gap: 10px; }
+.profile-avatar-row .authw-btn { flex: 0 0 auto; padding: 9px 14px; }
+.profile-btns { max-width: 320px; }
+
+@media (max-width: 520px) {
+  .profile-head { flex-direction: column; text-align: center; }
+  .profile-avatar { width: 96px; height: 96px; font-size: 48px; }
+}

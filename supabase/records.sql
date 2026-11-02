@@ -135,57 +135,67 @@ language sql stable security definer set search_path = public as $$
   group by v.user_id, v.grp;
 $$;
 
+-- One account's own numbers, as shown in the "you" column of the Records
+-- tab and on their public profile. p_dev also counts Wordle solves made from
+-- that browser before signing in (null on someone else's profile).
+create or replace function public.personal_records(p_uid uuid, p_dev text default null)
+returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'wordle_fastest', (
+      select json_build_object('value', s.time_ms, 'date', s.date::text)
+      from public.wordle_scores s
+      where s.time_ms > 0 and (s.user_id = p_uid or s.device_id = p_dev)
+      order by s.time_ms, s.created_at limit 1),
+    'wordle_firsts', (
+      select count(*) from public.wordle_daily_winners() w
+      where w.user_id = p_uid or w.device_id = p_dev),
+    'freeplay_best', (
+      select max(f.score) from public.wordle_freeplay_scores f
+      where f.user_id = p_uid or f.device_id = p_dev),
+    'visit_days', (
+      select count(*) from public.user_visit_days d where d.user_id = p_uid),
+    'visit_streak_longest', (
+      select max(v.len) from public.visit_streaks() v where v.user_id = p_uid),
+    'visit_streak_current', (
+      select coalesce(max(v.len), 0) from public.visit_streaks() v
+      where v.user_id = p_uid and v.last_day >= (now() at time zone 'America/New_York')::date - 1),
+    'member_since', (
+      select u.created_at from auth.users u where u.id = p_uid),
+    'snapshot_watch_ms', (
+      select st.value from public.user_stats st where st.user_id = p_uid and st.key = 'snapshot_watch_ms'),
+    'fish_nips', (
+      select st.value from public.user_stats st where st.user_id = p_uid and st.key = 'fish_nips'),
+    'movie_reads', (
+      select count(*) from public.user_reads r where r.user_id = p_uid and r.kind = 'movie'),
+    'game_reads', (
+      select count(*) from public.user_reads r where r.user_id = p_uid and r.kind = 'game')
+  );
+$$;
+
 -- Everything the Records tab shows: the caller's own numbers, and the
 -- all-time best for each with its holder. p_device_id is the Wordle's
 -- per-browser id, so solves made here before signing in still count.
--- Each site entry is { value, holder, date?, mine } (mine = caller holds it).
+-- Each site entry is { value, holder, holder_username, date?, mine } (mine =
+-- caller holds it; holder_username is null for guests without a profile).
 create or replace function public.get_records(p_device_id text default null)
 returns json
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
   v_dev text := nullif(p_device_id, '');
-  v_today date := (now() at time zone 'America/New_York')::date;
   v_personal json;
   v_site json;
 begin
   if v_uid is null then raise exception 'not signed in'; end if;
 
-  select json_build_object(
-    'wordle_fastest', (
-      select json_build_object('value', s.time_ms, 'date', s.date::text)
-      from public.wordle_scores s
-      where s.time_ms > 0 and (s.user_id = v_uid or s.device_id = v_dev)
-      order by s.time_ms, s.created_at limit 1),
-    'wordle_firsts', (
-      select count(*) from public.wordle_daily_winners() w
-      where w.user_id = v_uid or w.device_id = v_dev),
-    'freeplay_best', (
-      select max(f.score) from public.wordle_freeplay_scores f
-      where f.user_id = v_uid or f.device_id = v_dev),
-    'visit_days', (
-      select count(*) from public.user_visit_days d where d.user_id = v_uid),
-    'visit_streak_longest', (
-      select max(v.len) from public.visit_streaks() v where v.user_id = v_uid),
-    'visit_streak_current', (
-      select coalesce(max(v.len), 0) from public.visit_streaks() v
-      where v.user_id = v_uid and v.last_day >= v_today - 1),
-    'member_since', (
-      select u.created_at from auth.users u where u.id = v_uid),
-    'snapshot_watch_ms', (
-      select st.value from public.user_stats st where st.user_id = v_uid and st.key = 'snapshot_watch_ms'),
-    'fish_nips', (
-      select st.value from public.user_stats st where st.user_id = v_uid and st.key = 'fish_nips'),
-    'movie_reads', (
-      select count(*) from public.user_reads r where r.user_id = v_uid and r.kind = 'movie'),
-    'game_reads', (
-      select count(*) from public.user_reads r where r.user_id = v_uid and r.kind = 'game')
-  ) into v_personal;
+  v_personal := public.personal_records(v_uid, v_dev);
 
   select json_build_object(
     'wordle_fastest', (
       select json_build_object('value', s.time_ms, 'date', s.date::text,
                                'holder', case when s.user_id is null then s.name else public.record_holder_name(s.user_id) end,
+                               'holder_username', public.profile_username(s.user_id),
                                'mine', coalesce(s.user_id = v_uid, false) or coalesce(s.device_id = v_dev, false))
       from public.wordle_scores s
       where s.time_ms > 0
@@ -196,6 +206,7 @@ begin
                                'holder', case when (array_agg(w.user_id))[1] is null
                                               then (array_agg(w.name order by w.day desc))[1]
                                               else public.record_holder_name((array_agg(w.user_id))[1]) end,
+                               'holder_username', public.profile_username((array_agg(w.user_id))[1]),
                                'mine', bool_or(coalesce(w.user_id = v_uid, false) or coalesce(w.device_id = v_dev, false)))
       from public.wordle_daily_winners() w
       group by coalesce(w.user_id::text, w.device_id)
@@ -203,43 +214,51 @@ begin
     'freeplay_best', (
       select json_build_object('value', f.score,
                                'holder', case when f.user_id is null then f.name else public.record_holder_name(f.user_id) end,
+                               'holder_username', public.profile_username(f.user_id),
                                'mine', coalesce(f.user_id = v_uid, false) or coalesce(f.device_id = v_dev, false))
       from public.wordle_freeplay_scores f
       order by f.score desc limit 1),
     'visit_days', (
       select json_build_object('value', count(*), 'holder', public.record_holder_name(d.user_id),
+                               'holder_username', public.profile_username(d.user_id),
                                'mine', d.user_id = v_uid)
       from public.user_visit_days d
       group by d.user_id
       order by count(*) desc, min(d.day) limit 1),
     'visit_streak_longest', (
       select json_build_object('value', v.len, 'holder', public.record_holder_name(v.user_id),
+                               'holder_username', public.profile_username(v.user_id),
                                'date', v.last_day, 'mine', v.user_id = v_uid)
       from public.visit_streaks() v
       order by v.len desc, v.last_day limit 1),
     'member_since', (
       select json_build_object('value', u.created_at, 'holder', public.record_holder_name(u.id),
+                               'holder_username', public.profile_username(u.id),
                                'mine', u.id = v_uid)
       from auth.users u
       order by u.created_at limit 1),
     'snapshot_watch_ms', (
       select json_build_object('value', st.value, 'holder', public.record_holder_name(st.user_id),
+                               'holder_username', public.profile_username(st.user_id),
                                'mine', st.user_id = v_uid)
       from public.user_stats st where st.key = 'snapshot_watch_ms'
       order by st.value desc, st.updated_at limit 1),
     'fish_nips', (
       select json_build_object('value', st.value, 'holder', public.record_holder_name(st.user_id),
+                               'holder_username', public.profile_username(st.user_id),
                                'mine', st.user_id = v_uid)
       from public.user_stats st where st.key = 'fish_nips'
       order by st.value desc, st.updated_at limit 1),
     'movie_reads', (
       select json_build_object('value', count(*), 'holder', public.record_holder_name(r.user_id),
+                               'holder_username', public.profile_username(r.user_id),
                                'mine', r.user_id = v_uid)
       from public.user_reads r where r.kind = 'movie'
       group by r.user_id
       order by count(*) desc, max(r.read_at) limit 1),
     'game_reads', (
       select json_build_object('value', count(*), 'holder', public.record_holder_name(r.user_id),
+                               'holder_username', public.profile_username(r.user_id),
                                'mine', r.user_id = v_uid)
       from public.user_reads r where r.kind = 'game'
       group by r.user_id
@@ -254,6 +273,7 @@ $$;
 revoke all on function public.record_holder_name(uuid) from public, anon, authenticated;
 revoke all on function public.wordle_daily_winners() from public, anon, authenticated;
 revoke all on function public.visit_streaks() from public, anon, authenticated;
+revoke all on function public.personal_records(uuid, text) from public, anon, authenticated;
 
 revoke all on function public.record_visit() from public, anon;
 revoke all on function public.mark_read(text, text) from public, anon;

@@ -11,7 +11,7 @@ window.Auth = (function () {
     if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
     client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     client.auth.onAuthStateChange((_event, session) => {
-      if (!session || session.user.id !== usernameFor) { usernameFor = null; usernameCache = null; }
+      if (!session || session.user.id !== profileFor) { profileFor = null; profileCache = null; }
       listeners.forEach(fn => fn(session));
     });
     return client;
@@ -67,17 +67,23 @@ window.Auth = (function () {
   }
 
   // ── Usernames (supabase/profiles.sql) ─────────────────────────────────
-  let usernameFor = null;     // user id the cache belongs to
-  let usernameCache = null;   // Promise<string|null>
+  let profileFor = null;     // user id the cache belongs to
+  let profileCache = null;   // Promise<{ username, avatar_path, updated_at } | null>
 
-  async function getUsername() {
+  // The signed-in account's own username and avatar, or null.
+  async function getMyProfile() {
     const session = await getSession();
     if (!session) return null;
-    if (usernameFor !== session.user.id || !usernameCache) {
-      usernameFor = session.user.id;
-      usernameCache = rpc('get_my_profile').then(({ data }) => (data && data.username) || null, () => null);
+    if (profileFor !== session.user.id || !profileCache) {
+      profileFor = session.user.id;
+      profileCache = rpc('get_my_profile').then(({ data }) => (data && data.username ? data : null), () => null);
     }
-    return usernameCache;
+    return profileCache;
+  }
+
+  async function getUsername() {
+    const me = await getMyProfile();
+    return me ? me.username : null;
   }
 
   // Resolves to { ok: true, username } or { ok: false, reason: 'taken' | 'invalid' | 'error' }.
@@ -86,8 +92,8 @@ window.Auth = (function () {
     if (error || !data) return { ok: false, reason: 'error' };
     if (data.ok) {
       const session = await getSession();
-      usernameFor = session && session.user.id;
-      usernameCache = Promise.resolve(data.username);
+      if (session) usernameById.set(session.user.id, data.username);
+      profileCache = null;   // re-fetched on next use
     }
     return data;
   }
@@ -97,5 +103,60 @@ window.Auth = (function () {
     return error ? null : !!data;
   }
 
-  return { getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc };
+  // ── Profiles (supabase/public_profiles.sql) ───────────────────────────
+  function profileUrl(username) {
+    return '/Profile/profile.html?u=' + encodeURIComponent(username);
+  }
+
+  // Map<user id, username> for the given accounts. Accounts without a
+  // username aren't in the result. Answers are cached for the page's lifetime.
+  const usernameById = new Map();
+  async function usernamesFor(ids) {
+    const wanted = [...new Set(ids.filter(Boolean))];
+    const missing = wanted.filter(id => !usernameById.has(id));
+    if (missing.length) {
+      const { data, error } = await rpc('usernames_for', { p_ids: missing });
+      if (!error && data) {
+        missing.forEach(id => usernameById.set(id, null));
+        data.forEach(r => usernameById.set(r.user_id, r.username));
+      }
+    }
+    const out = new Map();
+    wanted.forEach(id => { if (usernameById.get(id)) out.set(id, usernameById.get(id)); });
+    return out;
+  }
+
+  async function getPublicProfile(username) {
+    const { data, error } = await rpc('get_public_profile', { p_username: username });
+    return error ? { error } : { data };
+  }
+
+  // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
+  async function updateProfile({ bio = null, answers = null, avatarPath = null } = {}) {
+    const { data, error } = await rpc('update_profile', { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath });
+    if (error || !data) return { ok: false, reason: 'error' };
+    if (data.ok) profileCache = null;   // avatar may have changed
+    return data;
+  }
+
+  async function uploadAvatar(blob) {
+    const c = getClient();
+    const session = await getSession();
+    if (!c || !session) return { ok: false, reason: 'error' };
+    const path = session.user.id + '/avatar.webp';
+    const { error } = await c.storage.from('avatars').upload(path, blob, { upsert: true, contentType: blob.type || 'image/webp' });
+    if (error) return { ok: false, reason: 'error' };
+    return updateProfile({ avatarPath: path });
+  }
+
+  // version busts the browser cache after the same path is re-uploaded.
+  function avatarUrl(path, version) {
+    const c = getClient();
+    if (!c || !path) return null;
+    const url = c.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    return version ? url + '?v=' + encodeURIComponent(version) : url;
+  }
+
+  return { getMyProfile, getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc,
+           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, avatarUrl };
 })();

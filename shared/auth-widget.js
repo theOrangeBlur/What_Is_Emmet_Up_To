@@ -9,26 +9,69 @@ window.AuthWidget = (function () {
   const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
   const USERNAME_RULES = '3–16 letters, numbers or underscores';
 
+  // Set by the profile page while you're looking at your own profile: the
+  // box there becomes the way out instead of a link back to the same page.
+  let onOwnProfile = false;
+  function setOnOwnProfile(value) {
+    if (onOwnProfile === !!value) return;
+    onOwnProfile = !!value;
+    renderLink();
+  }
+
+  const onAwardsPage = /\/Awards\/awards(\.html)?$/i.test(window.location.pathname);
+
+  function setAction(text, onClick) {
+    linkEl.className = 'authw-link';
+    linkEl.removeAttribute('href');
+    linkEl.setAttribute('role', 'button');
+    linkEl.tabIndex = 0;
+    linkEl.textContent = text;
+    linkEl.onclick = onClick;
+    linkEl.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } };
+  }
+
   async function renderLink() {
     if (!linkEl || !window.Auth) return;
     const session = await window.Auth.getSession();
-    if (session) {
-      const username = await window.Auth.getUsername();
-      linkEl.textContent = '';
-      // The name opens the change-name popup; the rest of the button signs out.
-      const nameEl = document.createElement('span');
-      nameEl.className = 'authw-username';
-      nameEl.textContent = username || session.user.email;
-      nameEl.title = username ? 'change your name' : 'pick a name';
-      nameEl.addEventListener('click', e => { e.stopPropagation(); showUsernameModal(); });
-      linkEl.appendChild(nameEl);
-      linkEl.appendChild(document.createTextNode(' · slip out the back'));
-      linkEl.onclick = () => window.Auth.signOut();
+    linkEl.removeAttribute('title');
+    if (!session) {
+      setAction('knock on the door', () => showAuthModal('login'));
+    } else if (onOwnProfile) {
+      setAction('wait, is this not you...?', () => window.Auth.signOut());
+      linkEl.title = 'slip out the back';
     } else {
-      linkEl.textContent = 'knock on the door';
-      linkEl.onclick = () => showAuthModal('login');
+      // Signed in: the box is your picture (or initial), linking to your profile.
+      const me = await window.Auth.getMyProfile();
+      linkEl.className = 'authw-link authw-avatar';
+      linkEl.removeAttribute('role');
+      linkEl.removeAttribute('tabindex');
+      linkEl.onclick = null; linkEl.onkeydown = null;
+      linkEl.href = me ? window.Auth.profileUrl(me.username) : '/Profile/profile.html';
+      linkEl.title = me ? me.username : 'pick a name';
+      linkEl.textContent = '';
+      const url = me && window.Auth.avatarUrl(me.avatar_path, me.updated_at);
+      if (url) {
+        const img = document.createElement('img');
+        img.src = url; img.alt = me.username;
+        linkEl.appendChild(img);
+      } else {
+        linkEl.textContent = ((me && me.username) || session.user.email || '?').charAt(0).toUpperCase();
+      }
     }
-    if (awardsEl) awardsEl.style.display = session ? '' : 'none';
+    if (awardsEl) awardsEl.style.display = session && !onAwardsPage ? '' : 'none';
+  }
+
+  // A person's name, linked to their profile when they have one. Every page
+  // that shows someone's name should build it with this.
+  function profileLink(username, text) {
+    const label = text != null && text !== '' ? text : username;
+    if (!username || !window.Auth) return document.createTextNode(label == null ? '' : String(label));
+    const a = document.createElement('a');
+    a.className = 'name-link';
+    a.href = window.Auth.profileUrl(username);
+    a.textContent = label;
+    if (label !== username) a.title = username;
+    return a;
   }
 
   function showAuthModal(initialMode) {
@@ -172,6 +215,7 @@ window.AuthWidget = (function () {
       }
       overlay.remove();
       await renderLink();
+      document.dispatchEvent(new CustomEvent('username:changed', { detail: result.username }));
     }
 
     saveBtn.addEventListener('click', save);
@@ -194,7 +238,11 @@ window.AuthWidget = (function () {
     checkedUid = session.user.id;
     if (await window.Auth.getUsername()) return;
     const picked = session.user.user_metadata && session.user.user_metadata.username;
-    if (picked && (await window.Auth.setUsername(picked)).ok) { await renderLink(); return; }
+    if (picked && (await window.Auth.setUsername(picked)).ok) {
+      await renderLink();
+      document.dispatchEvent(new CustomEvent('username:changed', { detail: picked }));
+      return;
+    }
     let skipped = false;
     try { skipped = sessionStorage.getItem('username_prompt_skipped') === '1'; } catch {}
     if (!skipped) showUsernameModal();
@@ -204,7 +252,7 @@ window.AuthWidget = (function () {
     if (linkEl || !window.Auth) return;
     const row = document.createElement('div');
     row.className = 'authw-row';
-    linkEl = document.createElement('div');
+    linkEl = document.createElement('a');
     linkEl.className = 'authw-link';
     linkEl.id = 'site-auth-link';
     awardsEl = document.createElement('a');
@@ -235,5 +283,5 @@ window.AuthWidget = (function () {
     init();
   }
 
-  return { renderLink, showAuthModal, showUsernameModal };
+  return { renderLink, showAuthModal, showUsernameModal, profileLink, setOnOwnProfile };
 })();

@@ -40,7 +40,11 @@ const splashTexts = [
     "Voted most likely person to break a bone on this trip",
     "You can go ahead and turn Dark Reader off :)",
     "Whatever could be baking in that 3D printer of his?",
-    "Puzzler, Maker, & Puzzle Maker!"
+    "Puzzler, Maker, & Puzzle Maker!",
+    "What's the verdict: Cat?",
+    "Do I have to move my car today?",
+    "All in a day's work",
+    "I've been collecting videos for over a year!"
 ];
 
 // Simple seeded random number generator
