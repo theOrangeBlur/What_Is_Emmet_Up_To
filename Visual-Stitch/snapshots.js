@@ -880,6 +880,17 @@ video.addEventListener('pause', () => { videoLastPausedAt = Date.now(); });
 video.addEventListener('ended', () => { videoLastPausedAt = Date.now(); });
 video.addEventListener('play',  () => { videoLastPausedAt = Infinity; });
 
+// Watch time for the Records tab. Only small forward steps count, so seeking
+// around the timeline doesn't rack up time.
+let watchLastTime = null;
+video.addEventListener('timeupdate', () => {
+  const t = video.currentTime;
+  const step = watchLastTime == null ? 0 : t - watchLastTime;
+  watchLastTime = t;
+  if (!video.paused && step > 0 && step < 1.5 && window.Awards) Awards.tally('snapshot_watch_ms', step * 1000);
+});
+video.addEventListener('seeking', () => { watchLastTime = null; });
+
 // Rebuild on resize (segments use percentages, but just in case)
 window.addEventListener('resize', buildTimeline);
 

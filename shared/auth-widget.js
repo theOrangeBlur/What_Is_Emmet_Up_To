@@ -6,12 +6,23 @@
 window.AuthWidget = (function () {
   let linkEl = null;
   let awardsEl = null;
+  const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+  const USERNAME_RULES = '3–16 letters, numbers or underscores';
 
   async function renderLink() {
     if (!linkEl || !window.Auth) return;
     const session = await window.Auth.getSession();
     if (session) {
-      linkEl.textContent = session.user.email + ' · slip out the back';
+      const username = await window.Auth.getUsername();
+      linkEl.textContent = '';
+      // The name opens the change-name popup; the rest of the button signs out.
+      const nameEl = document.createElement('span');
+      nameEl.className = 'authw-username';
+      nameEl.textContent = username || session.user.email;
+      nameEl.title = username ? 'change your name' : 'pick a name';
+      nameEl.addEventListener('click', e => { e.stopPropagation(); showUsernameModal(); });
+      linkEl.appendChild(nameEl);
+      linkEl.appendChild(document.createTextNode(' · slip out the back'));
       linkEl.onclick = () => window.Auth.signOut();
     } else {
       linkEl.textContent = 'knock on the door';
@@ -56,6 +67,9 @@ window.AuthWidget = (function () {
     const passInp = document.createElement('input');
     passInp.className = 'authw-input'; passInp.type = 'password'; passInp.placeholder = 'secret knock';
     passInp.spellcheck = false;
+    const nameInp = document.createElement('input');
+    nameInp.className = 'authw-input'; nameInp.placeholder = 'what do we call you?';
+    nameInp.maxLength = 16; nameInp.autocomplete = 'username'; nameInp.spellcheck = false;
     const msg = document.createElement('div'); msg.className = 'authw-msg'; msg.style.display = 'none';
     const btnRow = document.createElement('div'); btnRow.className = 'authw-btns';
     const submitBtn = document.createElement('button'); submitBtn.className = 'authw-btn authw-btn-primary';
@@ -68,6 +82,7 @@ window.AuthWidget = (function () {
       submitBtn.textContent = mode === 'login' ? "let's boogy" : "i'm new here";
       passInp.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
       toggleLink.textContent = mode === 'login' ? 'how do i join?' : 'already in? let me back';
+      nameInp.style.display = mode === 'signup' ? '' : 'none';
       msg.style.display = 'none';
     }
     render();
@@ -78,10 +93,17 @@ window.AuthWidget = (function () {
       const email = emailInp.value.trim();
       const password = passInp.value;
       if (!email || !password) { showMsg("you'll need an email and a secret knock to get in"); return; }
+      const username = nameInp.value.trim();
+      if (mode === 'signup' && !USERNAME_RE.test(username)) { showMsg('your name needs to be ' + USERNAME_RULES); return; }
       submitBtn.disabled = true;
+      if (mode === 'signup' && await window.Auth.usernameAvailable(username) === false) {
+        submitBtn.disabled = false;
+        showMsg('someone already goes by that — try another name');
+        return;
+      }
       const { error } = mode === 'login'
         ? await window.Auth.signIn(email, password)
-        : await window.Auth.signUp(email, password);
+        : await window.Auth.signUp(email, password, username);
       submitBtn.disabled = false;
       if (error) { showMsg(error.message); return; }
       if (mode === 'signup') { showMsg("check your email — we slipped a note under the door to confirm it's you"); return; }
@@ -91,6 +113,7 @@ window.AuthWidget = (function () {
 
     submitBtn.addEventListener('click', doSubmit);
     passInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
+    nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(); });
     cancelBtn.addEventListener('click', () => overlay.remove());
     toggleLink.addEventListener('click', () => { mode = mode === 'login' ? 'signup' : 'login'; render(); });
     forgotLink.addEventListener('click', async () => {
@@ -103,11 +126,78 @@ window.AuthWidget = (function () {
 
     btnRow.appendChild(submitBtn); btnRow.appendChild(cancelBtn);
     card.appendChild(peephole); card.appendChild(heading); card.appendChild(emailInp); card.appendChild(passInp);
-    card.appendChild(msg); card.appendChild(btnRow);
+    card.appendChild(nameInp); card.appendChild(msg); card.appendChild(btnRow);
     card.appendChild(forgotLink); card.appendChild(toggleLink);
     overlay.appendChild(card);
     document.body.appendChild(overlay);
     setTimeout(() => emailInp.focus(), 50);
+  }
+
+  // Pick or change a username. Also shown once per browser session to
+  // signed-in accounts that don't have one yet.
+  function showUsernameModal() {
+    if (document.querySelector('.authw-name-overlay')) return;
+    const overlay = document.createElement('div'); overlay.className = 'authw-overlay authw-name-overlay';
+    const card = document.createElement('div'); card.className = 'authw-card';
+    const heading = document.createElement('div'); heading.className = 'authw-heading'; heading.textContent = 'what do we call you?';
+    const hint = document.createElement('div'); hint.className = 'authw-msg';
+    hint.textContent = USERNAME_RULES + '. it goes on the records and fills in your wordle name.';
+    const nameInp = document.createElement('input');
+    nameInp.className = 'authw-input'; nameInp.placeholder = 'a name for the records';
+    nameInp.maxLength = 16; nameInp.autocomplete = 'username'; nameInp.spellcheck = false;
+    const msg = document.createElement('div'); msg.className = 'authw-msg'; msg.style.display = 'none';
+    const btnRow = document.createElement('div'); btnRow.className = 'authw-btns';
+    const saveBtn = document.createElement('button'); saveBtn.className = 'authw-btn authw-btn-primary'; saveBtn.textContent = "that's me";
+    const laterBtn = document.createElement('button'); laterBtn.className = 'authw-btn'; laterBtn.textContent = 'later';
+
+    window.Auth.getUsername().then(name => { if (name && !nameInp.value) nameInp.value = name; });
+
+    function close() {
+      try { sessionStorage.setItem('username_prompt_skipped', '1'); } catch {}
+      overlay.remove();
+    }
+    function showMsg(text) { msg.textContent = text; msg.style.display = 'block'; }
+
+    async function save() {
+      const name = nameInp.value.trim();
+      if (!USERNAME_RE.test(name)) { showMsg('it needs to be ' + USERNAME_RULES); return; }
+      saveBtn.disabled = true;
+      const result = await window.Auth.setUsername(name);
+      saveBtn.disabled = false;
+      if (!result.ok) {
+        showMsg(result.reason === 'taken' ? 'someone already goes by that — try another name'
+              : result.reason === 'invalid' ? 'it needs to be ' + USERNAME_RULES
+              : 'the doorman lost his pen — try again in a bit');
+        return;
+      }
+      overlay.remove();
+      await renderLink();
+    }
+
+    saveBtn.addEventListener('click', save);
+    nameInp.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+    laterBtn.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+    btnRow.appendChild(saveBtn); btnRow.appendChild(laterBtn);
+    card.appendChild(heading); card.appendChild(hint); card.appendChild(nameInp);
+    card.appendChild(msg); card.appendChild(btnRow);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    setTimeout(() => nameInp.focus(), 50);
+  }
+
+  // After sign-in: claim the name picked at sign-up, or ask for one.
+  let checkedUid = null;
+  async function ensureUsername(session) {
+    if (!session || checkedUid === session.user.id) return;
+    checkedUid = session.user.id;
+    if (await window.Auth.getUsername()) return;
+    const picked = session.user.user_metadata && session.user.user_metadata.username;
+    if (picked && (await window.Auth.setUsername(picked)).ok) { await renderLink(); return; }
+    let skipped = false;
+    try { skipped = sessionStorage.getItem('username_prompt_skipped') === '1'; } catch {}
+    if (!skipped) showUsernameModal();
   }
 
   function init() {
@@ -131,7 +221,12 @@ window.AuthWidget = (function () {
     if (mount) mount.appendChild(row);
     else document.body.insertBefore(row, document.body.firstChild);
     renderLink();
-    window.Auth.onAuthStateChange(() => renderLink());
+    window.Auth.getSession().then(ensureUsername);
+    window.Auth.onAuthStateChange(session => {
+      if (!session) checkedUid = null;
+      renderLink();
+      ensureUsername(session);
+    });
   }
 
   if (document.readyState === 'loading') {
@@ -140,5 +235,5 @@ window.AuthWidget = (function () {
     init();
   }
 
-  return { renderLink, showAuthModal };
+  return { renderLink, showAuthModal, showUsernameModal };
 })();

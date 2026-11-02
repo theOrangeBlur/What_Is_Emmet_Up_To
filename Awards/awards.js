@@ -1,8 +1,13 @@
-// Trophy case page: lists every award via the get_awards RPC. Hidden awards
-// the visitor hasn't earned arrive already masked from the database, and
-// buried ones don't arrive at all until they're earned.
+// Trophy case page, in two tabs:
+//   Awards   every award via the get_awards RPC. Hidden awards the visitor
+//            hasn't earned arrive already masked from the database, and
+//            buried ones don't arrive at all until they're earned.
+//   Records  the visitor's personal bests next to the all-time record for
+//            each, via the get_records RPC (supabase/records.sql).
 
 const root = document.getElementById('awards-root');
+const recordsRoot = document.getElementById('records-root');
+const tabs = document.querySelectorAll('.case-tab');
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -23,7 +28,7 @@ function progressBar(value, max) {
   return bar;
 }
 
-function renderSignedOut() {
+function renderSignedOut(root) {
   root.innerHTML = '';
   const card = el('div', 'case-locked');
   card.appendChild(el('div', 'case-locked-icon', '🔒'));
@@ -97,16 +102,149 @@ async function renderAwards() {
   ].forEach(s => { if (s) root.appendChild(s); });
 }
 
+// ── Records ─────────────────────────────────────────────────────────────
+
+function plural(word) {
+  return n => `${n.toLocaleString('en-US')} ${word}${n === 1 ? '' : 's'}`;
+}
+
+// Same m:ss.t style as the Final Wordle timer.
+function formatSolveTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + '.' + Math.floor((ms % 1000) / 100);
+}
+
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+// Records carry three kinds of date: Wordle day keys (20261101), plain
+// dates (2026-11-01) and timestamps. The first two are calendar days, so
+// build them locally rather than letting Date read them as UTC midnight.
+function formatRecordDate(s) {
+  s = String(s);
+  let m = s.match(/^(\d{4})(\d{2})(\d{2})$/) || s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(s);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const RECORD_GROUPS = [
+  { title: 'Final Wordle', records: [
+    { key: 'wordle_fastest', icon: '⏱️', title: 'Fastest daily solve',              fmt: formatSolveTime },
+    { key: 'wordle_firsts',  icon: '🥇', title: 'Days finishing first',             fmt: plural('day') },
+    { key: 'freeplay_best',  icon: '✒️', title: 'Most freeplay words in 5 minutes', fmt: plural('word') }
+  ]},
+  { title: 'Visits', records: [
+    { key: 'visit_days',           icon: '🚪', title: 'Days dropped by',          fmt: plural('day') },
+    { key: 'visit_streak_longest', icon: '📆', title: 'Longest visiting streak',  fmt: plural('day') },
+    { key: 'visit_streak_current', icon: '🔥', title: 'Current visiting streak',  fmt: plural('day'), personalOnly: true },
+    { key: 'member_since',         icon: '🗝️', title: 'Member since',             fmt: formatRecordDate }
+  ]},
+  { title: 'Grab-bag', records: [
+    { key: 'movie_reads',       icon: '🎬', title: 'Movie reviews read',               fmt: plural('review') },
+    { key: 'game_reads',        icon: '🎮', title: 'Game reviews read',                fmt: plural('review') },
+    { key: 'snapshot_watch_ms', icon: '🎞️', title: "Time spent watching Emmet's life", fmt: formatDuration },
+    { key: 'fish_nips',         icon: '🐟', title: 'Times nipped by a fish',           fmt: plural('nip') }
+  ]}
+];
+
+function getWordleDeviceId() {
+  try { return localStorage.getItem('wordle_device_id'); } catch { return null; }
+}
+
+function renderRecord(def, personal, site) {
+  // Personal values come back either bare or as { value, date }.
+  const mine = personal != null && typeof personal === 'object' ? personal : { value: personal };
+  const has = v => v != null && v !== 0;
+
+  const row = el('article', 'record' + (site && site.mine ? ' record-held' : ''));
+  row.appendChild(el('div', 'award-icon', def.icon));
+
+  const body = el('div', 'award-body');
+  body.appendChild(el('h3', 'award-title', def.title));
+  const you = el('p', 'record-you');
+  you.appendChild(el('span', 'record-label', 'you'));
+  you.appendChild(document.createTextNode(has(mine.value) ? def.fmt(mine.value) : '—'));
+  if (has(mine.value) && mine.date) you.appendChild(el('span', 'record-date', formatRecordDate(mine.date)));
+  body.appendChild(you);
+  row.appendChild(body);
+
+  if (!def.personalOnly) {
+    const best = el('div', 'record-best');
+    best.appendChild(el('div', 'record-label', 'record'));
+    if (site && has(site.value)) {
+      best.appendChild(el('div', 'record-value', def.fmt(site.value)));
+      const who = el('div', 'record-holder', site.holder || 'A MYSTERY GUEST');
+      if (site.date) who.appendChild(el('span', 'record-date', formatRecordDate(site.date)));
+      best.appendChild(who);
+      if (site.mine) best.appendChild(el('div', 'record-badge', "🏅 that's you"));
+    } else {
+      best.appendChild(el('div', 'record-holder', 'up for grabs'));
+    }
+    row.appendChild(best);
+  }
+  return row;
+}
+
+async function renderRecords() {
+  const { data, error } = await window.Auth.rpc('get_records', { p_device_id: getWordleDeviceId() });
+  if (error || !data) {
+    recordsRoot.innerHTML = '';
+    recordsRoot.appendChild(el('div', 'case-loading', "the record books are locked up — try again in a bit"));
+    return;
+  }
+  const personal = data.personal || {}, site = data.site || {};
+  recordsRoot.innerHTML = '';
+  RECORD_GROUPS.forEach(group => {
+    const section = el('section', 'case-section');
+    section.appendChild(el('h2', 'case-section-title', group.title));
+    group.records.forEach(def => section.appendChild(renderRecord(def, personal[def.key], site[def.key])));
+    recordsRoot.appendChild(section);
+  });
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────
+
+function activeTab() {
+  return window.location.hash === '#records' ? 'records' : 'awards';
+}
+
+function showTab(name) {
+  tabs.forEach(t => {
+    const on = t.dataset.tab === name;
+    t.classList.toggle('case-tab-active', on);
+    t.setAttribute('aria-selected', on);
+  });
+  root.hidden = name !== 'awards';
+  recordsRoot.hidden = name !== 'records';
+}
+
+tabs.forEach(t => t.addEventListener('click', () => {
+  history.replaceState(null, '', t.dataset.tab === 'records' ? '#records' : window.location.pathname);
+  showTab(t.dataset.tab);
+  render();
+}));
+window.addEventListener('hashchange', () => { showTab(activeTab()); render(); });
+
 let renderQueued = null;
 async function render() {
   // Collapse bursts (e.g. several awards claimed right after signing in) into one fetch.
   clearTimeout(renderQueued);
   renderQueued = setTimeout(async () => {
+    const tab = activeTab();
+    const target = tab === 'records' ? recordsRoot : root;
     const session = await window.Auth.getSession();
-    if (session) await renderAwards(); else renderSignedOut();
+    if (!session) renderSignedOut(target);
+    else if (tab === 'records') await renderRecords();
+    else await renderAwards();
   }, 150);
 }
 
+showTab(activeTab());
 window.Auth.onAuthStateChange(render);
 document.addEventListener('awards:changed', render);
 render();

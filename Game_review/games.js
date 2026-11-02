@@ -32,7 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = e.target.closest('.game-card.expandable');
         if (!card) return;
         if (e.target.tagName === 'A') return;
-        setCardExpanded(card, !card.classList.contains('expanded'));
+        const expanding = !card.classList.contains('expanded');
+        setCardExpanded(card, expanding);
+        if (expanding && window.Awards) Awards.markRead('game', card.id);
     });
 
     function applyFiltersAndSort() {

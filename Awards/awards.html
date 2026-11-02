@@ -28,11 +28,19 @@
   <header class="case-header">
     <div class="case-kicker">The Emmet Enquirer &middot; Awards</div>
     <h1 class="case-title">The Trophy Case</h1>
-    <p class="case-sub">Challenges to conquer, secrets to sniff out.</p>
+    <p class="case-sub">Challenges to conquer, secrets to sniff out, records to break.</p>
   </header>
 
-  <main id="awards-root" class="case-body">
+  <nav class="case-tabs" role="tablist">
+    <button class="case-tab" role="tab" data-tab="awards" id="tab-awards" aria-controls="awards-root">Awards</button>
+    <button class="case-tab" role="tab" data-tab="records" id="tab-records" aria-controls="records-root">Records</button>
+  </nav>
+
+  <main id="awards-root" class="case-body" role="tabpanel" aria-labelledby="tab-awards">
     <div class="case-loading">polishing the trophies&hellip;</div>
+  </main>
+  <main id="records-root" class="case-body" role="tabpanel" aria-labelledby="tab-records" hidden>
+    <div class="case-loading">dusting off the record books&hellip;</div>
   </main>
 
   <script src="./awards.js"></script>

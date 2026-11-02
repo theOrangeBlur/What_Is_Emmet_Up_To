@@ -885,6 +885,7 @@ function updateFish() {
             nipScale = 1.25;
             hapticNip(15);
             playNipClick();
+            if (window.Awards) Awards.tally('fish_nips', 1);
             targetX = STATE.nipBounceTarget.x;
             targetY = STATE.nipBounceTarget.y;
         } else if (STATE.nipPhase === 'bouncing' && dist < 10) {
@@ -906,6 +907,7 @@ function updateFish() {
                 nipScale = 1.3;
                 hapticNip(18);
                 playNipClick();
+                if (window.Awards) Awards.tally('fish_nips', 1);
                 const dx = fishX - swX, dy = fishY - swY;
                 const len = Math.hypot(dx, dy) || 1;
                 targetX = clampX(fishX + (dx / len) * 70);
@@ -996,6 +998,7 @@ function spawnSwarmFish() {
                 sf.nipScale = 1.45;
                 hapticNip(12);
                 playNipClick();
+                if (window.Awards) Awards.tally('fish_nips', 1);
                 const dx = sf.x - mouseX, dy = sf.y - mouseY;
                 const len = Math.hypot(dx, dy) || 1;
                 sf.bounceTargetX = sf.x + (dx / len) * 65;

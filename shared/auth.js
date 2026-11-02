@@ -10,7 +10,10 @@ window.Auth = (function () {
     if (client) return client;
     if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
     client = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-    client.auth.onAuthStateChange((_event, session) => listeners.forEach(fn => fn(session)));
+    client.auth.onAuthStateChange((_event, session) => {
+      if (!session || session.user.id !== usernameFor) { usernameFor = null; usernameCache = null; }
+      listeners.forEach(fn => fn(session));
+    });
     return client;
   }
 
@@ -25,10 +28,12 @@ window.Auth = (function () {
     return data.session;
   }
 
-  async function signUp(email, password) {
+  // The username rides along in user_metadata so it survives the email
+  // confirmation round trip; it's claimed into profiles on first sign-in.
+  async function signUp(email, password, username) {
     const c = getClient();
     if (!c) return { error: { message: 'auth unavailable' } };
-    return c.auth.signUp({ email, password });
+    return c.auth.signUp({ email, password, options: { data: { username } } });
   }
 
   async function signIn(email, password) {
@@ -61,5 +66,36 @@ window.Auth = (function () {
     return c.rpc(name, args);
   }
 
-  return { getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc };
+  // ── Usernames (supabase/profiles.sql) ─────────────────────────────────
+  let usernameFor = null;     // user id the cache belongs to
+  let usernameCache = null;   // Promise<string|null>
+
+  async function getUsername() {
+    const session = await getSession();
+    if (!session) return null;
+    if (usernameFor !== session.user.id || !usernameCache) {
+      usernameFor = session.user.id;
+      usernameCache = rpc('get_my_profile').then(({ data }) => (data && data.username) || null, () => null);
+    }
+    return usernameCache;
+  }
+
+  // Resolves to { ok: true, username } or { ok: false, reason: 'taken' | 'invalid' | 'error' }.
+  async function setUsername(name) {
+    const { data, error } = await rpc('set_username', { p_name: name });
+    if (error || !data) return { ok: false, reason: 'error' };
+    if (data.ok) {
+      const session = await getSession();
+      usernameFor = session && session.user.id;
+      usernameCache = Promise.resolve(data.username);
+    }
+    return data;
+  }
+
+  async function usernameAvailable(name) {
+    const { data, error } = await rpc('username_available', { p_name: name });
+    return error ? null : !!data;
+  }
+
+  return { getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc };
 })();

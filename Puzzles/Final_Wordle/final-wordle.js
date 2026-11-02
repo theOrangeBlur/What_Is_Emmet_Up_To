@@ -294,6 +294,17 @@ async function getUserId() {
   } catch { return null; }
 }
 
+// Start the arcade name box at the account's username, squeezed to arcade
+// form (letters only, 6 max). It stays editable, and isn't touched once typed in.
+async function prefillArcadeName(inp) {
+  if (!window.Auth || !window.Auth.getUsername) return;
+  try {
+    const username = await window.Auth.getUsername();
+    const arcade = (username || '').replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 6);
+    if (arcade && !inp.value) inp.value = arcade;
+  } catch {}
+}
+
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
@@ -853,6 +864,7 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   nameInp.className = 'arcade-input'; nameInp.maxLength = 6; nameInp.placeholder = '______';
   nameInp.autocomplete = 'off'; nameInp.spellcheck = false;
   nameInp.addEventListener('input', () => { nameInp.value = nameInp.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 6); });
+  prefillArcadeName(nameInp);
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
@@ -929,6 +941,7 @@ function showFreeNameModal(score) {
   nameInp.className = 'arcade-input'; nameInp.maxLength = 6; nameInp.placeholder = '______';
   nameInp.autocomplete = 'off'; nameInp.spellcheck = false;
   nameInp.addEventListener('input', () => { nameInp.value = nameInp.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 6); });
+  prefillArcadeName(nameInp);
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';

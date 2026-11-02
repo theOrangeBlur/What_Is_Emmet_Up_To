@@ -55,11 +55,36 @@ body {
 }
 .case-sub { color: var(--muted); font-size: 12px; margin: 0; }
 
+/* Awards | Records tabs */
+.case-tabs {
+  max-width: 760px;
+  margin: 20px auto 0;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.case-tab {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  padding: 9px 20px;
+  cursor: pointer;
+}
+.case-tab:hover { color: var(--text); }
+.case-tab-active { border-color: var(--green); color: var(--green-hi); background: var(--panel); }
+
 .case-body {
   max-width: 760px;
   margin: 0 auto;
   padding: 24px 16px 64px;
 }
+.case-body[hidden] { display: none; }
 .case-loading { text-align: center; color: var(--muted); font-size: 12px; padding: 40px 0; }
 
 /* Summary bar */
@@ -141,6 +166,32 @@ body {
 .award-date { color: var(--green-hi); }
 .award-rare { color: var(--gold); }
 
+/* One record row: icon, your value, then the all-time record on the right */
+.record {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.record-held { border-left: 3px solid var(--gold); }
+.record-label {
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 8px;
+}
+.record-you { font-size: 13px; margin: 0; }
+.record-date { margin-left: 8px; font-size: 10px; color: var(--muted); }
+.record-best { flex-shrink: 0; text-align: right; font-size: 11px; line-height: 1.6; }
+.record-best .record-label { margin-right: 0; }
+.record-value { font-size: 13px; font-weight: 700; color: var(--gold); }
+.record-holder { color: var(--soft); letter-spacing: .05em; }
+.record-badge { color: var(--gold); font-size: 10px; }
+
 /* Signed-out card */
 .case-locked {
   max-width: 380px;
@@ -180,4 +231,8 @@ body {
   .award-icon { width: 44px; height: 44px; font-size: 22px; }
   .award-body { flex-basis: calc(100% - 58px); }
   .award-meta { flex-basis: 100%; text-align: left; padding-left: 58px; display: flex; gap: 12px; }
+  .record { flex-wrap: wrap; }
+  .record .award-body { flex-basis: calc(100% - 58px); }
+  .record-best { flex-basis: 100%; text-align: left; padding-left: 58px; }
+  .case-tab { padding: 9px 14px; letter-spacing: .2em; }
 }

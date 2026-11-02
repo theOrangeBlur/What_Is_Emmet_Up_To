@@ -30,6 +30,9 @@
   transition: border-color .15s, color .15s;
 }
 .authw-link:hover { border-color: #538d4e; color: #6aaf63; }
+/* The name inside the signed-in link: opens the change-name popup. */
+.authw-username { text-transform: none; color: #e5e0d8; border-bottom: 1px dotted #7a7670; }
+.authw-username:hover { color: #6aaf63; border-bottom-color: #6aaf63; }
 .authw-awards-link {
   display: block;
   margin-right: 8px;

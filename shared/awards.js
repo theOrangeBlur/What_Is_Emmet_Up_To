@@ -70,17 +70,114 @@ window.Awards = (function () {
     holdForLater(key, n, target != null && n >= target);
   }
 
+  // ── Records: running tallies (fish nips, video watch time, ...) ──────────
+  // Counted up in memory and sent in batches, since some of these tick many
+  // times a second. Signed out, they wait in localStorage like awards do.
+  const TALLY_PENDING_KEY = 'records_pending';
+  const TALLY_FLUSH_MS = 15000;
+  const tallies = {};
+  let tallyTimer = null;
+
+  function tally(key, delta) {
+    if (!(delta > 0)) return;
+    tallies[key] = (tallies[key] || 0) + delta;
+    if (!tallyTimer) tallyTimer = setTimeout(flushTallies, TALLY_FLUSH_MS);
+  }
+
+  function stashTallies(batch) {
+    const pending = load(TALLY_PENDING_KEY, {});
+    for (const key of Object.keys(batch)) pending[key] = (pending[key] || 0) + batch[key];
+    save(TALLY_PENDING_KEY, pending);
+  }
+
+  let flushing = false;
+  async function flushTallies() {
+    clearTimeout(tallyTimer);
+    tallyTimer = null;
+    // Stash synchronously before any await, so a tab closing mid-send keeps them.
+    stashTallies(tallies);
+    for (const key of Object.keys(tallies)) delete tallies[key];
+    if (flushing) return;
+    const session = await getSession();
+    if (!session) return;
+    flushing = true;
+    const batch = load(TALLY_PENDING_KEY, {});
+    save(TALLY_PENDING_KEY, {});
+    for (const key of Object.keys(batch)) {
+      const { error } = await window.Auth.rpc('add_stat', { p_key: key, p_delta: Math.round(batch[key]) });
+      if (error) stashTallies({ [key]: batch[key] }); // try again next flush
+    }
+    flushing = false;
+  }
+
+  // ── Records: reviews opened (movies, games) ─────────────────────────────
+  // Each review counts once per account. Signed out, ids wait in localStorage.
+  const READS_PENDING_KEY = 'records_reads_pending';   // { kind: [id, ...] }
+  function readsDoneKey(uid) { return 'records_reads_' + uid; }
+
+  function addRead(store, kind, id) {
+    const list = store[kind] || (store[kind] = []);
+    if (list.includes(id)) return false;
+    list.push(id);
+    return true;
+  }
+
+  async function sendRead(session, kind, id) {
+    const done = load(readsDoneKey(session.user.id), {});
+    if ((done[kind] || []).includes(id)) return true;
+    const { error } = await window.Auth.rpc('mark_read', { p_kind: kind, p_item: id });
+    if (error) return false;
+    addRead(done, kind, id);
+    save(readsDoneKey(session.user.id), done);
+    return true;
+  }
+
+  async function markRead(kind, id) {
+    if (!id) return;
+    const session = await getSession();
+    if (session && await sendRead(session, kind, id)) return;
+    const pending = load(READS_PENDING_KEY, {});
+    if (addRead(pending, kind, id)) save(READS_PENDING_KEY, pending);
+  }
+
+  async function claimPendingReads(session) {
+    const pending = load(READS_PENDING_KEY, {});
+    for (const kind of Object.keys(pending)) {
+      const left = [];
+      for (const id of pending[kind]) if (!await sendRead(session, kind, id)) left.push(id);
+      pending[kind] = left;
+    }
+    save(READS_PENDING_KEY, pending);
+  }
+
+  // Same Eastern day boundary as the Wordle and record_visit().
+  function estDayKey() {
+    const d = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+  }
+
+  async function recordVisit(uid) {
+    const k = 'records_visit_' + uid;
+    const today = estDayKey();
+    if (load(k, 0) === today) return;
+    const { error } = await window.Auth.rpc('record_visit');
+    if (!error) save(k, today);
+  }
+
   // ── Sign-in: welcome award + claim anything earned while signed out ──────
   let syncedUid = null;
   async function onSignedIn(session) {
     if (!session || syncedUid === session.user.id) return;
     syncedUid = session.user.id;
+    recordVisit(session.user.id);
     await grant(session, 'welcome', null);
     const pending = load(PENDING_KEY, {});
     for (const key of Object.keys(pending)) {
       if (await grant(session, key, pending[key] === true ? null : pending[key])) delete pending[key];
     }
     save(PENDING_KEY, pending);
+    flushTallies();
+    claimPendingReads(session);
   }
 
   // ── Toasts ──────────────────────────────────────────────────────────────
@@ -193,6 +290,8 @@ window.Awards = (function () {
     if (hour === 2 || hour === 3) unlock('h_m2');
     if (isMajorHoliday(new Date())) unlock('b_h8');
     watchKonami();
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flushTallies(); });
+    window.addEventListener('pagehide', flushTallies);
   }
 
   if (document.readyState === 'loading') {
@@ -201,5 +300,5 @@ window.Awards = (function () {
     init();
   }
 
-  return { unlock, progress };
+  return { unlock, progress, tally, markRead };
 })();

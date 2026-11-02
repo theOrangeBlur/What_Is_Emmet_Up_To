@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 0 means unrated, not zero stars
         const rating = parseFloat(card.dataset.rating) || 0;
         if (expanding && rating > 0 && rating < 3 && window.Awards) Awards.unlock('b_t3');
+        if (expanding && window.Awards) Awards.markRead('movie', card.id);
     });
 
     // ============================================
