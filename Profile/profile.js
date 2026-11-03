@@ -218,6 +218,7 @@ function renderRecords(p) {
     group.records.forEach(def => {
       const raw = records[def.key];
       const r = raw != null && typeof raw === 'object' ? raw : { value: raw };
+      if (def.hiddenUntilEarned && !has(r.value)) return;
       const row = el('article', 'record');
       row.appendChild(el('div', 'award-icon', def.icon));
       const body = el('div', 'award-body');

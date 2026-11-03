@@ -170,7 +170,10 @@ async function renderRecords() {
   RECORD_GROUPS.forEach(group => {
     const section = el('section', 'case-section');
     section.appendChild(el('h2', 'case-section-title', group.title));
-    group.records.forEach(def => section.appendChild(renderRecord(def, personal[def.key], site[def.key])));
+    group.records.forEach(def => {
+      if (def.hiddenUntilEarned && !personal[def.key]) return;
+      section.appendChild(renderRecord(def, personal[def.key], site[def.key]));
+    });
     recordsRoot.appendChild(section);
   });
 }

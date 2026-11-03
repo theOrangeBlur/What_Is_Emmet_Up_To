@@ -457,6 +457,7 @@ async function insertScore(name, timeMs, guesses) {
     });
     if (!res.ok) { console.error('insertScore failed:', res.status, await res.text()); return false; }
     reportDailySolveCount();
+    checkGiantSlayer();
     return true;
   } catch (e) { console.error('insertScore error:', e); return false; }
 }
@@ -471,6 +472,16 @@ async function reportDailySolveCount() {
     if (!res.ok) return;
     const days = new Set((await res.json()).map(r => r.date));
     Awards.progress('wordle_regular', days.size, 10);
+  } catch {}
+}
+
+// Checked after a solve and on return visits, since the other side of the
+// comparison may not have posted their time until later in the day.
+async function checkGiantSlayer() {
+  if (!window.Auth || !window.Awards || !await getUserId()) return;
+  try {
+    const { data, error } = await window.Auth.rpc('my_giants_slain', { p_device_id: getDeviceId() });
+    if (!error && data > 0) Awards.unlock('h_g6');
   } catch {}
 }
 
@@ -1109,6 +1120,7 @@ async function buildGame(mode) {
     familySolvedToday = !!deviceScore;
     showWordleComments('daily', !!deviceScore);
     if (deviceScore) {
+      checkGiantSlayer();
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
       renderLeaderboard(true);

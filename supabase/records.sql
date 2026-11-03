@@ -35,6 +35,13 @@ create table if not exists public.user_reads (
 alter table public.user_reads drop constraint if exists user_reads_kind_check;
 alter table public.user_reads add constraint user_reads_kind_check check (kind in ('movie', 'game', 'project'));
 
+-- Players worth beating at the daily Wordle. Seeded in awards-hidden.sql;
+-- no policies, so only the functions below ever read it.
+create table if not exists public.giants (
+  user_id uuid primary key references auth.users on delete cascade
+);
+alter table public.giants enable row level security;
+
 alter table public.user_stats enable row level security;
 alter table public.user_reads enable row level security;
 alter table public.user_visit_days enable row level security;
@@ -143,6 +150,32 @@ language sql stable security definer set search_path = public as $$
   group by v.user_id, v.grp;
 $$;
 
+-- Days the player's daily solve beat a giant's time that same day. Ties
+-- don't count, and neither does a giant beating themself.
+create or replace function public.giants_slain(p_uid uuid, p_dev text default null)
+returns int
+language sql stable security definer set search_path = public as $$
+  select count(distinct s.date)::int
+  from public.wordle_scores s
+  where s.time_ms > 0
+    and (s.user_id = p_uid or s.device_id = p_dev)
+    and not exists (select 1 from public.giants g where g.user_id = p_uid)
+    and s.time_ms < (
+      select min(j.time_ms) from public.wordle_scores j
+      join public.giants g on g.user_id = j.user_id
+      where j.date = s.date and j.time_ms > 0);
+$$;
+
+-- The caller's own giants_slain, for the Wordle page to check after a solve.
+create or replace function public.my_giants_slain(p_device_id text default null)
+returns int
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  return public.giants_slain(auth.uid(), nullif(p_device_id, ''));
+end;
+$$;
+
 -- One account's own numbers, as shown in the "you" column of the Records
 -- tab and on their public profile. p_dev also counts Wordle solves made from
 -- that browser before signing in (null on someone else's profile).
@@ -161,6 +194,7 @@ language sql stable security definer set search_path = public as $$
     'freeplay_best', (
       select max(f.score) from public.wordle_freeplay_scores f
       where f.user_id = p_uid or f.device_id = p_dev),
+    'giants_slain', public.giants_slain(p_uid, p_dev),
     'visit_days', (
       select count(*) from public.user_visit_days d where d.user_id = p_uid),
     'visit_streak_longest', (
@@ -282,12 +316,15 @@ revoke all on function public.record_holder_name(uuid) from public, anon, authen
 revoke all on function public.wordle_daily_winners() from public, anon, authenticated;
 revoke all on function public.visit_streaks() from public, anon, authenticated;
 revoke all on function public.personal_records(uuid, text) from public, anon, authenticated;
+revoke all on function public.giants_slain(uuid, text) from public, anon, authenticated;
 
 revoke all on function public.record_visit() from public, anon;
 revoke all on function public.mark_read(text, text) from public, anon;
 revoke all on function public.add_stat(text, bigint) from public, anon;
 revoke all on function public.get_records(text) from public, anon;
+revoke all on function public.my_giants_slain(text) from public, anon;
 grant execute on function public.record_visit() to authenticated;
+grant execute on function public.my_giants_slain(text) to authenticated;
 grant execute on function public.mark_read(text, text) to authenticated;
 grant execute on function public.add_stat(text, bigint) to authenticated;
 grant execute on function public.get_records(text) to authenticated;
