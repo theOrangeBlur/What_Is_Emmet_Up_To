@@ -734,6 +734,14 @@ function jumpToSelection() {
 }
 
 // Fetch metadata and initialize controls
+// One comment thread per month, following the "From" month.
+function mountMonthComments() {
+  const slot = document.getElementById('snapshot-comments');
+  const months = compilationMetadata && compilationMetadata.months;
+  const m = months && months[parseInt(monthStartSelect.value)];
+  if (slot && m && window.Comments) Comments.mount(slot, 'snapshots', m.month);
+}
+
 async function loadMetadata() {
   try {
     let response;
@@ -768,6 +776,7 @@ async function loadMetadata() {
 
     if (compilationMetadata.months && compilationMetadata.months.length > 0) {
       populateMonthSelects(compilationMetadata.months);
+      mountMonthComments();
 
       // Update stats
       const totalDuration = formatDuration(compilationMetadata.total_duration || 0);
@@ -836,6 +845,7 @@ monthStartSelect.addEventListener('change', () => {
   syncSelectColors();
   updateTimelineSelection();
   triggerJiggle();
+  mountMonthComments();
 });
 
 monthEndSelect.addEventListener('change', () => {
@@ -847,6 +857,7 @@ monthEndSelect.addEventListener('change', () => {
   syncSelectColors();
   updateTimelineSelection();
   triggerJiggle();
+  mountMonthComments();
 });
 
 // Video error handling - try fallback URL

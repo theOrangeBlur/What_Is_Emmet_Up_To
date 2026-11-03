@@ -9,6 +9,15 @@ function fullHeight(details) {
     return details.scrollHeight + (details.offsetHeight - details.clientHeight);
 }
 
+// A comment thread just above the collapse button, made on first expand.
+function mountComments(details, slug) {
+    if (!window.Comments || details.querySelector('.project-comments')) return;
+    const slot = document.createElement('div');
+    slot.className = 'project-comments';
+    details.insertBefore(slot, details.querySelector('.collapse-btn'));
+    Comments.mount(slot, 'projects', slug);
+}
+
 // Toggle project details visibility
 function toggleProject(slug) {
     const details = document.getElementById(`${slug}-details`);
@@ -18,6 +27,8 @@ function toggleProject(slug) {
     card.classList.toggle('expanded', expand);
 
     if (expand) {
+        if (window.Awards) Awards.markRead('project', slug);
+        mountComments(details, slug);
         // The vertical padding transitions in with the panel, so measuring
         // mid-transition misses it and clips the bottom (the collapse
         // button). Snap the padding to its final value before measuring.

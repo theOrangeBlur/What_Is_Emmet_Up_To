@@ -41,7 +41,7 @@ function renderSignedOut(root) {
   root.appendChild(card);
 }
 
-function renderAward(a) {
+function renderAward(a, rewarding) {
   const unlocked = !!a.unlocked_at;
   const row = el('article', 'award' + (unlocked ? ' award-unlocked' : ' award-locked') + (a.hidden && !unlocked ? ' award-secret' : ''));
   row.appendChild(el('div', 'award-icon', a.icon));
@@ -49,6 +49,12 @@ function renderAward(a) {
   const body = el('div', 'award-body');
   const title = el('h3', 'award-title', a.title);
   if (a.buried) title.appendChild(el('span', 'award-tag', 'buried'));
+  // Marks an award that opens something up somewhere, without saying what.
+  if (rewarding) {
+    const mark = el('span', 'award-reward-mark', '✦');
+    mark.title = 'this might do something special for you...';
+    title.appendChild(mark);
+  }
   body.appendChild(title);
   if (a.description) body.appendChild(el('p', 'award-desc', a.description));
   if (a.hidden && !unlocked) {
@@ -70,16 +76,19 @@ function renderAward(a) {
   return row;
 }
 
-function renderSection(title, awards) {
+function renderSection(title, awards, rewarding) {
   if (!awards.length) return null;
   const section = el('section', 'case-section');
   section.appendChild(el('h2', 'case-section-title', title));
-  awards.forEach(a => section.appendChild(renderAward(a)));
+  awards.forEach(a => section.appendChild(renderAward(a, rewarding.has(a.key))));
   return section;
 }
 
 async function renderAwards() {
-  const { data, error } = await window.Auth.rpc('get_awards');
+  const [{ data, error }, rewardRes] = await Promise.all([
+    window.Auth.rpc('get_awards'),
+    window.Auth.rpc('get_rewarding_awards')
+  ]);
   if (error || !data) {
     root.innerHTML = '';
     root.appendChild(el('div', 'case-loading', "the trophy case is jammed shut — try again in a bit"));
@@ -88,6 +97,8 @@ async function renderAwards() {
   const unlocked = data.filter(a => a.unlocked_at).sort((a, b) => new Date(b.unlocked_at) - new Date(a.unlocked_at));
   const locked = data.filter(a => !a.unlocked_at && !a.hidden);
   const secret = data.filter(a => !a.unlocked_at && a.hidden);
+  // Awards that unlock something. Missing just means no marks.
+  const rewarding = new Set((rewardRes.data || []).map(r => r.award_key));
 
   root.innerHTML = '';
   const summary = el('div', 'case-summary');
@@ -96,9 +107,9 @@ async function renderAwards() {
   root.appendChild(summary);
 
   [
-    renderSection('Earned', unlocked),
-    renderSection('Still out there', locked),
-    renderSection(`Hidden (${secret.length})`, secret)
+    renderSection('Earned', unlocked, rewarding),
+    renderSection('Still out there', locked, rewarding),
+    renderSection(`Hidden (${secret.length})`, secret, rewarding)
   ].forEach(s => { if (s) root.appendChild(s); });
 }
 

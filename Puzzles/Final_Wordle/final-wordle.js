@@ -1059,6 +1059,8 @@ function endFreeSession() {
   if (gbtn) gbtn.disabled = true;
   if (revBtn) revBtn.style.display = 'none';
   const score = freeSession.wordsSolved;
+  // Counts toward opening up the free play comments.
+  if (window.Awards) Awards.tally('wordle_free_plays', 1);
   setTimeout(async () => {
     const [lb, deviceScore] = await Promise.all([fetchFreeScores(), fetchDeviceFreeScore()]);
     const qualifiesForBoard = score > 0 && (lb.length < 10 || score > lb[lb.length - 1].score);
@@ -1083,6 +1085,19 @@ function prefetchNextFreePuzzle() {
   }, 0);
 }
 
+// Each day's puzzle gets its own thread, kept shut until the word is out of
+// the bag (solved or revealed) so nobody reads a spoiler. Free play shares one.
+function showWordleComments(mode, open) {
+  const slot = document.getElementById('wordle-comments');
+  const note = document.getElementById('wordle-comments-note');
+  if (!slot || !note || !window.Comments) return;
+  const show = mode === 'free' || open;
+  slot.hidden = !show;
+  note.hidden = show;
+  if (mode === 'free') Comments.mount(slot, 'wordle_free', 'freeplay');
+  else if (open) Comments.mount(slot, 'wordle_daily', String(getDayKey()));
+}
+
 async function buildGame(mode) {
   const root = document.getElementById('root');
   root.innerHTML = '<div style="color:var(--text2);font-size:11px;letter-spacing:.2em;padding:80px 0">loading...</div>';
@@ -1092,6 +1107,7 @@ async function buildGame(mode) {
     lb.style.display = '';
     const deviceScore = await fetchDeviceScore();
     familySolvedToday = !!deviceScore;
+    showWordleComments('daily', !!deviceScore);
     if (deviceScore) {
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
@@ -1103,6 +1119,7 @@ async function buildGame(mode) {
     renderLeaderboard(false);
     if (isFamilyUnlocked()) updateFamilyLeaderboard(false);
   } else {
+    showWordleComments('free');
     renderFreeLeaderboard();  // async, fire-and-forget here
     document.getElementById('free-play-bar').style.display = '';
     if (!freeSession.active && !freeSession.sessionDone) startFreeSession();
@@ -1282,6 +1299,7 @@ async function buildGame(mode) {
       gbtn.disabled = true; inp.disabled = true; revBtn.style.display = 'none';
       if (mode === 'daily') {
         if (window.Awards) Awards.unlock('wordle_daily');
+        showWordleComments('daily', true);
         const timeMs = startTime ? Date.now() - startTime : 0;
         const dayKey = 'wordle_' + getDayKey();
         winMsg.insertAdjacentElement('afterend', createShareButton(() => formatTime(timeMs)));
@@ -1339,6 +1357,7 @@ async function buildGame(mode) {
     } else {
       ct.textContent = 'better luck tomorrow';
       setFb('', '');
+      showWordleComments('daily', true);
     }
   });
   if (mode === 'free') {

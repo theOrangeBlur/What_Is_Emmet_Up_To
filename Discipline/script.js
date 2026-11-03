@@ -133,6 +133,12 @@ function renderCalendar() {
                         'July', 'August', 'September', 'October', 'November', 'December'];
     document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
 
+    // One comment thread per month, keyed like 2026-01.
+    const commentSlot = document.getElementById('dispatchComments');
+    if (commentSlot && window.Comments) {
+        Comments.mount(commentSlot, 'dispatch', `${year}-${String(month + 1).padStart(2, '0')}`);
+    }
+
     // Update nav button states
     updateNavButtons();
 

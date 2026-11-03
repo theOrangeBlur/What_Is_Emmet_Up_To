@@ -70,6 +70,11 @@ window.Awards = (function () {
     holdForLater(key, n, target != null && n >= target);
   }
 
+  // Lets shared/unlocks.js re-check stat-based unlocks once numbers move.
+  function recordsChanged() {
+    document.dispatchEvent(new CustomEvent('records:changed'));
+  }
+
   // ── Records: running tallies (fish nips, video watch time, ...) ──────────
   // Counted up in memory and sent in batches, since some of these tick many
   // times a second. Signed out, they wait in localStorage like awards do.
@@ -103,14 +108,31 @@ window.Awards = (function () {
     flushing = true;
     const batch = load(TALLY_PENDING_KEY, {});
     save(TALLY_PENDING_KEY, {});
+    let sent = false;
     for (const key of Object.keys(batch)) {
       const { error } = await window.Auth.rpc('add_stat', { p_key: key, p_delta: Math.round(batch[key]) });
       if (error) stashTallies({ [key]: batch[key] }); // try again next flush
+      else sent = true;
     }
     flushing = false;
+    if (sent) recordsChanged();
   }
 
-  // ── Records: reviews opened (movies, games) ─────────────────────────────
+  // Time spent actually on a page, tallied into `key` in ms. Only counts while
+  // the tab is showing and the visitor has touched the page in the last two
+  // minutes, so a forgotten background tab doesn't rack up hours.
+  const IDLE_MS = 2 * 60 * 1000;
+  function tallyActiveTime(key) {
+    let lastInput = Date.now();
+    const poke = () => { lastInput = Date.now(); };
+    ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(type =>
+      window.addEventListener(type, poke, { passive: true, capture: true }));
+    setInterval(() => {
+      if (!document.hidden && Date.now() - lastInput < IDLE_MS) tally(key, 1000);
+    }, 1000);
+  }
+
+  // ── Records: reviews opened (movies, games, projects) ──────────────────
   // Each review counts once per account. Signed out, ids wait in localStorage.
   const READS_PENDING_KEY = 'records_reads_pending';   // { kind: [id, ...] }
   function readsDoneKey(uid) { return 'records_reads_' + uid; }
@@ -129,6 +151,7 @@ window.Awards = (function () {
     if (error) return false;
     addRead(done, kind, id);
     save(readsDoneKey(session.user.id), done);
+    recordsChanged();
     return true;
   }
 
@@ -161,7 +184,7 @@ window.Awards = (function () {
     const today = estDayKey();
     if (load(k, 0) === today) return;
     const { error } = await window.Auth.rpc('record_visit');
-    if (!error) save(k, today);
+    if (!error) { save(k, today); recordsChanged(); }
   }
 
   // ── Sign-in: welcome award + claim anything earned while signed out ──────
@@ -198,21 +221,70 @@ window.Awards = (function () {
     setTimeout(() => toast.remove(), 300);
   }
 
-  function showUnlockToast(award) {
-    const toast = document.createElement('div'); toast.className = 'awd-toast';
-    const icon = document.createElement('div'); icon.className = 'awd-icon'; icon.textContent = award.icon || '🏆';
+  // A clickable toast in the awards stack. Also used by shared/unlocks.js.
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // Shrink a toast down into the 🏆 awards link in the auth widget, as if
+  // dropping it into the trophy case. Where that link isn't showing (the
+  // awards page itself), it shrinks away where it stands.
+  function flyToCase(toast) {
+    if (toast.dataset.leaving) return;
+    toast.dataset.leaving = '1';
+    const target = document.querySelector('.authw-awards-link');
+    const to = target && target.getBoundingClientRect();
+    if (prefersReducedMotion() || !toast.animate) { toast.remove(); return; }
+
+    const from = toast.getBoundingClientRect();
+    let dx = 0, dy = 0;
+    const visible = to && to.width > 0 && to.height > 0;
+    if (visible) {
+      dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+      dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+    }
+    // Keep its spot in the stack while it flies, so the others don't jump.
+    toast.style.pointerEvents = 'none';
+    toast.classList.add('awd-flying');
+    const flight = toast.animate([
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx * 0.35}px, ${dy * 0.35 - 30}px) scale(0.55)`, opacity: 1, offset: 0.4 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.04)`, opacity: visible ? 0.6 : 0 }
+    ], { duration: 650, easing: 'cubic-bezier(.5, 0, .75, .3)', fill: 'forwards' });
+    flight.onfinish = () => {
+      toast.remove();
+      if (visible) {
+        target.classList.remove('awd-catch');
+        void target.offsetWidth; // restart the pulse if it's already running
+        target.classList.add('awd-catch');
+        setTimeout(() => target.classList.remove('awd-catch'), 700);
+      }
+    };
+  }
+
+  // A glowing toast that waits for the visitor to dismiss it, then flies into
+  // the trophy case. Clicking anywhere else on it goes to the trophy case.
+  function toast(opts) {
+    const toast = document.createElement('div'); toast.className = 'awd-toast awd-glow';
+    const icon = document.createElement('div'); icon.className = 'awd-icon'; icon.textContent = opts.icon || '🏆';
     const body = document.createElement('div'); body.className = 'awd-body';
-    const label = document.createElement('div'); label.className = 'awd-label'; label.textContent = 'award unlocked';
-    const title = document.createElement('div'); title.className = 'awd-title'; title.textContent = award.title || 'A mystery';
+    const label = document.createElement('div'); label.className = 'awd-label'; label.textContent = opts.label;
+    const title = document.createElement('div'); title.className = 'awd-title'; title.textContent = opts.title;
     body.appendChild(label); body.appendChild(title);
-    if (award.description) {
-      const desc = document.createElement('div'); desc.className = 'awd-desc'; desc.textContent = award.description;
+    if (opts.description) {
+      const desc = document.createElement('div'); desc.className = 'awd-desc'; desc.textContent = opts.description;
       body.appendChild(desc);
     }
-    toast.appendChild(icon); toast.appendChild(body);
-    toast.addEventListener('click', () => { window.location.href = '/Awards/awards.html'; });
+    const close = document.createElement('button'); close.className = 'awd-close'; close.textContent = '×';
+    close.setAttribute('aria-label', 'dismiss');
+    close.addEventListener('click', e => { e.stopPropagation(); flyToCase(toast); });
+    toast.appendChild(icon); toast.appendChild(body); toast.appendChild(close);
+    toast.addEventListener('click', () => { window.location.href = opts.href || '/Awards/awards.html'; });
     stack().appendChild(toast);
-    setTimeout(() => dismiss(toast), 6000);
+  }
+
+  function showUnlockToast(award) {
+    toast({ label: 'award unlocked', icon: award.icon, title: award.title || 'A mystery', description: award.description });
   }
 
   function showLoginNudge() {
@@ -300,5 +372,5 @@ window.Awards = (function () {
     init();
   }
 
-  return { unlock, progress, tally, markRead };
+  return { unlock, progress, tally, tallyActiveTime, markRead, toast };
 })();

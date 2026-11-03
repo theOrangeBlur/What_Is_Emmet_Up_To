@@ -7,7 +7,7 @@
 -- wordle_freeplay_scores. Everything else is tracked here:
 --   user_visit_days  one row per (account, EST day) the visitor shows up signed in
 --   user_stats       running tallies, bumped by add_stat() from the pages
---   user_reads       which movie/game reviews each account has opened
+--   user_reads       which movie/game reviews and projects each account has opened
 
 create table if not exists public.user_stats (
   user_id    uuid not null references auth.users on delete cascade,
@@ -25,11 +25,15 @@ create table if not exists public.user_visit_days (
 
 create table if not exists public.user_reads (
   user_id uuid not null references auth.users on delete cascade,
-  kind    text not null check (kind in ('movie', 'game')),
+  kind    text not null check (kind in ('movie', 'game', 'project')),
   item_id text not null,
   read_at timestamptz not null default now(),
   primary key (user_id, kind, item_id)
 );
+
+-- Older tables were made before projects counted; widen their check.
+alter table public.user_reads drop constraint if exists user_reads_kind_check;
+alter table public.user_reads add constraint user_reads_kind_check check (kind in ('movie', 'game', 'project'));
 
 alter table public.user_stats enable row level security;
 alter table public.user_reads enable row level security;
@@ -58,13 +62,13 @@ drop policy if exists "read own reads" on public.user_reads;
 create policy "read own reads" on public.user_reads
   for select using (auth.uid() = user_id);
 
--- Note that the caller opened a review. Re-opening one doesn't count twice.
+-- Note that the caller opened a review or project. Re-opening one doesn't count twice.
 create or replace function public.mark_read(p_kind text, p_item text)
 returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if auth.uid() is null then raise exception 'not signed in'; end if;
-  if p_kind not in ('movie', 'game') then raise exception 'unknown kind'; end if;
+  if p_kind not in ('movie', 'game', 'project') then raise exception 'unknown kind'; end if;
   if p_item is null or length(p_item) = 0 or length(p_item) > 120 then raise exception 'bad item'; end if;
   insert into public.user_reads (user_id, kind, item_id) values (auth.uid(), p_kind, p_item)
   on conflict do nothing;
@@ -85,6 +89,10 @@ begin
   v_cap := case p_key
     when 'fish_nips'         then 1000
     when 'snapshot_watch_ms' then 3600000  -- an hour of video per call
+    when 'hexdoku_ms'        then 3600000  -- active time on each puzzle page
+    when 'boat_ms'           then 3600000
+    when 'balance_ms'        then 3600000
+    when 'wordle_free_plays' then 1        -- one finished freeplay session per call
   end;
   if v_cap is null then raise exception 'unknown stat'; end if;
   if p_delta is null or p_delta <= 0 then return null; end if;

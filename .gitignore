@@ -34,3 +34,6 @@ Thumbs.db
 
 # Hidden award seeds (keep the secrets secret)
 supabase/awards-hidden.sql
+
+# Hidden unlock seeds and secret page content
+supabase/unlocks-hidden.sql

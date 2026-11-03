@@ -35,7 +35,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const expanding = !card.classList.contains('expanded');
         setCardExpanded(card, expanding);
         if (expanding && window.Awards) Awards.markRead('game', card.id);
+        if (expanding) mountComments(card);
     });
+
+    // A comment thread at the bottom of the review, made on first expand.
+    // It renders after the panel is measured, so re-measure once it's in.
+    function mountComments(card) {
+        const details = card.querySelector('.game-card__details');
+        if (!window.Comments || !details || details.querySelector('.review-comments')) return;
+        const slot = document.createElement('div');
+        slot.className = 'review-comments';
+        slot.addEventListener('comments:rendered', () => {
+            if (card.classList.contains('expanded')) details.style.maxHeight = details.scrollHeight + 'px';
+        });
+        details.appendChild(slot);
+        Comments.mount(slot, 'games', card.id);
+    }
 
     function applyFiltersAndSort() {
         const sortBy = sortSelect.value;

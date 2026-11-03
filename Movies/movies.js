@@ -117,7 +117,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const rating = parseFloat(card.dataset.rating) || 0;
         if (expanding && rating > 0 && rating < 3 && window.Awards) Awards.unlock('b_t3');
         if (expanding && window.Awards) Awards.markRead('movie', card.id);
+        if (expanding) mountComments(card);
     });
+
+    // A comment thread at the bottom of the review, made on first expand.
+    // It renders after the panel is measured, so re-measure once it's in.
+    function mountComments(card) {
+        const details = card.querySelector('.movie-card__details');
+        if (!window.Comments || !details || details.querySelector('.review-comments')) return;
+        const slot = document.createElement('div');
+        slot.className = 'review-comments';
+        slot.addEventListener('comments:rendered', () => {
+            if (card.classList.contains('expanded')) details.style.maxHeight = details.scrollHeight + 'px';
+        });
+        details.appendChild(slot);
+        Comments.mount(slot, 'movies', card.id);
+    }
 
     // ============================================
     // SORTING AND FILTERING

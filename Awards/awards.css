@@ -159,6 +159,7 @@ body {
 }
 .award-desc { font-size: 11px; color: var(--soft); margin: 0; line-height: 1.5; }
 .award-hint { font-size: 11px; color: var(--gold); font-style: italic; margin: 0; line-height: 1.5; }
+.award-reward-mark { margin-left: 8px; color: var(--gold); font-size: 0.85em; vertical-align: middle; cursor: help; }
 .award-progress { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .award-progress-text { font-size: 10px; color: var(--muted); white-space: nowrap; }
 

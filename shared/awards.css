@@ -35,8 +35,31 @@
 @keyframes awd-slide-out {
   to { transform: translateX(110%); opacity: 0; }
 }
+/* Achievement and unlock toasts glow until they're dismissed. */
+.awd-glow {
+  border-color: #6aaf63;
+  animation: awd-slide-in .35s ease-out, awd-glow 2.4s ease-in-out .35s infinite;
+}
+.awd-glow .awd-icon { animation: awd-icon-glow 2.4s ease-in-out .35s infinite; }
+@keyframes awd-glow {
+  0%, 100% { box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 6px rgba(106, 175, 99, .35); }
+  50%      { box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 22px 4px rgba(106, 175, 99, .6); }
+}
+@keyframes awd-icon-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(201, 162, 39, 0); border-color: #3d3d3d; }
+  50%      { box-shadow: 0 0 12px rgba(201, 162, 39, .55); border-color: #c9a227; }
+}
+.awd-flying, .awd-flying .awd-icon { animation: none; }
+/* The awards link gives a little pulse as a toast lands in it. */
+.authw-awards-link.awd-catch { animation: awd-catch .6s ease-out; }
+@keyframes awd-catch {
+  0%   { transform: scale(1);    text-shadow: 0 0 0 rgba(201, 162, 39, 0); }
+  35%  { transform: scale(1.25); text-shadow: 0 0 10px rgba(201, 162, 39, .9); }
+  100% { transform: scale(1);    text-shadow: 0 0 0 rgba(201, 162, 39, 0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .awd-toast, .awd-toast.awd-leaving { animation: none; }
+  .awd-toast, .awd-toast.awd-leaving, .awd-glow, .awd-glow .awd-icon, .authw-awards-link.awd-catch { animation: none; }
+  .awd-glow { box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 14px rgba(106, 175, 99, .5); }
 }
 .awd-nudge { cursor: default; border-color: #c9a227; }
 .awd-icon {

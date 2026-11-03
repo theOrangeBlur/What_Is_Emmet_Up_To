@@ -436,6 +436,13 @@ function renderTankCard(tank, csvText, effectiveWaterData = null) {
         ${waterParamsHTML}
     `;
 
+    if (window.Comments) {
+        const slot = document.createElement('div');
+        slot.className = 'tank-comments';
+        card.appendChild(slot);
+        Comments.mount(slot, 'fish', `${tank.gallons}g`);
+    }
+
     return card;
 }
 

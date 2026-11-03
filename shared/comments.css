@@ -1,0 +1,80 @@
+/* Comment threads (shared/comments.js). Pages range from newsprint to dark
+   puzzle boards, so everything inherits the surrounding font and color and
+   draws its lines from currentColor. */
+.cmt-host { margin-top: 1.25em; }
+/* Hidden until the daily's word is out, so comments can't spoil it. */
+.wordle-comments-note { font-size: 0.8em; opacity: 0.6; font-style: italic; text-align: center; }
+/* A page-wide thread at the bottom of a page (the puzzles). */
+.cmt-page { width: 100%; max-width: 640px; margin: 2.5em auto; padding: 0 16px; box-sizing: border-box; position: relative; }
+.cmt {
+  --cmt-line: color-mix(in srgb, currentColor 22%, transparent);
+  --cmt-faint: color-mix(in srgb, currentColor 6%, transparent);
+  border-top: 1px solid var(--cmt-line);
+  padding-top: 0.9em;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.cmt-heading {
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 0.75em;
+  opacity: 0.8;
+}
+.cmt-count { font-weight: 400; }
+.cmt-empty { font-size: 0.9em; opacity: 0.65; font-style: italic; margin: 0 0 0.75em; }
+
+.cmt-list { list-style: none; margin: 0 0 1em; padding: 0; display: flex; flex-direction: column; gap: 0.75em; }
+.cmt-item { padding: 0.6em 0.75em; background: var(--cmt-faint); border-radius: 6px; }
+.cmt-head { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; font-size: 0.8em; margin-bottom: 0.35em; }
+.cmt-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex: none; }
+.cmt-avatar-blank {
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cmt-line); font-size: 0.75em; font-weight: 700;
+}
+.cmt-name { font-weight: 700; }
+.cmt-when { opacity: 0.6; }
+.cmt-delete {
+  margin-left: auto; background: none; border: none; padding: 0;
+  font: inherit; color: inherit; opacity: 0.55; cursor: pointer; text-decoration: underline;
+}
+.cmt-delete:hover { opacity: 1; }
+.cmt-body { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.95em; line-height: 1.5; }
+
+.cmt-form { display: flex; flex-direction: column; gap: 0.5em; }
+.cmt-input {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 4.5em;
+  font: inherit; font-size: 0.95em; color: inherit;
+  background: var(--cmt-faint); border: 1px solid var(--cmt-line); border-radius: 6px; padding: 0.5em 0.6em;
+}
+.cmt-input:focus { outline: 2px solid color-mix(in srgb, currentColor 45%, transparent); outline-offset: 1px; }
+.cmt-form-row { display: flex; align-items: center; gap: 0.75em; justify-content: flex-end; }
+.cmt-msg { font-size: 0.8em; opacity: 0.75; margin-right: auto; }
+.cmt-btn {
+  font: inherit; font-size: 0.85em; color: inherit; cursor: pointer;
+  background: none; border: 1px solid currentColor; border-radius: 4px; padding: 0.35em 0.9em;
+}
+.cmt-btn:hover:not(:disabled) { background: var(--cmt-faint); }
+.cmt-btn:disabled { opacity: 0.5; cursor: default; }
+
+.cmt-lock { padding: 0.7em 0.8em; border: 1px dashed var(--cmt-line); border-radius: 6px; }
+.cmt-lock-text { margin: 0 0 0.5em; font-size: 0.9em; }
+.cmt-lock-text:last-child { margin-bottom: 0; }
+
+.cmt-sparkle {
+  position: relative; display: inline-block; margin-left: 0.6em;
+  font-size: 1.1em; letter-spacing: 0; text-transform: none; cursor: help; outline: none;
+  color: #d4a72c;
+}
+.cmt-sparkle::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+  width: max-content; max-width: 220px; padding: 0.4em 0.6em; border-radius: 4px;
+  background: #1c1c1c; color: #f4f1e8; font-size: 0.75rem; font-weight: 400; font-style: italic;
+  line-height: 1.4; white-space: normal; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 10;
+}
+.cmt-sparkle:hover::after, .cmt-sparkle:focus::after { opacity: 1; }
