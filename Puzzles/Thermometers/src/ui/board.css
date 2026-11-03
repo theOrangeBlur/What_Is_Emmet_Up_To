@@ -1,0 +1,147 @@
+/* Board SVG styles, shared by the lab and the public page.
+   Tokens live on #board so the board looks the same on either page's theme. */
+#board {
+  --ink: #23262b;
+  --grid: #e3e5e9;
+  --border: #4a4f57;
+  --tube: #c9cdd3;
+  --red: #e0463b;
+  --blue: #2f6fdc;
+  --any: #5b6170;
+  --hl: rgba(255, 205, 40, 0.28);
+  --bad: #c23b31;
+}
+.grid-bg {
+  fill: #fff;
+}
+.grid line {
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+.border {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+}
+.tube {
+  fill: none;
+  stroke: var(--tube);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tube-bulb {
+  fill: var(--tube);
+}
+/* color marked, level not (fully) known */
+.tube.tint-red {
+  stroke: #f2b8b2;
+}
+.tube-bulb.tint-red {
+  fill: #f2b8b2;
+}
+.tube.tint-blue {
+  stroke: #b9cdf3;
+}
+.tube-bulb.tint-blue {
+  fill: #b9cdf3;
+}
+.fill {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fill.fill-red {
+  stroke: var(--red);
+}
+.fill.fill-blue {
+  stroke: var(--blue);
+}
+.fill.fill-any {
+  stroke: var(--any);
+}
+.fill-bulb.fill-any {
+  fill: var(--any);
+}
+.fill-bulb.fill-red {
+  fill: var(--red);
+}
+.fill-bulb.fill-blue {
+  fill: var(--blue);
+}
+.xmarks path {
+  stroke: #8a9099;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+.xmarks path.xm-red {
+  stroke: var(--red);
+  stroke-width: 2.6;
+}
+.xmarks path.xm-blue {
+  stroke: var(--blue);
+  stroke-width: 2.6;
+}
+.hl-line {
+  fill: var(--hl);
+}
+.hint {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+.hint-red {
+  stroke: var(--red);
+}
+.hint-blue {
+  stroke: var(--blue);
+}
+.hint-empty {
+  stroke: #8a9099;
+}
+.hint-filled {
+  stroke: #7c3aed;
+}
+.hint-notred {
+  stroke: var(--red);
+  stroke-dasharray: 1.5 3.5;
+}
+.hint-notblue {
+  stroke: var(--blue);
+  stroke-dasharray: 1.5 3.5;
+}
+.xglyph {
+  font-weight: 700;
+}
+.focus {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 3;
+}
+.error {
+  fill: rgba(194, 59, 49, 0.12);
+  stroke: var(--bad);
+  stroke-width: 2;
+}
+.clue {
+  font-size: 20px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.clue-red {
+  fill: var(--red);
+}
+.clue-blue {
+  fill: var(--blue);
+}
+.clue-black {
+  fill: var(--ink);
+}
+.clue.done {
+  opacity: 0.3;
+}
+.over-ring {
+  fill: rgba(194, 59, 49, 0.1);
+  stroke: var(--bad);
+  stroke-width: 1.5;
+}

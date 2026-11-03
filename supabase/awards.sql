@@ -135,7 +135,10 @@ insert into public.awards (key, title, description, hint, icon, hidden, target, 
   ('scales_streak',    'Prove It',           'Find the odd coin three times in a row.',                                     null, '🔁',  false, 3,    75),
   ('wordle_daily',     'Final Answer',       'Solve a daily Final Wordle.',                                                 null, '🟩',  false, null, 80),
   ('wordle_regular',   'The Regular',        'Solve ten daily Final Wordles while signed in.',                              null, '☕',  false, 10,   90),
-  ('wordle_free10',    'Wordsmith',          'Solve ten words in a single freeplay session.',                               null, '✒️', false, null, 100)
+  ('wordle_free10',    'Wordsmith',          'Solve ten words in a single freeplay session.',                               null, '✒️', false, null, 100),
+  ('thermo_daily',     'Taking Temperature', 'Solve a daily Thermometers puzzle.',                                          null, '🌡️', false, null, 110),
+  ('thermo_nohint',    'Cold Reading',       'Solve a daily Thermometers puzzle without a hint.',                           null, '🧊',  false, null, 115),
+  ('thermo_free10',    'Heat Wave',          'Solve ten free play Thermometers puzzles.',                                   null, '🔥',  false, 10,   120)
 on conflict (key) do update set
   title = excluded.title, description = excluded.description, hint = excluded.hint,
   icon = excluded.icon, hidden = excluded.hidden, target = excluded.target, sort = excluded.sort;

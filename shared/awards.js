@@ -15,7 +15,7 @@ window.Awards = (function () {
   const SITE_PAGES = [
     'index.html', 'snapshots.html', 'blog.html', 'projects.html', 'movies.html',
     'games.html', 'discipline.html', 'fish.html', 'hexdoku.html', 'boat.html',
-    'balance.html', 'final-wordle.html', 'awards.html'
+    'balance.html', 'final-wordle.html', 'thermometers.html', 'awards.html'
   ];
 
   function load(k, fallback) {

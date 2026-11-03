@@ -100,6 +100,7 @@ begin
     when 'boat_ms'           then 3600000
     when 'balance_ms'        then 3600000
     when 'wordle_free_plays' then 1        -- one finished freeplay session per call
+    when 'thermo_free_solves' then 1       -- one solved free play puzzle per call
   end;
   if v_cap is null then raise exception 'unknown stat'; end if;
   if p_delta is null or p_delta <= 0 then return null; end if;

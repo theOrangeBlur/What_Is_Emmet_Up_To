@@ -1,0 +1,25 @@
+{
+  "name": "thermometers-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "bench": "vite-node scripts/bench.ts",
+    "presets": "vite-node scripts/presets.ts",
+    "knobs": "vite-node scripts/knobs.ts",
+    "jumps": "vite-node scripts/jumps.ts",
+    "path": "vite-node scripts/path.ts",
+    "dailies": "vite-node scripts/dailies.ts",
+    "publish-daily": "vite-node scripts/publish-daily.ts"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "vite": "5.4.10",
+    "vitest": "2.1.4"
+  }
+}

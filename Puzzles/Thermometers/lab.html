@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thermometers Lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 6v16' stroke='%23e0463b' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='24' r='6' fill='%23e0463b'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./src/ui/styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Thermometers <span class="sub">red &amp; blue · puzzle lab</span></h1>
+    </header>
+
+    <div class="layout">
+      <main class="play">
+        <div class="meta" id="meta"></div>
+
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Tap tool">
+            <button class="tool active" data-tool="red" title="Tap fills red (key 1)"><span class="dot red"></span>Red</button>
+            <button class="tool" data-tool="blue" title="Tap fills blue (key 2)"><span class="dot blue"></span>Blue</button>
+            <button class="tool" data-tool="any" title="Tap fills with color undecided (key 3, or Alt-click)"><span class="dot any"></span>Either</button>
+            <button class="tool" data-tool="x" title="Tap marks ✕: cell is empty (key 4, or Shift-click)">✕</button>
+            <button class="tool" data-tool="xr" title="Tap marks red ✕: cell is not red (key 5)"><span class="xglyph t-red">✕</span></button>
+            <button class="tool" data-tool="xb" title="Tap marks blue ✕: cell is not blue (key 6)"><span class="xglyph t-blue">✕</span></button>
+          </div>
+          <div class="seg">
+            <button class="tool toggle" id="btn-whole" aria-pressed="false" title="Whole-thermometer mode: Red/Blue taps mark the thermometer's color without filling cells; Either clears the mark (key W, or hold Ctrl)">Mark thermo</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+          <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
+          <button id="btn-reset">Reset</button>
+          <button id="btn-check">Check</button>
+          <button id="btn-hint">Hint</button>
+          <button id="btn-reveal">Reveal</button>
+          <span class="timer" id="timer">0:00</span>
+        </div>
+
+        <div class="board-wrap">
+          <svg id="board" aria-label="Puzzle board"></svg>
+          <div class="busy" id="busy" hidden>Generating…</div>
+        </div>
+
+        <p class="message" id="message"></p>
+        <p class="help">
+          <b>Left-click</b> fills red up to the cell · <b>Right-click</b> fills blue · <b>Alt-click</b> fills gray (filled, color undecided) ·
+          <b>Ctrl-click</b> (left red, right blue) marks a whole thermometer's color without filling it, and doing it again clears the mark ·
+          <b>Shift-click</b> or drag marks ✕ (empty). The red ✕ and blue ✕ tools mark "not red" and "not blue" (right-click swaps them) ·
+          click the top filled cell again to empty it. Clicking a filled thermometer with another
+          color recolors it, since each thermometer holds only one color. Gray cells count toward black clues only.
+        </p>
+      </main>
+
+      <aside class="panel">
+        <nav class="tabs">
+          <button class="tab active" data-tab="gen">Generate</button>
+          <button class="tab" data-tab="batch">Batch</button>
+          <button class="tab" data-tab="log">Playlog</button>
+          <button class="tab" data-tab="rules">Rules</button>
+        </nav>
+        <section class="tab-body" id="tab-gen"></section>
+        <section class="tab-body" id="tab-batch" hidden></section>
+        <section class="tab-body" id="tab-log" hidden></section>
+        <section class="tab-body" id="tab-rules" hidden>
+          <h3>Rules</h3>
+          <ul>
+            <li>Fill some thermometers starting from the bulb, with no gaps. A thermometer can be partly filled or empty.</li>
+            <li>Each thermometer is filled with <b class="t-red">red</b> or <b class="t-blue">blue</b>, never both.</li>
+            <li>A <b class="t-red">red</b> number counts the red cells in its row or column, a <b class="t-blue">blue</b> number the blue cells, and a <b>black</b> number all filled cells. Lines with no number have no constraint.</li>
+            <li>Black clues are never 0. An empty line shows a red 0, a blue 0, or no clue.</li>
+            <li>Every generated puzzle has exactly one solution.</li>
+            <li><b>Mark thermo</b> (or Ctrl-click) tints a thermometer pale red or blue when you know its color but not its level. Emptying it keeps the mark, and filling it uses the marked color.</li>
+            <li>Cell marks: <b>✕</b> means empty, <b class="t-red">✕</b> means not red, <b class="t-blue">✕</b> means not blue. A color ✕ on a bulb marks the whole thermometer the other color instead. Hint takes all of them into account.</li>
+            <li>While solving, the gray <b>Either</b> fill marks cells you know are filled before you know their color. They count toward black clues only.</li>
+          </ul>
+          <h3>Difficulty tiers</h3>
+          <ol>
+            <li><b>Saturation</b>: a clue equals the most or least its line can hold.</li>
+            <li><b>Line bounds</b>: counting what the other thermometers can still add.</li>
+            <li><b>Line combinations</b>: only some exact combinations of levels add up.</li>
+            <li><b>Crossing lines</b>: two lines that share thermometers, looked at together.</li>
+            <li><b>Contradiction</b>: assume a cell, follow the counts, and find a broken clue.</li>
+          </ol>
+          <p>Tiers 1–2 are <i>counting</i>: reasoning along one row or column. Tiers 3–5 are <i>jumps</i>, where counting is stuck and you have to think harder.
+          A jump's <i>chain</i> is how many lines you hold at once: 2 for crossing lines, and for a contradiction the lines you follow from the assumption to the broken clue (3 or more).</p>
+          <p><b>Easy</b> = no jumps. <b>Medium</b> = 1–2 jumps, chains ≤ 2 (no contradictions). <b>Hard</b> = up to 4 jumps, chains ≤ 4.
+          <b>Expert</b> = more than that (the preset caps chains at 6). Medium and up avoid clues within 1 of 0 or full.
+          "Needs guessing" means the logic solver got stuck.</p>
+        </section>
+      </aside>
+    </div>
+
+    <dialog id="win">
+      <form method="dialog" id="win-form">
+        <h2>Solved!</h2>
+        <p id="win-summary"></p>
+        <fieldset>
+          <legend>How fun was it?</legend>
+          <div class="stars" id="win-stars">
+            <label><input type="radio" name="rating" value="1" />1</label>
+            <label><input type="radio" name="rating" value="2" />2</label>
+            <label><input type="radio" name="rating" value="3" checked />3</label>
+            <label><input type="radio" name="rating" value="4" />4</label>
+            <label><input type="radio" name="rating" value="5" />5</label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Difficulty felt</legend>
+          <div class="stars">
+            <label><input type="radio" name="feel" value="too easy" />Too easy</label>
+            <label><input type="radio" name="feel" value="just right" checked />Just right</label>
+            <label><input type="radio" name="feel" value="too hard" />Too hard</label>
+          </div>
+        </fieldset>
+        <label class="block">Notes<textarea name="notes" rows="3" placeholder="What was interesting? Any annoying steps?"></textarea></label>
+        <div class="row">
+          <button value="save" class="primary">Save to playlog</button>
+          <button value="skip">Skip</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/lab.ts"></script>
+  </body>
+</html>

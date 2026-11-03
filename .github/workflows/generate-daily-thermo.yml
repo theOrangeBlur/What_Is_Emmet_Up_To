@@ -1,0 +1,37 @@
+name: Publish Daily Thermometers
+
+# Stores today's and tomorrow's daily puzzles in Supabase (thermo_daily), so a
+# day's puzzle never changes once published. Days already stored are left alone.
+on:
+  schedule:
+    - cron: '10 5 * * *'  # just after midnight EST
+  workflow_dispatch:
+    inputs:
+      days_ahead:
+        description: 'How many days ahead to publish'
+        default: '1'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Puzzles/Thermometers
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Puzzles/Thermometers/package-lock.json
+
+      - run: npm ci
+
+      - name: Publish
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DAYS_AHEAD: ${{ github.event.inputs.days_ahead || '1' }}
+        run: |
+          case "$DAYS_AHEAD" in (*[!0-9]*|'') echo "days_ahead must be a number"; exit 1;; esac
+          npm run publish-daily -- "$DAYS_AHEAD"

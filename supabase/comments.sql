@@ -166,7 +166,9 @@ insert into public.unlocks (key, kind, title, description, icon, sort, stat_key,
   ('perk:comment_boat',         'perk', 'River Crossing comments', 'Comment on the River Crossing.',    '💬', 108, 'boat_ms',             1800000),
   ('perk:comment_balance',      'perk', 'Coin Riddle comments',  'Comment on the Coin Riddle.',         '💬', 109, 'balance_ms',          1800000),
   ('perk:comment_wordle_daily', 'perk', 'Daily Wordle comments', 'Talk about the daily Final Wordle.',  '💬', 110, 'wordle_daily_solves', 5),
-  ('perk:comment_wordle_free',  'perk', 'Free Play comments',    'Talk about Final Wordle free play.',  '💬', 111, 'wordle_free_plays',   3)
+  ('perk:comment_wordle_free',  'perk', 'Free Play comments',    'Talk about Final Wordle free play.',  '💬', 111, 'wordle_free_plays',   3),
+  ('perk:comment_thermo_daily', 'perk', 'Daily Thermometers comments', 'Talk about the daily Thermometers.', '💬', 112, null,               null),  -- one daily solve (award below)
+  ('perk:comment_thermo_free',  'perk', 'Thermometers free play comments', 'Talk about Thermometers free play.', '💬', 113, null,               null)   -- one daily solve (award below)
 on conflict (key) do update set
   kind = excluded.kind, title = excluded.title, description = excluded.description, icon = excluded.icon,
   sort = excluded.sort, stat_key = excluded.stat_key, stat_target = excluded.stat_target,
@@ -180,7 +182,9 @@ from (values
   ('h_n5',     'perk:comment_fish'),
   ('hex_one',  'perk:comment_hexdoku'),
   ('ferryman', 'perk:comment_boat'),
-  ('scales',   'perk:comment_balance')
+  ('scales',   'perk:comment_balance'),
+  ('thermo_daily',  'perk:comment_thermo_daily'),
+  ('thermo_daily',  'perk:comment_thermo_free')
 ) as v(award_key, unlock_key)
 where exists (select 1 from public.awards a where a.key = v.award_key)
 on conflict do nothing;

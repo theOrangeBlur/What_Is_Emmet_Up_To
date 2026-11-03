@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thermometers</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png" vite-ignore />
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png" vite-ignore />
+    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png" vite-ignore />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./src/ui/site.css" />
+    <!-- Site-wide account, awards and comments. They live at the site root, outside this Vite project. -->
+    <link rel="stylesheet" href="/shared/auth-widget.css" vite-ignore />
+    <link rel="stylesheet" href="/shared/awards.css" vite-ignore />
+    <link rel="stylesheet" href="/shared/comments.css" vite-ignore />
+    <script>
+      window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
+      window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" vite-ignore></script>
+    <script src="/shared/auth.js" vite-ignore></script>
+    <script src="/shared/auth-widget.js" vite-ignore></script>
+    <script src="/shared/awards.js" vite-ignore></script>
+    <script src="/shared/unlocks.js" vite-ignore></script>
+    <script src="/shared/comments.js" vite-ignore></script>
+  </head>
+  <body>
+    <a class="home-link" href="/index.html">&#8592; home</a>
+    <div class="hd">Thermometers</div>
+    <div class="sub">red &amp; blue</div>
+    <a class="beta" href="#feedback">
+      <span class="beta-badge">beta</span>
+      <span class="beta-text">This game is in beta testing, and Emmet would love your feedback!</span>
+    </a>
+    <div class="rule"></div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-daily">Daily Challenge</button>
+      <button class="mode-btn" id="mode-free">Free Play</button>
+    </div>
+
+    <div id="free-bar" class="free-bar" hidden>
+      <label>Size
+        <select id="free-size">
+          <option value="5">5×5</option>
+          <option value="6">6×6</option>
+          <option value="7">7×7</option>
+          <option value="8">8×8</option>
+          <option value="9">9×9</option>
+          <option value="10">10×10</option>
+        </select>
+      </label>
+      <label>Difficulty
+        <select id="free-diff">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      <button id="free-new" class="pill">New puzzle</button>
+    </div>
+
+    <div id="game-layout">
+      <main id="play">
+        <div class="meta" id="meta"></div>
+
+        <div id="controls">
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="Tap tool">
+              <button class="tool active" data-tool="red" title="Tap fills red (key 1)"><span class="dot red"></span>Red</button>
+              <button class="tool" data-tool="blue" title="Tap fills blue (key 2)"><span class="dot blue"></span>Blue</button>
+              <button class="tool" data-tool="any" title="Filled, color undecided (key 3, or Alt-click)"><span class="dot any"></span>Either</button>
+              <button class="tool" data-tool="x" title="Marks ✕: cell is empty (key 4, or Shift-click)">✕</button>
+              <button class="tool" data-tool="xr" title="Marks red ✕: cell is not red (key 5)"><span class="t-red">✕</span></button>
+              <button class="tool" data-tool="xb" title="Marks blue ✕: cell is not blue (key 6)"><span class="t-blue">✕</span></button>
+            </div>
+            <button class="tool toggle" id="btn-whole" aria-pressed="false" title="Mark a whole thermometer's color without filling it (key W, or hold Ctrl)">Mark thermo</button>
+          </div>
+          <div class="toolbar">
+            <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+            <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
+            <button id="btn-reset">Reset</button>
+            <button id="btn-check" title="Highlight cells that conflict with the solution">Check</button>
+            <button id="btn-hint" title="Explain the next step (key H)">Hint</button>
+            <button id="btn-reveal">Reveal</button>
+            <span class="timer" id="timer">0:00</span>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <svg id="board" aria-label="Puzzle board"></svg>
+          <div class="cover" id="cover" hidden></div>
+        </div>
+
+        <p class="message" id="message"></p>
+        <div id="after"></div>
+
+        <details class="rules">
+          <summary>How to play</summary>
+          <ul>
+            <li>Fill some thermometers from the bulb up, with no gaps. A thermometer can be partly filled or empty.</li>
+            <li>Each thermometer is <b class="t-red">red</b> or <b class="t-blue">blue</b>, never both.</li>
+            <li>A <b class="t-red">red</b> number counts the red cells in its row or column, a <b class="t-blue">blue</b> number the blue cells, and a <b>black</b> number all filled cells. A line with no number can be anything.</li>
+            <li>Every puzzle has exactly one solution, and it can be reached by logic alone.</li>
+          </ul>
+          <p><b>Left-click</b> fills red up to the cell, <b>right-click</b> fills blue, and clicking the top filled cell again empties it.
+          <b>Shift-click</b> or drag marks ✕ (empty). <b>Alt-click</b> or <b>Either</b> fills gray: filled, color unknown.
+          <b>Ctrl-click</b> or <b>Mark thermo</b> tints a thermometer's color without filling it. The red ✕ and blue ✕ tools mark "not red" and "not blue".</p>
+          <p>On a phone, pick a tool and tap. Keys: 1–6 pick tools, W toggles Mark thermo, H hints, Ctrl+Z / Ctrl+Y undo and redo.</p>
+          <p class="daily-only">Daily rules: each hint adds 30 seconds to your time. Revealing the solution ends the run without a score.</p>
+        </details>
+      </main>
+
+      <aside id="lb-col">
+        <div id="leaderboard"></div>
+      </aside>
+    </div>
+
+    <div class="cmt-page" id="feedback">
+      <p id="comments-note" class="comments-note" hidden>comments are unlocked after one solve of the daily puzzle!</p>
+      <div id="comments"></div>
+    </div>
+
+    <script type="module" src="./src/site.ts"></script>
+  </body>
+</html>
