@@ -8,6 +8,9 @@
 //   Comments.mount(container, 'movies', card.id)
 // Mounting the same container again with a new item swaps the thread.
 //
+// Comments nest one level, Slack-style: replies hide behind an "N replies"
+// link under their comment and open in place, with their own composer.
+//
 // Signed out, a thread is a knock-on-the-door prompt. Signed in, anyone can
 // read; posting takes the page's perk:comment_<page> unlock, and until then
 // the composer is a lock that doesn't let on how to open it.
@@ -23,7 +26,8 @@ window.Comments = (function () {
     too_fast: 'easy there — give it a few seconds',
     too_many: "that's plenty for today",
     empty: 'say something first',
-    unknown_page: "comments aren't open here"
+    unknown_page: "comments aren't open here",
+    no_parent: 'that comment is gone'
   };
 
   function el(tag, className, text) {
@@ -56,8 +60,17 @@ window.Comments = (function () {
     section.appendChild(lock);
   }
 
-  function renderComment(c, onDelete) {
+  function formatDay(iso) {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function renderComment(c, onDelete, onReply) {
     const li = el('li', 'cmt-item' + (c.mine ? ' cmt-mine' : ''));
+    if (c.deleted) {
+      li.classList.add('cmt-deleted');
+      li.appendChild(el('div', 'cmt-body', 'this comment was deleted'));
+      return li;
+    }
     const head = el('div', 'cmt-head');
     const url = c.avatar_path && window.Auth.avatarUrl && window.Auth.avatarUrl(c.avatar_path, c.profile_updated_at);
     if (url) {
@@ -73,8 +86,15 @@ window.Comments = (function () {
       : document.createTextNode(c.username || 'A MYSTERY GUEST'));
     head.appendChild(name);
     head.appendChild(el('time', 'cmt-when', formatWhen(c.created_at)));
+    const actions = el('span', 'cmt-actions');
+    if (onReply) {
+      const reply = el('button', 'cmt-link', 'reply');
+      reply.type = 'button';
+      reply.addEventListener('click', onReply);
+      actions.appendChild(reply);
+    }
     if (c.can_delete) {
-      const del = el('button', 'cmt-delete', c.mine ? 'delete' : 'remove');
+      const del = el('button', 'cmt-link', c.mine ? 'delete' : 'remove');
       del.type = 'button';
       del.addEventListener('click', async () => {
         if (!confirm(c.mine ? 'Delete your comment?' : 'Remove this comment?')) return;
@@ -82,8 +102,9 @@ window.Comments = (function () {
         const { data } = await window.Auth.rpc('delete_comment', { p_id: c.id });
         if (data) onDelete(); else del.disabled = false;
       });
-      head.appendChild(del);
+      actions.appendChild(del);
     }
+    if (actions.firstChild) head.appendChild(actions);
     li.appendChild(head);
     li.appendChild(el('div', 'cmt-body', c.body));
     return li;
@@ -102,15 +123,16 @@ window.Comments = (function () {
     section.firstChild.appendChild(mark);
   }
 
-  function renderComposer(section, page, item, onPosted) {
-    const form = el('form', 'cmt-form');
+  // The page's composer, or with parentId, a thread's reply box.
+  function renderComposer(parentEl, page, item, onPosted, parentId) {
+    const form = el('form', 'cmt-form' + (parentId ? ' cmt-form-reply' : ''));
     const box = el('textarea', 'cmt-input');
     box.maxLength = MAX_LEN;
-    box.rows = 3;
-    box.placeholder = 'say your piece';
+    box.rows = parentId ? 2 : 3;
+    box.placeholder = parentId ? 'reply in thread' : 'say your piece';
     const row = el('div', 'cmt-form-row');
     const msg = el('span', 'cmt-msg');
-    const btn = el('button', 'cmt-btn', 'post');
+    const btn = el('button', 'cmt-btn', parentId ? 'reply' : 'post');
     btn.type = 'submit';
     row.appendChild(msg); row.appendChild(btn);
     form.appendChild(box); form.appendChild(row);
@@ -119,7 +141,9 @@ window.Comments = (function () {
       const body = box.value.trim();
       if (!body) { msg.textContent = REASONS.empty; return; }
       btn.disabled = true; msg.textContent = '';
-      const { data, error } = await window.Auth.rpc('post_comment', { p_page: page, p_item: item, p_body: body });
+      const args = { p_page: page, p_item: item, p_body: body };
+      if (parentId) args.p_parent = parentId;
+      const { data, error } = await window.Auth.rpc('post_comment', args);
       btn.disabled = false;
       if (error || !data) { msg.textContent = "couldn't post that — try again in a bit"; return; }
       if (!data.ok) {
@@ -130,7 +154,54 @@ window.Comments = (function () {
       box.value = '';
       onPosted();
     });
-    section.appendChild(form);
+    parentEl.appendChild(form);
+    return form;
+  }
+
+  // A top-level comment plus its thread: an "N replies" toggle and, when
+  // open, the replies and a reply box. Open threads are remembered in
+  // container._cmt.open so a redraw after posting keeps them open.
+  function renderThread(container, c, replies, canPost, again) {
+    const { page, item, open } = container._cmt;
+    const resized = () => container.dispatchEvent(new CustomEvent('comments:rendered', { bubbles: true }));
+    let thread, toggle, form;
+
+    function setOpen(on) {
+      if (on) open.add(c.id); else open.delete(c.id);
+      thread.hidden = !on;
+      if (toggle) toggle.textContent = on ? 'hide replies' : repliesLabel();
+      resized();
+    }
+    function repliesLabel() {
+      const last = replies[replies.length - 1];
+      return replies.length + (replies.length === 1 ? ' reply' : ' replies') +
+             ' · last reply ' + formatDay(last.created_at);
+    }
+
+    const onReply = canPost && !c.deleted ? () => {
+      setOpen(true);
+      if (form) form.querySelector('textarea').focus();
+    } : null;
+    const li = renderComment(c, again, onReply);
+
+    if (replies.length) {
+      toggle = el('button', 'cmt-link cmt-thread-toggle');
+      toggle.type = 'button';
+      toggle.addEventListener('click', () => setOpen(thread.hidden));
+      li.appendChild(toggle);
+    }
+    thread = el('div', 'cmt-thread');
+    if (replies.length) {
+      const list = el('ol', 'cmt-list cmt-replies');
+      replies.forEach(r => list.appendChild(renderComment(r, again)));
+      thread.appendChild(list);
+    }
+    if (canPost) form = renderComposer(thread, page, item, again, c.id);
+    li.appendChild(thread);
+
+    thread.hidden = !open.has(c.id);
+    if (toggle) toggle.textContent = thread.hidden ? repliesLabel() : 'hide replies';
+    return li;
   }
 
   async function render(container) {
@@ -157,15 +228,21 @@ window.Comments = (function () {
     if (stale()) return;
 
     const comments = error || !Array.isArray(data) ? [] : data;
-    if (comments.length) section.firstChild.appendChild(el('span', 'cmt-count', ' (' + comments.length + ')'));
+    const live = comments.filter(c => !c.deleted).length;
+    if (live) section.firstChild.appendChild(el('span', 'cmt-count', ' (' + live + ')'));
+    const top = [], replies = new Map();
+    comments.forEach(c => {
+      if (c.parent_id == null) top.push(c);
+      else (replies.get(c.parent_id) || replies.set(c.parent_id, []).get(c.parent_id)).push(c);
+    });
     const again = () => render(container);
     if (error) {
       section.appendChild(el('p', 'cmt-empty', 'the comments are stuck — try again in a bit'));
-    } else if (!comments.length) {
+    } else if (!top.length) {
       section.appendChild(el('p', 'cmt-empty', canPost ? 'nobody has said anything yet — be the first' : 'nobody has said anything yet'));
     } else {
       const list = el('ol', 'cmt-list');
-      comments.forEach(c => list.appendChild(renderComment(c, again)));
+      top.forEach(c => list.appendChild(renderThread(container, c, replies.get(c.id) || [], canPost, again)));
       section.appendChild(list);
     }
     if (canPost) renderComposer(section, page, item, again);
@@ -186,6 +263,7 @@ window.Comments = (function () {
         container.addEventListener(type, e => e.stopPropagation()));
     }
     const same = container._cmt.page === page && container._cmt.item === item && container.firstChild;
+    if (!same) container._cmt.open = new Set();
     container._cmt.page = page;
     container._cmt.item = item;
     mounted.add(container);
