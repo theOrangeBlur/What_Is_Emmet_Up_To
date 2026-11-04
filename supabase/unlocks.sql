@@ -163,9 +163,12 @@ grant execute on function public.get_rewarding_awards() to authenticated;
 grant execute on function public.get_unlock_status(text[]) to authenticated;
 
 -- ── Visible unlocks ───────────────────────────────────────────────────────
+-- Retired: the Night Owl skin was never built. Night Owl is now just the
+-- hidden h_m2 award.
+delete from public.unlocks where key = 'skin:night_owl';
+
 insert into public.unlocks (key, kind, title, description, icon, min_awards, sort) values
-  ('title:hexpert',   'title', 'Hexpert',   'Wear the title on your profile.',         '🐝', null, 10),
-  ('skin:night_owl',  'skin',  'Night Owl', 'A darker coat of paint for the whole site.', '🦉', 5,    20)
+  ('title:hexpert',   'title', 'Hexpert',   'Wear the title on your profile.',         '🐝', null, 10)
 on conflict (key) do update set
   kind = excluded.kind, title = excluded.title, description = excluded.description,
   icon = excluded.icon, min_awards = excluded.min_awards, sort = excluded.sort;

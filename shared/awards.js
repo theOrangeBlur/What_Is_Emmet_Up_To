@@ -383,7 +383,7 @@ window.Awards = (function () {
     await onSignedIn(await getSession());
     trackPage();
     const hour = new Date().getHours();
-    if (hour === 2 || hour === 3) unlock('h_m2');
+    if (hour < 4) unlock('h_m2');
     if (isMajorHoliday(new Date())) unlock('b_h8');
     watchKonami();
     document.addEventListener('visibilitychange', () => { if (document.hidden) flushTallies(); });
