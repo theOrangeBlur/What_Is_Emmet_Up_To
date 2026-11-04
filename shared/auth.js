@@ -169,6 +169,21 @@ window.Auth = (function () {
     return updateProfile({ artPath: path });
   }
 
+  // A drawn icon's editable original (one image pixel per grid cell), kept
+  // next to the avatar so the pixel editor can reopen it. Not tracked in the
+  // profile row: it lives at a fixed path.
+  async function uploadPixelSource(blob) {
+    const c = getClient();
+    const session = await getSession();
+    if (!c || !session) return { ok: false, reason: 'error' };
+    const { error } = await c.storage.from('avatars').upload(session.user.id + '/pixel.png', blob, { upsert: true, contentType: 'image/png' });
+    return error ? { ok: false, reason: 'error' } : { ok: true };
+  }
+
+  function pixelSourceUrl(userId, version) {
+    return userId ? avatarUrl(userId + '/pixel.png', version) : null;
+  }
+
   // The profile's sound clip, in its own bucket (audio only, bigger cap).
   async function uploadSound(file) {
     const c = getClient();
@@ -196,5 +211,5 @@ window.Auth = (function () {
   }
 
   return { getMyProfile, getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc,
-           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, uploadArt, uploadSound, avatarUrl, soundUrl };
+           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, uploadArt, uploadSound, uploadPixelSource, avatarUrl, pixelSourceUrl, soundUrl };
 })();

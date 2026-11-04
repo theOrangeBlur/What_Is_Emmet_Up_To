@@ -106,6 +106,7 @@ function themeOf(p) {
 // page; the others are fetched when a profile or the picker needs them.
 const NAME_FONT_DEFAULT = NameFonts.DEFAULT;
 const NAME_FONT_UNLOCK = 'perk:name_fonts';
+const PIXEL_ICON_UNLOCK = 'perk:pixel_icon';
 const NAME_FONTS = NameFonts.FONTS;
 
 // The page's <link> already carries these.
@@ -488,8 +489,62 @@ async function renderEdit(p) {
     setPreview(null);
     clearBtn.hidden = true;
   });
-  avatarRow.appendChild(pickBtn); avatarRow.appendChild(clearBtn); avatarRow.appendChild(fileInp);
-  form.appendChild(field('picture', avatarRow));
+  // Draw one in the pixel editor. Reopens your last drawing (or the one in
+  // progress this visit) so it can be touched up.
+  let newPixelSource = null;   // the drawing's one-pixel-per-cell original
+  let lastDrawing = null;      // <img> of the most recent drawing, fed back in
+  const drawBtn = el('button', 'authw-btn', 'draw one');
+  drawBtn.type = 'button';
+  drawBtn.hidden = !window.PixelEditor;
+  // Locked until three filled-in fields are public (perk:pixel_icon).
+  drawBtn.disabled = true;
+  const drawLock = el('p', 'profile-font-lock', '');
+  drawLock.hidden = true;
+  if (window.PixelEditor) {
+    (window.Unlocks ? window.Unlocks.status([PIXEL_ICON_UNLOCK]) : Promise.resolve({})).then(all => {
+      const st = all[PIXEL_ICON_UNLOCK];
+      if (st && st.unlocked) { drawBtn.disabled = false; return; }
+      const target = (st && st.target) || 3;
+      const done = Math.min((st && st.value) || 0, target);
+      drawBtn.textContent = '🔒 draw one';
+      drawLock.textContent = `🔒 Make ${target} fields public to draw your own pixel icon — ${done} / ${target} so far. ` +
+        'Only filled-in fields count, and they count once you save.';
+      drawLock.hidden = false;
+    }).catch(() => {});
+  }
+  function loadImage(src) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+  drawBtn.addEventListener('click', async () => {
+    drawBtn.disabled = true;
+    try {
+      if (!lastDrawing && session) {
+        const url = window.Auth.pixelSourceUrl(session.user.id, Date.now());
+        if (url) lastDrawing = await loadImage(url);
+      }
+      const result = await window.PixelEditor.open({ initial: lastDrawing });
+      if (!result) return;
+      newAvatar = result.png;
+      newPixelSource = result.source;
+      removeAvatar = false;
+      lastDrawing = await loadImage(URL.createObjectURL(result.source));
+      setPreview(URL.createObjectURL(result.png));
+      clearBtn.hidden = false;
+    } finally {
+      drawBtn.disabled = false;
+    }
+  });
+  // A photo replaces any drawing waiting to be saved.
+  fileInp.addEventListener('change', () => { newPixelSource = null; });
+
+  avatarRow.appendChild(pickBtn); avatarRow.appendChild(drawBtn); avatarRow.appendChild(clearBtn); avatarRow.appendChild(fileInp);
+  form.appendChild(field('picture', avatarRow, drawLock));
 
   // Username
   const nameInp = el('input', 'authw-input');
@@ -750,6 +805,8 @@ async function renderEdit(p) {
       if (newAvatar) {
         const up = await window.Auth.uploadAvatar(newAvatar);
         if (!up.ok) { showMsg("everything saved but the picture — try it again"); return; }
+        // Best effort: the icon itself is already saved.
+        if (newPixelSource) await window.Auth.uploadPixelSource(newPixelSource);
       } else if (removeAvatar) {
         await window.Auth.updateProfile({ avatarPath: '' });
       }
@@ -766,6 +823,8 @@ async function renderEdit(p) {
         await window.Auth.updateProfile({ soundPath: '' });
       }
       editing = false;
+      // Public fields feed perk:pixel_icon; re-check so its toast shows now.
+      if (window.Unlocks) window.Unlocks.refresh();
       await load();
     } finally {
       saveBtn.disabled = false;
