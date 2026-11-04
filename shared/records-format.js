@@ -34,7 +34,11 @@ const RECORD_GROUPS = [
     { key: 'wordle_fastest', icon: '⏱️', title: 'Fastest daily solve',              fmt: formatSolveTime },
     { key: 'wordle_firsts',  icon: '🥇', title: 'Days finishing first',             fmt: plural('day') },
     { key: 'freeplay_best',  icon: '✒️', title: 'Most freeplay words in 5 minutes', fmt: plural('word') },
-    { key: 'giants_slain',   icon: '🗡️', title: 'Giants slain',                     fmt: plural('day'), personalOnly: true, hiddenUntilEarned: true }
+    { key: 'giants_slain',   icon: '🗡️', title: 'Giants slain',                     fmt: plural('day'), personalOnly: true, hiddenUntilEarned: true },
+    { key: 'wordle_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
+  ]},
+  { title: 'Thermometers', records: [
+    { key: 'thermo_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
   ]},
   { title: 'Visits', records: [
     { key: 'visit_days',           icon: '🚪', title: 'Days dropped by',          fmt: plural('day') },

@@ -52,11 +52,14 @@
 .mb-table td:first-child { text-align: left; }
 .mb-table td.mb-pts { color: var(--sky, var(--cool, #6ec6ff)); font-weight: 700; }
 
-.mb-crown {
+/* Name marks: 👑 last month's champion, small 👑 last week's, 🎩 yesterday's winner. */
+.mb-crown,
+.mb-hat {
   margin-left: 4px;
   font-size: 10px;
   cursor: help;
 }
+.mb-crown-week { font-size: 7px; }
 
 .mb-champ {
   display: flex;

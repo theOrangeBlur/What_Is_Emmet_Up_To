@@ -27,11 +27,18 @@ declare global {
     Unlocks?: { has(key: string): Promise<boolean> };
     MonthBoard?: {
       mount(root: HTMLElement, game: string, drawDay: (el: HTMLElement) => Promise<void> | void): Promise<void>;
-      championId(game: string): Promise<string | null>;
-      crown(): Node;
+      marks(game: string): Promise<NameMarks>;
+      badges(userId: string | null, marks: NameMarks): Node;
       announce(game: string): Promise<void>;
     };
   }
+}
+
+/** User ids of last month's champion, last week's champion and yesterday's winner. */
+export interface NameMarks {
+  month: string | null;
+  week: string | null;
+  day: string | null;
 }
 
 export interface ScoreRow {
@@ -194,7 +201,7 @@ async function profileNames(rows: ScoreRow[]): Promise<Map<string, string>> {
 }
 
 /**
- * Today's board, behind a today/month toggle (shared/month-board.js) when that's loaded.
+ * Today's board, behind a today/week/month toggle (shared/month-board.js) when that's loaded.
  * Times stay hidden until you've finished, so they can't be chased.
  */
 export async function renderLeaderboard(root: HTMLElement, showTimes: boolean): Promise<void> {
@@ -208,9 +215,9 @@ export async function renderLeaderboard(root: HTMLElement, showTimes: boolean): 
 
 async function drawDailyBoard(root: HTMLElement, showTimes: boolean): Promise<void> {
   root.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  const [scores, champId] = await Promise.all([
+  const [scores, marks] = await Promise.all([
     fetchTodayScores(),
-    window.MonthBoard ? window.MonthBoard.championId('thermo') : Promise.resolve(null),
+    window.MonthBoard ? window.MonthBoard.marks('thermo') : Promise.resolve(null),
   ]);
   const names = await profileNames(scores);
   root.innerHTML = '';
@@ -230,7 +237,7 @@ async function drawDailyBoard(root: HTMLElement, showTimes: boolean): Promise<vo
     const nameTd = el('td');
     const username = s.user_id ? names.get(s.user_id) : null;
     nameTd.appendChild(window.AuthWidget ? window.AuthWidget.profileLink(username, s.name) : document.createTextNode(s.name));
-    if (champId && s.user_id === champId) nameTd.appendChild(window.MonthBoard!.crown());
+    if (marks) nameTd.appendChild(window.MonthBoard!.badges(s.user_id, marks));
     tr.appendChild(nameTd);
     tr.appendChild(el('td', '', showTimes ? String(s.hints) : '—'));
     tr.appendChild(el('td', '', showTimes ? formatTime(s.time_ms) : '—'));

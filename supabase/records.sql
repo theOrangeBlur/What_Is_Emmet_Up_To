@@ -1,6 +1,7 @@
 -- Records (personal bests and site-wide all-time records) for the Trophy Case.
 -- Paste into the Supabase SQL editor and run, after profiles.sql (record
--- holders go by their username). Safe to re-run: tables are created if
+-- holders go by their username) and leaderboards.sql (monthly_champions are
+-- the giants for giants_slain). Safe to re-run: tables are created if
 -- missing and functions are replaced.
 --
 -- Final Wordle records are read straight out of wordle_scores and
@@ -34,13 +35,6 @@ create table if not exists public.user_reads (
 -- Older tables were made before projects counted; widen their check.
 alter table public.user_reads drop constraint if exists user_reads_kind_check;
 alter table public.user_reads add constraint user_reads_kind_check check (kind in ('movie', 'game', 'project'));
-
--- Players worth beating at the daily Wordle. Seeded in awards-hidden.sql;
--- no policies, so only the functions below ever read it.
-create table if not exists public.giants (
-  user_id uuid primary key references auth.users on delete cascade
-);
-alter table public.giants enable row level security;
 
 alter table public.user_stats enable row level security;
 alter table public.user_reads enable row level security;
@@ -152,8 +146,10 @@ language sql stable security definer set search_path = public as $$
   group by v.user_id, v.grp;
 $$;
 
--- Days the player's daily solve beat a giant's time that same day. Ties
--- don't count, and neither does a giant beating themself.
+-- Days the player's daily solve beat a giant's time that same day. A giant
+-- is anyone who has ever been crowned a Final Wordle monthly champion
+-- (monthly_champions, from leaderboards.sql). Ties don't count, and nobody
+-- slays themself, but one champion can slay another.
 create or replace function public.giants_slain(p_uid uuid, p_dev text default null)
 returns int
 language sql stable security definer set search_path = public as $$
@@ -161,11 +157,12 @@ language sql stable security definer set search_path = public as $$
   from public.wordle_scores s
   where s.time_ms > 0
     and (s.user_id = p_uid or s.device_id = p_dev)
-    and not exists (select 1 from public.giants g where g.user_id = p_uid)
     and s.time_ms < (
       select min(j.time_ms) from public.wordle_scores j
-      join public.giants g on g.user_id = j.user_id
-      where j.date = s.date and j.time_ms > 0);
+      where j.date = s.date and j.time_ms > 0
+        and j.user_id is distinct from p_uid
+        and j.user_id in (select c.user_id from public.monthly_champions c
+                          where c.game = 'wordle' and c.user_id is not null));
 $$;
 
 -- The caller's own giants_slain, for the Wordle page to check after a solve.
@@ -197,6 +194,10 @@ language sql stable security definer set search_path = public as $$
       select max(f.score) from public.wordle_freeplay_scores f
       where f.user_id = p_uid or f.device_id = p_dev),
     'giants_slain', public.giants_slain(p_uid, p_dev),
+    'wordle_month_titles', (
+      select count(*) from public.monthly_champions c where c.game = 'wordle' and c.user_id = p_uid),
+    'thermo_month_titles', (
+      select count(*) from public.monthly_champions c where c.game = 'thermo' and c.user_id = p_uid),
     'visit_days', (
       select count(*) from public.user_visit_days d where d.user_id = p_uid),
     'visit_streak_longest', (
@@ -262,6 +263,20 @@ begin
                                'mine', coalesce(f.user_id = v_uid, false) or coalesce(f.device_id = v_dev, false))
       from public.wordle_freeplay_scores f
       order by f.score desc limit 1),
+    'wordle_month_titles', (
+      select json_build_object('value', count(*), 'holder', public.record_holder_name(c.user_id),
+                               'holder_username', public.profile_username(c.user_id),
+                               'mine', c.user_id = v_uid)
+      from public.monthly_champions c where c.game = 'wordle' and c.user_id is not null
+      group by c.user_id
+      order by count(*) desc, min(c.month) limit 1),
+    'thermo_month_titles', (
+      select json_build_object('value', count(*), 'holder', public.record_holder_name(c.user_id),
+                               'holder_username', public.profile_username(c.user_id),
+                               'mine', c.user_id = v_uid)
+      from public.monthly_champions c where c.game = 'thermo' and c.user_id is not null
+      group by c.user_id
+      order by count(*) desc, min(c.month) limit 1),
     'visit_days', (
       select json_build_object('value', count(*), 'holder', public.record_holder_name(d.user_id),
                                'holder_username', public.profile_username(d.user_id),

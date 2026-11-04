@@ -491,9 +491,9 @@ async function renderLeaderboard(solved = false) {
 
 async function drawDailyBoard(lb, solved) {
   lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  const [scores, champId] = await Promise.all([
+  const [scores, marks] = await Promise.all([
     fetchTodayScores(),
-    window.MonthBoard ? window.MonthBoard.championId('wordle') : null
+    window.MonthBoard ? window.MonthBoard.marks('wordle') : null
   ]);
   const usernames = await fetchProfileNames(scores.map(s => s.user_id));
   if (!scores.length) {
@@ -510,7 +510,7 @@ async function drawDailyBoard(lb, solved) {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
     const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
     const nameTd = nameCell(s.name, s.user_id, usernames);
-    if (champId && s.user_id === champId) nameTd.appendChild(window.MonthBoard.crown());
+    if (marks) nameTd.appendChild(window.MonthBoard.badges(s.user_id, marks));
     tr.appendChild(nameTd);
     const time = document.createElement('td'); time.textContent = solved ? formatTime(s.time_ms) : '—'; tr.appendChild(time);
     table.appendChild(tr);

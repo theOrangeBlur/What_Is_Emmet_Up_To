@@ -1,8 +1,9 @@
-name: Crown Monthly Champions
+name: Crown Champions
 
-# Gives last month's winner of each daily puzzle its champion award
-# (crown_monthly_champions in supabase/leaderboards.sql). Runs every day so a
-# missed run on the 1st still catches up; re-running changes nothing.
+# Hands out the daily puzzles' champion awards (crown_champions in
+# supabase/leaderboards.sql): last month's and last week's winners of each
+# puzzle, and the winners of the last few days. Runs every day just after the
+# EST day ends, so a missed run still catches up; re-running changes nothing.
 on:
   schedule:
     - cron: '20 5 * * *'
@@ -12,13 +13,13 @@ jobs:
   crown:
     runs-on: ubuntu-latest
     steps:
-      - name: Crown last month's champions
+      - name: Crown champions
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           KEY="$(printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | tr -d '[:space:]')"
           curl --fail-with-body -sS -X POST \
-            'https://nsocmpzeccpoatrfddjf.supabase.co/rest/v1/rpc/crown_monthly_champions' \
+            'https://nsocmpzeccpoatrfddjf.supabase.co/rest/v1/rpc/crown_champions' \
             -H "apikey: $KEY" \
             -H "Authorization: Bearer $KEY" \
             -H 'Content-Type: application/json' \

@@ -1,13 +1,16 @@
-// Monthly standings for the daily puzzles (supabase/leaderboards.sql).
+// Weekly and monthly standings for the daily puzzles (supabase/leaderboards.sql).
 // Load after auth.js and auth-widget.js. Pages call:
-//   MonthBoard.mount(root, game, drawDay)  today/month toggle; drawDay(el) draws the daily board into el
-//   MonthBoard.championId(game)            last month's winner's user id, or null
-//   MonthBoard.crown()                     a 👑 to put after a champion's name
+//   MonthBoard.mount(root, game, drawDay)  today/week/month toggle; drawDay(el) draws the daily board into el
+//   MonthBoard.marks(game)                 { month, week, day }: the user ids of last month's champion,
+//                                          last week's champion and yesterday's winner (each may be null)
+//   MonthBoard.badges(userId, marks)       the 👑 / small 👑 / 🎩 to put after that player's name
 //   MonthBoard.announce(game)              once a month, a card naming last month's champion
+//   MonthBoard.championId(game), crown()   the older monthly-only calls, still used by cached pages
 // game is 'wordle' or 'thermo'. Everything fails quietly: no network, no board.
+// Weeks run Monday to Sunday. They have no announcement card.
 
 window.MonthBoard = (function () {
-  const championCache = new Map(); // game -> Promise<row|null>
+  const cache = new Map(); // `${rpc}:${game}` -> Promise<row|null>
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -17,8 +20,12 @@ window.MonthBoard = (function () {
   }
 
   // Same EST day boundary as the puzzles' getDayKey / dayKey.
+  function estNow() {
+    return new Date(Date.now() - 5 * 60 * 60 * 1000);
+  }
+
   function currentMonth() {
-    const d = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    const d = estNow();
     return d.getUTCFullYear() * 100 + d.getUTCMonth() + 1;
   }
 
@@ -27,9 +34,22 @@ window.MonthBoard = (function () {
     return d.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }).toLowerCase();
   }
 
-  function daysLeft() {
-    const now = new Date(Date.now() - 5 * 60 * 60 * 1000);
+  // A week key (its Monday, 20261102) as "nov 2".
+  function weekName(week) {
+    const d = new Date(Date.UTC(Math.floor(week / 10000), Math.floor(week / 100) % 100 - 1, week % 100));
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).toLowerCase();
+  }
+
+  function daysLeftInMonth() {
+    const now = estNow();
     const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+    return Math.max(1, Math.ceil((next - now.getTime()) / 86400000));
+  }
+
+  function daysLeftInWeek() {
+    const now = estNow();
+    const sinceMonday = (now.getUTCDay() + 6) % 7;
+    const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - sinceMonday + 7);
     return Math.max(1, Math.ceil((next - now.getTime()) / 86400000));
   }
 
@@ -55,6 +75,19 @@ window.MonthBoard = (function () {
     }
   }
 
+  // One row from a per-game RPC, fetched once per page.
+  function cachedRow(rpc, game) {
+    const key = rpc + ':' + game;
+    if (!cache.has(key)) {
+      cache.set(key, call(rpc, { p_game: game }).then((rows) => (rows && rows[0]) || null));
+    }
+    return cache.get(key);
+  }
+
+  const champion = (game) => cachedRow('get_monthly_champion', game);
+  const weekChampion = (game) => cachedRow('get_weekly_champion', game);
+  const dailyWinner = (game) => cachedRow('get_daily_winner', game);
+
   async function myUserId() {
     if (!window.Auth) return null;
     try {
@@ -74,9 +107,9 @@ window.MonthBoard = (function () {
     }
   }
 
-  // Monthly views go by the account's username, not the arcade name typed on a
-  // given day (one account can post as several names over a month). The arcade
-  // name is only a fallback for an account that hasn't picked a username.
+  // Standings views go by the account's username, not the arcade name typed on
+  // a given day (one account can post as several names). The arcade name is
+  // only a fallback for an account that hasn't picked a username.
   function nameNode(name, userId, names) {
     const username = userId ? names.get(userId) : null;
     const label = username || name;
@@ -92,16 +125,18 @@ window.MonthBoard = (function () {
     return 0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5) < 0.12;
   }
 
-  function champion(game) {
-    if (!championCache.has(game)) {
-      championCache.set(game, call('get_monthly_champion', { p_game: game }).then((rows) => (rows && rows[0]) || null));
-    }
-    return championCache.get(game);
+  // ── Marks next to names ───────────────────────────────────────────────
+  async function marks(game) {
+    const [m, w, d] = await Promise.all([champion(game), weekChampion(game), dailyWinner(game)]);
+    return {
+      month: m ? m.user_id : null,
+      week: w ? w.user_id : null,
+      day: d ? d.user_id : null,
+    };
   }
 
   async function championId(game) {
-    const c = await champion(game);
-    return c ? c.user_id : null;
+    return (await marks(game)).month;
   }
 
   function crown() {
@@ -110,9 +145,31 @@ window.MonthBoard = (function () {
     return c;
   }
 
-  function banner(champ, names) {
+  function weekCrown() {
+    const c = el('span', 'mb-crown mb-crown-week', '👑');
+    c.title = "last week's champion";
+    return c;
+  }
+
+  function hat() {
+    const h = el('span', 'mb-hat', '🎩');
+    h.title = 'won yesterday';
+    return h;
+  }
+
+  function badges(userId, m) {
+    const f = document.createDocumentFragment();
+    if (!userId || !m) return f;
+    if (m.month === userId) f.appendChild(crown());
+    if (m.week === userId) f.appendChild(weekCrown());
+    if (m.day === userId) f.appendChild(hat());
+    return f;
+  }
+
+  // ── Standings views ───────────────────────────────────────────────────
+  function banner(label, champ, names) {
     const b = el('div', 'mb-champ');
-    b.appendChild(el('span', 'mb-champ-label', `👑 ${monthName(champ.month)} champion`));
+    b.appendChild(el('span', 'mb-champ-label', label));
     const who = el('span', 'mb-champ-name');
     who.appendChild(nameNode(champ.name, champ.user_id, names));
     b.appendChild(who);
@@ -120,23 +177,32 @@ window.MonthBoard = (function () {
     return b;
   }
 
-  async function renderMonth(root) {
+  // Shared by the week and month views. period is 'week' or 'month'.
+  async function renderStandings(root, period) {
     const game = root.dataset.mbGame;
     root.innerHTML = '<div class="lb-loading">loading standings...</div>';
-    const [rows, champ, me] = await Promise.all([
-      call('get_monthly_standings', { p_game: game, p_month: null }),
-      champion(game),
+    const isWeek = period === 'week';
+    const [rows, champ, m, me] = await Promise.all([
+      isWeek
+        ? call('get_weekly_standings', { p_game: game, p_week: null })
+        : call('get_monthly_standings', { p_game: game, p_month: null }),
+      isWeek ? weekChampion(game) : champion(game),
+      marks(game),
       myUserId(),
     ]);
     const standings = rows || [];
     const names = await usernames([...standings.map((r) => r.user_id), champ && champ.user_id]);
     root.innerHTML = '';
-    if (champ) root.appendChild(banner(champ, names));
-    root.appendChild(el('div', 'lb-title', `${monthName(currentMonth())} standings`));
-    const left = daysLeft();
+    if (champ) {
+      root.appendChild(isWeek
+        ? banner(`👑 week of ${weekName(champ.week)} champion`, champ, names)
+        : banner(`👑 ${monthName(champ.month)} champion`, champ, names));
+    }
+    root.appendChild(el('div', 'lb-title', isWeek ? "this week's standings" : `${monthName(currentMonth())} standings`));
+    const left = isWeek ? daysLeftInWeek() : daysLeftInMonth();
     root.appendChild(el('div', 'mb-sub', `resets in ${left} day${left === 1 ? '' : 's'} · sign in to compete`));
     if (!standings.length) {
-      root.appendChild(el('div', 'lb-empty', rows ? 'no signed-in scores yet this month' : "couldn't load standings"));
+      root.appendChild(el('div', 'lb-empty', rows ? `no signed-in scores yet this ${period}` : "couldn't load standings"));
       return;
     }
     const table = el('table', 'lb-table mb-table');
@@ -148,7 +214,7 @@ window.MonthBoard = (function () {
       tr.appendChild(el('td', '', String(i + 1)));
       const nameTd = el('td');
       nameTd.appendChild(nameNode(r.name, r.user_id, names));
-      if (champ && r.user_id === champ.user_id) nameTd.appendChild(crown());
+      nameTd.appendChild(badges(r.user_id, m));
       tr.appendChild(nameTd);
       tr.appendChild(el('td', '', String(r.days_played)));
       tr.appendChild(el('td', '', String(r.wins)));
@@ -162,7 +228,7 @@ window.MonthBoard = (function () {
   // month. The first visit of a month records today's date, so the line under
   // the board stays up for the rest of that day, then goes until next month.
   function isFirstVisitDayOfMonth(game) {
-    const d = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    const d = estNow();
     const today = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
     const key = 'month_first_visit_' + game;
     try {
@@ -177,8 +243,8 @@ window.MonthBoard = (function () {
     }
   }
 
-  // The view ('day' | 'month') lives on the root, so a page redrawing its
-  // daily board after a solve stays on whichever tab the visitor picked.
+  // The view ('day' | 'week' | 'month') lives on the root, so a page redrawing
+  // its daily board after a solve stays on whichever tab the visitor picked.
   function mount(root, game, drawDay) {
     if (!root) return Promise.resolve();
     root.dataset.mbGame = game;
@@ -186,7 +252,7 @@ window.MonthBoard = (function () {
     const view = root.dataset.mbView || 'day';
     root.innerHTML = '';
     const toggle = el('div', 'lb-view-toggle');
-    [['day', 'today'], ['month', 'month']].forEach(([key, label]) => {
+    [['day', 'today'], ['week', 'week'], ['month', 'month']].forEach(([key, label]) => {
       const b = el('button', 'lb-view-btn' + (view === key ? ' active' : ''), label);
       b.type = 'button';
       b.addEventListener('click', () => {
@@ -199,10 +265,10 @@ window.MonthBoard = (function () {
     const body = el('div', 'mb-body');
     root.append(toggle, body);
     if (isFirstVisitDayOfMonth(game)) root.appendChild(el('div', 'mb-newmonth', 'A new game has begun. Who will take the crown?'));
-    return view === 'month' ? renderMonth(body) : Promise.resolve(drawDay(body));
+    return view === 'day' ? Promise.resolve(drawDay(body)) : renderStandings(body, view);
   }
 
-  // ── Fanfare ───────────────────────────────────────────────────────────
+  // ── Fanfare (monthly only) ────────────────────────────────────────────
   function seenKey(game) {
     return 'month_champ_seen_' + game;
   }
@@ -258,5 +324,5 @@ window.MonthBoard = (function () {
     document.body.appendChild(overlay);
   }
 
-  return { mount, championId, crown, announce };
+  return { mount, marks, badges, championId, crown, announce };
 })();
