@@ -1,6 +1,6 @@
 -- Unlocks: the rewards awards give out (skins, titles, secret pages, perks).
--- Paste into the Supabase SQL editor and run, after awards.sql and
--- records.sql (stat rules read the records tables). Safe to
+-- Paste into the Supabase SQL editor and run, after awards.sql,
+-- records.sql and thermometers.sql (stat rules read their tables). Safe to
 -- re-run: tables are created if missing, functions are replaced, and rows are
 -- upserted so edits here overwrite what's live.
 --
@@ -60,6 +60,23 @@ language sql stable security definer set search_path = public as $$
     when 'project_reads' then (select count(*) from public.user_reads r where r.user_id = p_uid and r.kind = 'project')
     when 'visit_days'    then (select count(*) from public.user_visit_days d where d.user_id = p_uid)
     when 'wordle_daily_solves' then (select count(distinct s.date) from public.wordle_scores s where s.user_id = p_uid)
+    -- Every game finished anywhere on the site: daily and free play Wordles and
+    -- Thermometers, each Hexdoku level, the River Crossing once, and up to
+    -- three Coin Riddle solves (solves from before balance_solves was counted
+    -- still earn one, through the award).
+    when 'games_played' then
+        (select count(distinct s.date) from public.wordle_scores s where s.user_id = p_uid)
+      + (select count(distinct t.date) from public.thermo_scores t where t.user_id = p_uid)
+      + coalesce((select sum(st.value) from public.user_stats st
+                  where st.user_id = p_uid and st.key in ('wordle_free_plays', 'thermo_free_solves')), 0)
+      + greatest(
+          coalesce((select ua.progress from public.user_awards ua where ua.user_id = p_uid and ua.award_key = 'hex_all'), 0),
+          (select count(*) from public.user_awards ua where ua.user_id = p_uid and ua.award_key = 'hex_one' and ua.unlocked_at is not null))
+      + (select count(*) from public.user_awards ua
+         where ua.user_id = p_uid and ua.award_key = 'ferryman' and ua.unlocked_at is not null)
+      + greatest(
+          least(coalesce((select st.value from public.user_stats st where st.user_id = p_uid and st.key = 'balance_solves'), 0), 3),
+          (select count(*) from public.user_awards ua where ua.user_id = p_uid and ua.award_key = 'scales' and ua.unlocked_at is not null))
     else (select st.value from public.user_stats st where st.user_id = p_uid and st.key = p_key)
   end;
 $$;
@@ -152,6 +169,14 @@ insert into public.unlocks (key, kind, title, description, icon, min_awards, sor
 on conflict (key) do update set
   kind = excluded.kind, title = excluded.title, description = excluded.description,
   icon = excluded.icon, min_awards = excluded.min_awards, sort = excluded.sort;
+
+insert into public.unlocks (key, kind, title, description, icon, sort, stat_key, stat_target, requirement) values
+  ('perk:name_fonts', 'perk', 'Name in lights', 'Pick the typeface your name is set in on your profile.', '🔤', 30,
+   'games_played', 10, 'Play ten games')
+on conflict (key) do update set
+  kind = excluded.kind, title = excluded.title, description = excluded.description, icon = excluded.icon,
+  sort = excluded.sort, stat_key = excluded.stat_key, stat_target = excluded.stat_target,
+  requirement = excluded.requirement;
 
 insert into public.award_unlocks (award_key, unlock_key) values
   ('hex_all', 'title:hexpert')

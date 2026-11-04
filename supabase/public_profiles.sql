@@ -8,11 +8,12 @@
 -- profiles can't be used to spoil them. The bio/avatar/answers columns
 -- themselves (and public_fields) are added in profiles.sql.
 
--- ── Avatars ───────────────────────────────────────────────────────────────
--- One small image per account at avatars/<user id>/avatar.webp. The page
--- shrinks it to 256px before uploading, so the 1 MB cap is generous.
+-- ── Avatars and art ───────────────────────────────────────────────────────
+-- Per account: avatars/<user id>/avatar.webp, shrunk to 256px, and
+-- avatars/<user id>/art.webp, the art window, shrunk to 1200px on its long
+-- side. The page shrinks both before uploading, so the 2 MB cap is generous.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('avatars', 'avatars', true, 1048576, array['image/webp', 'image/png', 'image/jpeg'])
+values ('avatars', 'avatars', true, 2097152, array['image/webp', 'image/png', 'image/jpeg'])
 on conflict (id) do update set
   public = excluded.public, file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
@@ -31,6 +32,31 @@ drop policy if exists "avatars: read own" on storage.objects;
 create policy "avatars: read own" on storage.objects for select to authenticated
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- ── Sounds ────────────────────────────────────────────────────────────────
+-- One clip per account at sounds/<user id>/sound. Audio can't be shrunk in the
+-- browser the way pictures are, so it gets its own bucket with a 5 MB cap
+-- (a few minutes of mp3) and audio types only.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('sounds', 'sounds', true, 5242880,
+        array['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/aac', 'audio/wav', 'audio/x-wav',
+              'audio/wave', 'audio/ogg', 'audio/webm', 'audio/flac', 'audio/x-flac'])
+on conflict (id) do update set
+  public = excluded.public, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "sounds: upload own" on storage.objects;
+create policy "sounds: upload own" on storage.objects for insert to authenticated
+  with check (bucket_id = 'sounds' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists "sounds: replace own" on storage.objects;
+create policy "sounds: replace own" on storage.objects for update to authenticated
+  using (bucket_id = 'sounds' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists "sounds: delete own" on storage.objects;
+create policy "sounds: delete own" on storage.objects for delete to authenticated
+  using (bucket_id = 'sounds' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists "sounds: read own" on storage.objects;
+create policy "sounds: read own" on storage.objects for select to authenticated
+  using (bucket_id = 'sounds' and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- ── Reading ───────────────────────────────────────────────────────────────
 -- Everything a profile page shows, or null if nobody goes by that name.
 -- Visible awards come back in full; secret ones as { icon, secret, unlocked_at }.
@@ -45,6 +71,11 @@ language sql stable security definer set search_path = public as $$
     'username',     p.username,
     'bio',          case when p.user_id = auth.uid() or 'bio' = any (p.public_fields) then p.bio end,
     'avatar_path',  p.avatar_path,
+    'art_path',     case when p.user_id = auth.uid() or 'art' = any (p.public_fields) then p.art_path end,
+    'art_title',    case when p.user_id = auth.uid() or 'art' = any (p.public_fields) then p.art_title end,
+    'sound_path',   case when p.user_id = auth.uid() or 'sound' = any (p.public_fields) then p.sound_path end,
+    'sound_title',  case when p.user_id = auth.uid() or 'sound' = any (p.public_fields) then p.sound_title end,
+    'name_font',    p.name_font,
     'updated_at',   p.updated_at,
     'answers',      (select coalesce(jsonb_object_agg(a.key, a.value), '{}'::jsonb)
                      from jsonb_each(p.answers) a
@@ -82,14 +113,21 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ── Writing ───────────────────────────────────────────────────────────────
--- Update the caller's bio, question answers, public fields and/or avatar. A
--- null argument leaves that field alone; '' clears the bio or avatar. Answers
+-- Update the caller's bio, question answers, public fields, avatar and/or art
+-- window. A null argument leaves that field alone; '' clears the bio, avatar,
+-- art picture, art heading, sound, sound heading or name font (back to the
+-- default). Any other name
+-- font takes the perk:name_fonts unlock (unlocks.sql). Answers
 -- and public fields each replace the whole set, and blank answers are dropped. The username is changed through
 -- set_username() in profiles.sql.
 drop function if exists public.update_profile(text, jsonb, text);
+drop function if exists public.update_profile(text, jsonb, text, text[]);
+drop function if exists public.update_profile(text, jsonb, text, text[], text, text);
+drop function if exists public.update_profile(text, jsonb, text, text[], text, text, text);
 create or replace function public.update_profile(
   p_bio text default null, p_answers jsonb default null, p_avatar_path text default null,
-  p_public_fields text[] default null)
+  p_public_fields text[] default null, p_art_path text default null, p_art_title text default null,
+  p_name_font text default null, p_sound_path text default null, p_sound_title text default null)
 returns json
 language plpgsql security definer set search_path = public as $$
 declare
@@ -136,10 +174,42 @@ begin
     return json_build_object('ok', false, 'reason', 'invalid');
   end if;
 
+  if p_art_path is not null and p_art_path <> ''
+     and p_art_path not like v_uid::text || '/%' then
+    return json_build_object('ok', false, 'reason', 'invalid');
+  end if;
+
+  if p_art_title is not null and char_length(trim(p_art_title)) > 80 then
+    return json_build_object('ok', false, 'reason', 'art_title_too_long');
+  end if;
+
+  if p_sound_path is not null and p_sound_path <> ''
+     and p_sound_path not like v_uid::text || '/%' then
+    return json_build_object('ok', false, 'reason', 'invalid');
+  end if;
+
+  if p_sound_title is not null and char_length(trim(p_sound_title)) > 80 then
+    return json_build_object('ok', false, 'reason', 'sound_title_too_long');
+  end if;
+
+  if p_name_font is not null and p_name_font <> '' then
+    if p_name_font !~ '^[a-z_]{1,24}$' then
+      return json_build_object('ok', false, 'reason', 'invalid');
+    end if;
+    if not exists (select 1 from public.get_my_unlocks() m where m.key = 'perk:name_fonts') then
+      return json_build_object('ok', false, 'reason', 'locked');
+    end if;
+  end if;
+
   update public.profiles set
     bio         = case when p_bio is null then bio else nullif(trim(p_bio), '') end,
     answers     = case when p_answers is null then answers else v_clean end,
     avatar_path = case when p_avatar_path is null then avatar_path else nullif(p_avatar_path, '') end,
+    art_path    = case when p_art_path is null then art_path else nullif(p_art_path, '') end,
+    art_title   = case when p_art_title is null then art_title else nullif(trim(p_art_title), '') end,
+    name_font   = case when p_name_font is null then name_font else nullif(p_name_font, '') end,
+    sound_path  = case when p_sound_path is null then sound_path else nullif(p_sound_path, '') end,
+    sound_title = case when p_sound_title is null then sound_title else nullif(trim(p_sound_title), '') end,
     public_fields = case when p_public_fields is null then public_fields
                          else array(select distinct unnest(p_public_fields)) end,
     updated_at  = now()
@@ -150,7 +220,7 @@ $$;
 
 revoke all on function public.get_public_profile(text) from public;
 revoke all on function public.usernames_for(uuid[]) from public;
-revoke all on function public.update_profile(text, jsonb, text, text[]) from public, anon;
+revoke all on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text) from public, anon;
 grant execute on function public.get_public_profile(text) to anon, authenticated;
 grant execute on function public.usernames_for(uuid[]) to anon, authenticated;
-grant execute on function public.update_profile(text, jsonb, text, text[]) to authenticated;
+grant execute on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text) to authenticated;

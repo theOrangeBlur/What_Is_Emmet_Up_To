@@ -132,8 +132,17 @@ window.Auth = (function () {
   }
 
   // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
-  async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null } = {}) {
-    const { data, error } = await rpc('update_profile', { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath, p_public_fields: publicFields });
+  async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null, artPath = null, artTitle = null, nameFont = null,
+                                 soundPath = null, soundTitle = null } = {}) {
+    const args = { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath, p_public_fields: publicFields };
+    // Sent only when set, so saves still work against an update_profile from
+    // before the art window and name fonts existed.
+    if (artPath != null) args.p_art_path = artPath;
+    if (artTitle != null) args.p_art_title = artTitle;
+    if (nameFont != null) args.p_name_font = nameFont;
+    if (soundPath != null) args.p_sound_path = soundPath;
+    if (soundTitle != null) args.p_sound_title = soundTitle;
+    const { data, error } = await rpc('update_profile', args);
     if (error || !data) return { ok: false, reason: 'error' };
     if (data.ok) profileCache = null;   // avatar may have changed
     return data;
@@ -149,6 +158,35 @@ window.Auth = (function () {
     return updateProfile({ avatarPath: path });
   }
 
+  // The art window's picture, kept next to the avatar.
+  async function uploadArt(blob) {
+    const c = getClient();
+    const session = await getSession();
+    if (!c || !session) return { ok: false, reason: 'error' };
+    const path = session.user.id + '/art.webp';
+    const { error } = await c.storage.from('avatars').upload(path, blob, { upsert: true, contentType: blob.type || 'image/webp' });
+    if (error) return { ok: false, reason: 'error' };
+    return updateProfile({ artPath: path });
+  }
+
+  // The profile's sound clip, in its own bucket (audio only, bigger cap).
+  async function uploadSound(file) {
+    const c = getClient();
+    const session = await getSession();
+    if (!c || !session) return { ok: false, reason: 'error' };
+    const path = session.user.id + '/sound';
+    const { error } = await c.storage.from('sounds').upload(path, file, { upsert: true, contentType: file.type || 'audio/mpeg' });
+    if (error) return { ok: false, reason: 'error' };
+    return updateProfile({ soundPath: path });
+  }
+
+  function soundUrl(path, version) {
+    const c = getClient();
+    if (!c || !path) return null;
+    const url = c.storage.from('sounds').getPublicUrl(path).data.publicUrl;
+    return version ? url + '?v=' + encodeURIComponent(version) : url;
+  }
+
   // version busts the browser cache after the same path is re-uploaded.
   function avatarUrl(path, version) {
     const c = getClient();
@@ -158,5 +196,5 @@ window.Auth = (function () {
   }
 
   return { getMyProfile, getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc,
-           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, avatarUrl };
+           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, uploadArt, uploadSound, avatarUrl, soundUrl };
 })();

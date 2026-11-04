@@ -1,7 +1,7 @@
 // Public profile page: /Profile/profile.html?u=<username>. Anyone can view
 // one via the get_public_profile RPC (supabase/public_profiles.sql); the
-// owner also gets an edit form for their name, bio, avatar and question
-// answers, each with a public/private toggle. Visitors only ever receive the
+// owner also gets an edit form for their name, bio, avatar, art window, sound and
+// question answers, each with a public/private toggle. Visitors only ever receive the
 // public ones. With no ?u, signed-in visitors are sent to their own profile.
 
 const root = document.getElementById('profile-root');
@@ -10,6 +10,12 @@ const USERNAME_RULES = '3–16 letters, numbers or underscores';
 const BIO_MAX = 140;
 const ANSWER_MAX = 140;
 const AVATAR_SIZE = 256;
+const ART_SIZE = 1200;       // longest side of an art window picture
+const ART_TITLE_MAX = 80;
+const ART_TITLE_HINT = 'type any heading you like — or leave it blank';
+const SOUND_TITLE_MAX = 80;
+const SOUND_TITLE_DEFAULT = 'listen to this!';   // the input's hint, and the heading when left blank
+const SOUND_MAX_BYTES = 5 * 1024 * 1024;         // the sounds bucket's cap (public_profiles.sql)
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 let profile = null;   // last get_public_profile result
@@ -89,6 +95,52 @@ function themeOf(p) {
   return THEME_COLORS.map(id => (p.answers || {})[id]);
 }
 
+// ── Name font ───────────────────────────────────────────────────────────
+// The typeface the name (and the avatar's fallback letter) is set in. Everyone
+// gets the default; the rest unlock after ten games (perk:name_fonts in
+// supabase/unlocks.sql). Keys are what profiles.name_font stores, so keep them.
+// Only the default and the page's own faces load with the page; the others
+// are fetched when a profile or the picker needs them.
+const NAME_FONT_DEFAULT = 'bricolage';
+const NAME_FONT_UNLOCK = 'perk:name_fonts';
+const NAME_FONTS = {
+  bricolage:         { label: 'Bricolage Grotesque',     family: "'Bricolage Grotesque', sans-serif", weight: 800, gf: 'Bricolage+Grotesque:opsz,wght@12..96,800' },
+  syne:              { label: 'Syne',                    family: "'Syne', sans-serif",                weight: 800, gf: 'Syne:wght@800' },
+  fraunces:          { label: 'Fraunces',                family: "'Fraunces', serif",                 weight: 800, gf: 'Fraunces:opsz,wght@9..144,800' },
+  instrument:        { label: 'Instrument Serif',        family: "'Instrument Serif', serif",         weight: 400, gf: 'Instrument+Serif:ital@0;1' },
+  instrument_italic: { label: 'Instrument Serif Italic', family: "'Instrument Serif', serif",         weight: 400, gf: 'Instrument+Serif:ital@0;1', italic: true },
+  dm_serif:          { label: 'DM Serif Display',        family: "'DM Serif Display', serif",         weight: 400, gf: 'DM+Serif+Display' },
+  young_serif:       { label: 'Young Serif',             family: "'Young Serif', serif",              weight: 400, gf: 'Young+Serif' },
+  archivo:           { label: 'Archivo Black',           family: "'Archivo Black', sans-serif",       weight: 400, gf: 'Archivo+Black' },
+  space_mono:        { label: 'Space Mono',              family: "'Space Mono', monospace",           weight: 700, gf: 'Space+Mono:wght@700' },
+  fraktur:           { label: 'Blackletter',             family: "'UnifrakturMaguntia', serif",       weight: 400, gf: 'UnifrakturMaguntia' },
+};
+
+// The page's <link> already carries these.
+const loadedFonts = new Set(['Bricolage+Grotesque:opsz,wght@12..96,800', 'Syne:wght@800', 'Space+Mono:wght@700']);
+function loadNameFont(key) {
+  const f = NAME_FONTS[key];
+  if (!f || loadedFonts.has(f.gf)) return;
+  loadedFonts.add(f.gf);
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=' + f.gf + '&display=swap';
+  document.head.appendChild(link);
+}
+
+function nameFontKey(key) {
+  return NAME_FONTS[key] ? key : NAME_FONT_DEFAULT;
+}
+
+function applyNameFont(key) {
+  const f = NAME_FONTS[nameFontKey(key)];
+  loadNameFont(nameFontKey(key));
+  const style = document.documentElement.style;
+  style.setProperty('--name-font', f.family);
+  style.setProperty('--name-weight', String(f.weight));
+  style.setProperty('--name-style', f.italic ? 'italic' : 'normal');
+}
+
 function card(icon, heading, text, button) {
   applyTheme(null);
   root.innerHTML = '';
@@ -159,6 +211,39 @@ function formatAnswer(q, value) {
   }
   wrap.textContent = text;
   return wrap;
+}
+
+// The art window: whatever picture the owner wants to show off, under a
+// heading they typed. Nothing shows until there's a picture.
+function renderArt(p) {
+  const url = window.Auth.avatarUrl(p.art_path, p.updated_at);
+  if (!url) return null;
+  const section = el('section', 'case-section');
+  const title = el('h2', 'case-section-title profile-art-title', p.art_title || '');
+  if (!p.art_title) title.classList.add('profile-art-title-blank');
+  section.appendChild(withPrivateTag(title, p, 'art'));
+  const frame = el('figure', 'profile-art');
+  const img = el('img');
+  img.src = url;
+  img.alt = p.art_title || p.username + "'s art";
+  frame.appendChild(img);
+  section.appendChild(frame);
+  return section;
+}
+
+// The sound clip, under its heading ("listen to this!" unless they typed one).
+function renderSound(p) {
+  const url = window.Auth.soundUrl(p.sound_path, p.updated_at);
+  if (!url) return null;
+  const section = el('section', 'case-section');
+  const title = el('h2', 'case-section-title profile-art-title', p.sound_title || SOUND_TITLE_DEFAULT);
+  section.appendChild(withPrivateTag(title, p, 'sound'));
+  const box = el('div', 'profile-sound');
+  const audio = el('audio', 'profile-sound-player');
+  audio.controls = true; audio.preload = 'metadata'; audio.src = url;
+  box.appendChild(audio);
+  section.appendChild(box);
+  return section;
 }
 
 function renderTrivia(p) {
@@ -237,7 +322,7 @@ function renderRecords(p) {
 function renderView(p) {
   root.innerHTML = '';
   root.appendChild(renderHeader(p));
-  [renderTrivia(p), renderAwards(p), renderRecords(p)].forEach(s => { if (s) root.appendChild(s); });
+  [renderArt(p), renderSound(p), renderTrivia(p), renderAwards(p), renderRecords(p)].forEach(s => { if (s) root.appendChild(s); });
 }
 
 // ── Editing (own profile only) ──────────────────────────────────────────
@@ -259,6 +344,30 @@ async function shrinkImage(file) {
       (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side,
       0, 0, AVATAR_SIZE, AVATAR_SIZE);
     return await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.85));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+// Keep the shape, cap the longest side. Browsers that can't write webp hand
+// back a png, which can be huge, so those go out as jpeg instead.
+async function shrinkArt(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const scale = Math.min(1, ART_SIZE / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    const toBlob = (type, q) => new Promise(resolve => canvas.toBlob(resolve, type, q));
+    const webp = await toBlob('image/webp', 0.85);
+    return webp && webp.type === 'image/webp' ? webp : await toBlob('image/jpeg', 0.85);
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -416,6 +525,176 @@ async function renderEdit(p) {
   bioInp.placeholder = 'a line about yourself';
   form.appendChild(field('bio', bioInp, charCounter(bioInp, BIO_MAX), privacyToggle('bio', publicSet)));
 
+  // Art window: a heading and a picture
+  let newArt = null;         // Blob to upload on save
+  let removeArt = false;
+  const artWrap = el('div', 'profile-art-edit');
+  const artTitleInp = el('input', 'authw-input profile-art-title-input');
+  artTitleInp.value = p.art_title || ''; artTitleInp.maxLength = ART_TITLE_MAX;
+  artTitleInp.placeholder = ART_TITLE_HINT;
+  artTitleInp.setAttribute('aria-label', 'art heading');
+  artWrap.appendChild(artTitleInp);
+
+  const artInp = el('input');
+  artInp.type = 'file'; artInp.accept = 'image/*'; artInp.hidden = true;
+  const artDrop = el('button', 'profile-art profile-art-drop');
+  artDrop.type = 'button';
+  const artEmpty = () => {
+    artDrop.innerHTML = '';
+    artDrop.classList.add('is-empty');
+    artDrop.appendChild(el('span', 'profile-art-drop-icon', '🖼️'));
+    artDrop.appendChild(el('span', 'profile-art-drop-text', 'click or drop a picture here'));
+  };
+  const artShow = src => {
+    artDrop.innerHTML = '';
+    artDrop.classList.remove('is-empty');
+    const img = el('img'); img.src = src; img.alt = '';
+    artDrop.appendChild(img);
+  };
+  const artUrl = window.Auth.avatarUrl(p.art_path, p.updated_at);
+  if (artUrl) artShow(artUrl); else artEmpty();
+
+  const artClear = el('button', 'authw-btn', 'remove picture');
+  artClear.type = 'button';
+  artClear.hidden = !p.art_path;
+  async function takeArt(file) {
+    if (!file || !file.type.startsWith('image/')) { showMsg("that doesn't look like a picture — try another"); return; }
+    try {
+      newArt = await shrinkArt(file);
+      removeArt = false;
+      artShow(URL.createObjectURL(newArt));
+      artClear.hidden = false;
+    } catch { showMsg("couldn't read that picture — try another"); }
+  }
+  artDrop.addEventListener('click', () => artInp.click());
+  artInp.addEventListener('change', () => takeArt(artInp.files && artInp.files[0]));
+  artDrop.addEventListener('dragover', e => { e.preventDefault(); artDrop.classList.add('is-over'); });
+  artDrop.addEventListener('dragleave', () => artDrop.classList.remove('is-over'));
+  artDrop.addEventListener('drop', e => {
+    e.preventDefault();
+    artDrop.classList.remove('is-over');
+    takeArt(e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+  artClear.addEventListener('click', () => {
+    newArt = null; removeArt = true; artInp.value = '';
+    artEmpty();
+    artClear.hidden = true;
+  });
+  artWrap.appendChild(artDrop);
+  const artBtns = el('div', 'profile-avatar-row');
+  artBtns.appendChild(artClear); artBtns.appendChild(artInp);
+  artWrap.appendChild(artBtns);
+  form.appendChild(field('art window', artWrap,
+    el('span', 'profile-note', 'show off a drawing, a photo, anything — it gets its own window on your page'),
+    privacyToggle('art', publicSet)));
+
+  // Sound: a heading and an audio file. Uploaded as is, so it's size-checked here.
+  let newSound = null;       // File to upload on save
+  let removeSound = false;
+  const soundWrap = el('div', 'profile-sound-edit');
+  const soundTitleInp = el('input', 'authw-input profile-art-title-input');
+  soundTitleInp.value = p.sound_title || ''; soundTitleInp.maxLength = SOUND_TITLE_MAX;
+  soundTitleInp.placeholder = SOUND_TITLE_DEFAULT;
+  soundTitleInp.setAttribute('aria-label', 'sound heading');
+  soundWrap.appendChild(soundTitleInp);
+
+  const soundInp = el('input');
+  soundInp.type = 'file'; soundInp.accept = 'audio/*'; soundInp.hidden = true;
+  const soundPlayer = el('audio', 'profile-sound-player');
+  soundPlayer.controls = true; soundPlayer.preload = 'metadata';
+  const soundStart = window.Auth.soundUrl(p.sound_path, p.updated_at);
+  if (soundStart) soundPlayer.src = soundStart; else soundPlayer.hidden = true;
+  const soundName = el('span', 'profile-note');
+  const soundPick = el('button', 'authw-btn', p.sound_path ? 'new sound' : 'pick a sound');
+  soundPick.type = 'button';
+  const soundClear = el('button', 'authw-btn', 'remove sound');
+  soundClear.type = 'button';
+  soundClear.hidden = !p.sound_path;
+  let soundObjectUrl = null;
+  function takeSound(file) {
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) { showMsg("that doesn't look like a sound file — try an mp3"); return; }
+    if (file.size > SOUND_MAX_BYTES) { showMsg('that sound is over 5 MB — try a shorter clip or an mp3'); return; }
+    newSound = file; removeSound = false;
+    if (soundObjectUrl) URL.revokeObjectURL(soundObjectUrl);
+    soundObjectUrl = URL.createObjectURL(file);
+    soundPlayer.src = soundObjectUrl; soundPlayer.hidden = false;
+    soundName.textContent = file.name;
+    soundPick.textContent = 'new sound';
+    soundClear.hidden = false;
+  }
+  soundPick.addEventListener('click', () => soundInp.click());
+  soundInp.addEventListener('change', () => takeSound(soundInp.files && soundInp.files[0]));
+  soundWrap.addEventListener('dragover', e => { e.preventDefault(); });
+  soundWrap.addEventListener('drop', e => {
+    e.preventDefault();
+    takeSound(e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+  soundClear.addEventListener('click', () => {
+    newSound = null; removeSound = true; soundInp.value = '';
+    soundPlayer.pause(); soundPlayer.removeAttribute('src'); soundPlayer.hidden = true;
+    soundName.textContent = '';
+    soundPick.textContent = 'pick a sound';
+    soundClear.hidden = true;
+  });
+  soundWrap.appendChild(soundPlayer);
+  const soundBtns = el('div', 'profile-avatar-row');
+  soundBtns.appendChild(soundPick); soundBtns.appendChild(soundClear); soundBtns.appendChild(soundName); soundBtns.appendChild(soundInp);
+  soundWrap.appendChild(soundBtns);
+  form.appendChild(field('sound', soundWrap,
+    el('span', 'profile-note', 'a song, a voice memo, a sound effect — mp3, m4a, wav or ogg, up to 5 MB'),
+    privacyToggle('sound', publicSet)));
+
+  // Name font: a row of samples, locked until ten games are played.
+  const startFont = nameFontKey(p.name_font);
+  let nameFont = startFont;
+  const fontWrap = el('div', 'profile-fonts is-locked');
+  const fontLock = el('p', 'profile-font-lock', 'checking whether you’ve unlocked these…');
+  fontWrap.appendChild(fontLock);
+  const fontGrid = el('div', 'profile-font-grid');
+  const fontBtns = {};
+  Object.entries(NAME_FONTS).forEach(([key, f]) => {
+    loadNameFont(key);
+    const b = el('button', 'profile-font-opt');
+    b.type = 'button';
+    b.disabled = true;
+    b.setAttribute('aria-pressed', String(key === nameFont));
+    const sample = el('span', 'profile-font-sample');
+    sample.style.fontFamily = f.family;
+    sample.style.fontWeight = f.weight;
+    sample.style.fontStyle = f.italic ? 'italic' : 'normal';
+    b.appendChild(sample);
+    b.appendChild(el('span', 'profile-font-label', f.label + (key === NAME_FONT_DEFAULT ? ' (default)' : '')));
+    b.addEventListener('click', () => {
+      nameFont = key;
+      Object.entries(fontBtns).forEach(([k, btn]) => btn.setAttribute('aria-pressed', String(k === key)));
+      applyNameFont(key);
+    });
+    fontBtns[key] = b;
+    fontGrid.appendChild(b);
+  });
+  fontWrap.appendChild(fontGrid);
+  const syncSamples = () => {
+    const text = nameInp.value.trim() || p.username;
+    fontGrid.querySelectorAll('.profile-font-sample').forEach(s => { s.textContent = text; });
+  };
+  nameInp.addEventListener('input', syncSamples);
+  syncSamples();
+  form.appendChild(field('name font', fontWrap));
+  (window.Unlocks ? window.Unlocks.status([NAME_FONT_UNLOCK]) : Promise.resolve({})).then(all => {
+    const st = all[NAME_FONT_UNLOCK];
+    if (st && st.unlocked) {
+      fontWrap.classList.remove('is-locked');
+      fontLock.remove();
+      Object.values(fontBtns).forEach(b => { b.disabled = false; });
+      return;
+    }
+    const target = (st && st.target) || 10;
+    const played = Math.min((st && st.value) || 0, target);
+    fontLock.textContent = `🔒 Play ${target} games to pick your own — ${played} / ${target} so far. ` +
+      'Wordle, Thermometers, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
+  }).catch(() => {});
+
   // Questions
   const answers = Object.assign({}, p.answers || {});
   const answerInps = {};
@@ -461,13 +740,40 @@ async function renderEdit(p) {
         history.replaceState(null, '', window.Auth.profileUrl(result.username));
         if (window.AuthWidget) window.AuthWidget.renderLink();
       }
-      const saved = await window.Auth.updateProfile({ bio: bioInp.value.trim(), answers, publicFields: [...publicSet].filter(id => !ALWAYS_PRIVATE.has(id)) });
-      if (!saved.ok) { showMsg(saved.reason === 'bio_too_long' ? 'that bio runs long — trim it a bit' : "couldn't save that — try again in a bit"); return; }
+      const artTitle = artTitleInp.value.trim();
+      const soundTitle = soundTitleInp.value.trim();
+      const saved = await window.Auth.updateProfile({
+        bio: bioInp.value.trim(), answers, publicFields: [...publicSet].filter(id => !ALWAYS_PRIVATE.has(id)),
+        artTitle: artTitle !== (p.art_title || '') ? artTitle : null,
+        soundTitle: soundTitle !== (p.sound_title || '') ? soundTitle : null,
+        // '' puts the name back on the default.
+        nameFont: nameFont !== startFont ? (nameFont === NAME_FONT_DEFAULT ? '' : nameFont) : null,
+      });
+      if (!saved.ok) {
+        showMsg(saved.reason === 'bio_too_long' ? 'that bio runs long — trim it a bit'
+              : saved.reason === 'art_title_too_long' ? 'that art heading runs long — trim it a bit'
+              : saved.reason === 'sound_title_too_long' ? 'that sound heading runs long — trim it a bit'
+              : saved.reason === 'locked' ? 'play ten games to unlock the other fonts'
+              : "couldn't save that — try again in a bit");
+        return;
+      }
       if (newAvatar) {
         const up = await window.Auth.uploadAvatar(newAvatar);
         if (!up.ok) { showMsg("everything saved but the picture — try it again"); return; }
       } else if (removeAvatar) {
         await window.Auth.updateProfile({ avatarPath: '' });
+      }
+      if (newArt) {
+        const up = await window.Auth.uploadArt(newArt);
+        if (!up.ok) { showMsg("everything saved but the art — try it again"); return; }
+      } else if (removeArt) {
+        await window.Auth.updateProfile({ artPath: '' });
+      }
+      if (newSound) {
+        const up = await window.Auth.uploadSound(newSound);
+        if (!up.ok) { showMsg("everything saved but the sound — try it again, or try an mp3"); return; }
+      } else if (removeSound) {
+        await window.Auth.updateProfile({ soundPath: '' });
       }
       editing = false;
       await load();
@@ -486,6 +792,7 @@ function render() {
   if (!profile) return;
   // Re-applied on every render, so cancelling an edit drops the preview.
   applyTheme(themeOf(profile));
+  applyNameFont(profile.name_font);
   if (editing && profile.is_me) renderEdit(profile);
   else renderView(profile);
 }

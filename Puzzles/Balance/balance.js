@@ -152,6 +152,7 @@ function resolveAccusation(type) {
         document.getElementById('win-weighings').textContent = msg;
         document.getElementById('overlay-win').classList.remove('hidden');
         if (window.Awards) {
+            Awards.tally('balance_solves', 1);
             Awards.unlock('scales');
             if (w <= 3) Awards.unlock('scales_perfect');
         }

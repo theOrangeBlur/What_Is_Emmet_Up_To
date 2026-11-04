@@ -15,6 +15,17 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists bio         text check (char_length(bio) <= 140);
 alter table public.profiles add column if not exists avatar_path text;
 alter table public.profiles add column if not exists answers     jsonb not null default '{}';
+-- The art window: one picture (avatars/<user id>/art.webp) under a heading
+-- the owner types. Shown to others when 'art' is in public_fields.
+alter table public.profiles add column if not exists art_path    text;
+alter table public.profiles add column if not exists art_title   text check (char_length(art_title) <= 80);
+-- A sound clip (sounds/<user id>/sound) under its own heading. Shown to
+-- others when 'sound' is in public_fields.
+alter table public.profiles add column if not exists sound_path  text;
+alter table public.profiles add column if not exists sound_title text check (char_length(sound_title) <= 80);
+-- Which typeface the name is set in (Profile/profile.js NAME_FONTS). Null is
+-- the default. Picking one takes the perk:name_fonts unlock (unlocks.sql).
+alter table public.profiles add column if not exists name_font   text check (name_font ~ '^[a-z_]{1,24}$');
 
 -- Which profile fields anyone can see: 'bio' for the bio, otherwise a key in
 -- answers. Everything else is shown only to its owner. When the column is
