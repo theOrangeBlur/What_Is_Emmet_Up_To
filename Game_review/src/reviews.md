@@ -200,8 +200,28 @@ There are quite a few puzzle games that I have never finished because they grow 
 
  This logic game feels cozy. There are a few simple mechanics, and just a good old bunch of puzzles to sit down and hack through. It scratches a similar itch as a sudoku, but each puzzle is so clearly and lovingly hand crafted. I’m biting through a few of these a day, and feeling inspired each time to make my own lovely logic puzzles.
 
-Pikmin
+
+# Pikmin
+
 
 I’m currently enjoying watching Jamie play through Pikmin for the first time - his first Pikmin experience! This game is deeply nostalgic for me, as I have fond memories of playing these first two games many times as a kid, and greatly enjoying Pikmin 3 and 4 after college.Last week I got to see Elijah play for a few hours as well, and I’m struck by how complex this game is - and how opaque many of the features are to a new player. For example, there’s really no way to tell red pikmin are immune to fire unless you watch a whole swath of pikmin get enveloped by flame, and notice that your reds are unaffected…. Well actually, if you lose quite a few pikmin to fire, the player character Olimar’s daily notes point out that reds are immune, just in case you missed it in battle.
 
-This first Pikmin game is brutal. Jamie lost huge numbers to his first encounter with a wollyhop, taking half an army and the better part of a day to get the timing down on how to defeat this common enemy. No wonder I found this game so mysterious and difficult as a child! Elijah wasn’t using throws at all in combat, rushing his pikmin in and taking heavy casualties in every battle - the game never tells you that throwing pikmin on an enemies back is the best way to defeat them. The game hints you at many ways of solving its puzzles, yes, but in so many ways it also expects you to try and figure out the best way of doing things yourself, by trying different strategies.
+This first Pikmin game is brutal. Jamie lost huge numbers to his first encounter with a wollyhop, taking half an army and the better part of a day to get the timing down on how to defeat this common enemy. No wonder I found this game so mysterious and difficult as a child! Elijah wasn’t using throws at all in combat, rushing his pikmin in and taking heavy casualties in every battle - the game never tells you that throwing pikmin on an enemy's back is the best way to defeat them. The game hints you at many ways of solving its puzzles, yes, but in so many ways it also expects you to try and figure out the best way of doing things yourself, by trying different strategies. 
+
+
+
+This game sets the precedence for such a wonderful, bizarre, and adorable franchise. It straddles the line of difficulty and fairness with such interesting game design choices, and I will never fail to be fascinated and in wonder of this tiny little masterpiece.
+
+Pikmin 2
+
+“They’re ants! They’re just… so like ants!” “What in God’s name…?” “What am I looking at? What the actual fuck? This is the craziest shit. It’s horrifying… I can’t help but like it.” -about the creeping chrysanthemum 
+
+
+
+Coming immediately after playing the first pikmin, Jamie started pikmin 2. I’m struck by just how many times the ship pauses the game to tell you something. It is definitely helpful in that it explains clearly what is happening, but I can’t help but feel that some of the appeal of the first game is that you are forced to make those observations yourself. It is far more accessible as a game though, and I respect it as a game decision.
+
+Did the pikmin sing in the last game? They’re so friggin cute.
+
+
+
+Jamie has revisited both of the first two caves! The first one because he didn’t grab the globe , thinking he would need more pikmin, and the second to get more purple pikmin after losing many in the fight against the empress bulblax.
