@@ -61,5 +61,32 @@ create policy thermo_scores_insert on public.thermo_scores
     and (user_id is null or user_id = auth.uid())
   );
 
+-- Claiming: a daily solved signed out is saved with user_id null, so its name
+-- can't link to a profile. When the player signs in, the page hands over its
+-- device id and this attaches that browser's recent unclaimed scores to the
+-- account. Device ids are readable from thermo_scores, so only today's and
+-- yesterday's scores can be claimed, which keeps anyone from collecting a
+-- stranger's old scores. A day the account already has a score for is skipped.
+create or replace function public.claim_thermo_scores(p_device_id text)
+returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_count int;
+begin
+  if v_uid is null then raise exception 'not signed in'; end if;
+  if p_device_id is null or p_device_id = '' then return 0; end if;
+  update public.thermo_scores s set user_id = v_uid
+  where s.device_id = p_device_id
+    and s.user_id is null
+    and s.date >= to_char((now() at time zone 'UTC') - interval '29 hours', 'YYYYMMDD')::int
+    and not exists (select 1 from public.thermo_scores o where o.date = s.date and o.user_id = v_uid);
+  get diagnostics v_count = row_count;
+  return v_count;
+end;
+$$;
+revoke all on function public.claim_thermo_scores(text) from public, anon;
+grant execute on function public.claim_thermo_scores(text) to authenticated;
+
 grant select on public.thermo_daily to anon, authenticated;
 grant select, insert on public.thermo_scores to anon, authenticated;

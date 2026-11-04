@@ -9,6 +9,8 @@ interface SiteAuth {
   getSession(): Promise<{ user: { id: string } } | null>;
   getUsername?(): Promise<string | null>;
   usernamesFor?(ids: (string | null)[]): Promise<Map<string, string>>;
+  onAuthStateChange?(fn: (session: { user: { id: string } } | null) => void): void;
+  rpc?(name: string, args?: Record<string, unknown>): Promise<{ data: unknown; error: unknown }>;
 }
 declare global {
   interface Window {
@@ -150,6 +152,20 @@ export async function insertScore(name: string, timeMs: number, hints: number, k
   } catch (e) {
     console.error('insertScore error:', e);
     return false;
+  }
+}
+
+/**
+ * Attach this browser's signed-out scores (today's and yesterday's) to the signed-in
+ * account, so their names link to the profile. Returns how many were claimed.
+ */
+export async function claimDeviceScores(): Promise<number> {
+  if (!configured() || !window.Auth?.rpc || !(await getUserId())) return 0;
+  try {
+    const { data, error } = await window.Auth.rpc('claim_thermo_scores', { p_device_id: getDeviceId() });
+    return error ? 0 : Number(data) || 0;
+  } catch {
+    return 0;
   }
 }
 

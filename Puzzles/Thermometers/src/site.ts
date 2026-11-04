@@ -8,6 +8,7 @@ import type { GenParams, Puzzle, ThermoState } from './core/types';
 import { Game, type Tool } from './ui/game';
 import { GenClient } from './ui/gen-client';
 import {
+  claimDeviceScores,
   fetchDaily,
   fetchMyScore,
   formatTime,
@@ -566,6 +567,18 @@ setInterval(() => {
 // ---- start -------------------------------------------------------------------------
 
 setMode(new URLSearchParams(location.search).has('free') ? 'free' : 'daily');
+
+// A daily solved signed out has no account on it. Once signed in, claim it so the
+// name links to the profile, then redraw the board (times only if today is finished).
+async function claimScores() {
+  if (!(await claimDeviceScores()) || mode !== 'daily') return;
+  const local = load<DailyLocal>(dailyKey(dayKey()), {});
+  renderLeaderboard($('#leaderboard'), !!(local.done || local.revealed));
+}
+claimScores();
+window.Auth?.onAuthStateChange?.((session) => {
+  if (session) claimScores();
+});
 
 // Local testing only: lets a browser script read the current puzzle.
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') (window as unknown as { __thermo: () => Game | null }).__thermo = () => game;
