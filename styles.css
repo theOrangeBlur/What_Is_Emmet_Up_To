@@ -239,6 +239,23 @@ body {
     color: var(--red-accent);
 }
 
+.nav-dropdown-heading {
+    display: block;
+    padding: 6px 20px 2px;
+    font-variant: small-caps;
+    font-weight: bold;
+    font-size: 0.9em;
+    letter-spacing: 0.06em;
+    color: var(--sepia-accent);
+    cursor: default;
+}
+
+.nav-dropdown-heading:not(:first-child) {
+    margin-top: 4px;
+    border-top: 1px solid var(--rule);
+    padding-top: 6px;
+}
+
 .nav-dropdown-item-disabled {
     display: block;
     padding: 5px 20px;
