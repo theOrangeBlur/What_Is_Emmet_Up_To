@@ -20,7 +20,9 @@ Good music and great visuals, though at times a bit buggy. I once had to un-down
 
  The final boss … wow. What a step up in difficulty! She took me four hours. Reading online, I see people claim weeks even. And yeah, sure she’s hard. But once you learn the moves… it feels pretty great. I think the parry system makes you feel like you understand the boss so well, in a way that’s different than clunky dark souls bosses. Nailing parry after parry after charged parry and slicing off a huge chunk of health is soooo satisfying.
 
-The Rogue Prince of Persia
+
+# The Rogue Prince of Persia
+
 
 Dude, what are you doing!?? You said no more logue-lites! Only games with endings!
 
@@ -124,7 +126,9 @@ This second entry in the series feels like the younger brother in a number of wa
 
 Something I want to highlight about these games are the radio stations you pick up on while swinging through New York. It adds just the right amount of fun and character to the game that makes swinging around even more fun - way better than fast travelling! A large part of what makes Spider-Man in general so wonderful is that the city is peopled with real souls. I love you, Spider-Man!
 
-Spider-Man 2
+
+# Marvel’s Spider-Man 2
+
 
 I shot through this one quickly off the heels of Miles Morales, which made that game feel even more like a tasty little snack in between major installments. It is just so much fun to pretend to be Spider-Man and zip through the city kicking villain tush. Much of the sweet richness of the movies is in these games, and the story is definitely the main draw. It’s as cinematic as a game gets. I’m a big web head, and I love the decisions made with this story, taking our familiar characters into a crazy new place. 
 
@@ -212,7 +216,9 @@ This first Pikmin game is brutal. Jamie lost huge numbers to his first encounter
 
 This game sets the precedence for such a wonderful, bizarre, and adorable franchise. It straddles the line of difficulty and fairness with such interesting game design choices, and I will never fail to be fascinated and in wonder of this tiny little masterpiece.
 
-Pikmin 2
+
+# Pikmin 2
+
 
 “They’re ants! They’re just… so like ants!” “What in God’s name…?” “What am I looking at? What the actual fuck? This is the craziest shit. It’s horrifying… I can’t help but like it.” -about the creeping chrysanthemum 
 
