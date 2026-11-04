@@ -178,8 +178,7 @@ window.MonthBoard = (function () {
   }
 
   // Shared by the week and month views. period is 'week' or 'month'.
-  async function renderStandings(root, period) {
-    const game = root.dataset.mbGame;
+  async function renderStandings(root, period, game) {
     root.innerHTML = '<div class="lb-loading">loading standings...</div>';
     const isWeek = period === 'week';
     const [rows, champ, m, me] = await Promise.all([
@@ -265,7 +264,7 @@ window.MonthBoard = (function () {
     const body = el('div', 'mb-body');
     root.append(toggle, body);
     if (isFirstVisitDayOfMonth(game)) root.appendChild(el('div', 'mb-newmonth', 'A new game has begun. Who will take the crown?'));
-    return view === 'day' ? Promise.resolve(drawDay(body)) : renderStandings(body, view);
+    return view === 'day' ? Promise.resolve(drawDay(body)) : renderStandings(body, view, game);
   }
 
   // ── Fanfare (monthly only) ────────────────────────────────────────────
