@@ -60,7 +60,26 @@ language sql stable security definer set search_path = public as $$
   order by 3 desc, 5 desc, 4 desc, min(r.created_at);
 $$;
 
+-- Each month's winner, saved by crown_monthly_champions() the first time it
+-- runs after the month ends. Once saved, the champion stays put even if that
+-- month's scores are later deleted. No policies: only read through the
+-- functions below.
+create table if not exists public.monthly_champions (
+  game        text not null check (game in ('wordle', 'thermo')),
+  month       int not null,
+  user_id     uuid references auth.users on delete set null,
+  name        text,
+  points      int,
+  days_played int,
+  wins        int,
+  crowned_at  timestamptz not null default now(),
+  primary key (game, month)
+);
+alter table public.monthly_champions enable row level security;
+
 -- Last month's winner for p_game, or no row if nobody signed in played.
+-- The saved champion is used if there is one; otherwise it's worked out live
+-- from the scores.
 -- color is their profile's favorite color (color1), which profile pages
 -- already hand every visitor as `theme`; null if they haven't picked one.
 -- name_font is the typeface they've picked for their name (shared/name-fonts.js).
@@ -68,10 +87,21 @@ drop function if exists public.get_monthly_champion(text); -- return columns cha
 create function public.get_monthly_champion(p_game text)
 returns table (user_id uuid, name text, points int, days_played int, wins int, month int, color text, name_font text)
 language sql stable security definer set search_path = public as $$
-  select s.user_id, s.name, s.points, s.days_played, s.wins, p.month, pr.answers->>'color1', pr.name_font
-  from (select public.month_key_before(public.est_day_key() / 100) as month) p
-  cross join lateral public.get_monthly_standings(p_game, p.month) s
-  left join public.profiles pr on pr.user_id = s.user_id
+  with p as (select public.month_key_before(public.est_day_key() / 100) as month),
+  saved as (
+    select c.user_id, c.name, c.points, c.days_played, c.wins, c.month
+    from public.monthly_champions c, p
+    where c.game = p_game and c.month = p.month
+  ),
+  live as (
+    select s.user_id, s.name, s.points, s.days_played, s.wins, p.month
+    from p cross join lateral public.get_monthly_standings(p_game, p.month) s
+    where not exists (select 1 from saved)
+    limit 1
+  )
+  select w.user_id, w.name, w.points, w.days_played, w.wins, w.month, pr.answers->>'color1', pr.name_font
+  from (select * from saved union all select * from live) w
+  left join public.profiles pr on pr.user_id = w.user_id
   limit 1;
 $$;
 
@@ -83,7 +113,9 @@ grant execute on function public.get_monthly_champion(text) to anon, authenticat
 -- ── Champion awards ───────────────────────────────────────────────────────
 -- Handed out by .github/workflows/crown-monthly-champions.yml with the service
 -- role, never from a page (grant_award would let anyone crown themself).
--- Running it more than once a month changes nothing.
+-- Running it more than once a month changes nothing. It saves last month's
+-- winner into monthly_champions (the first save sticks) and gives the saved
+-- winner the award, so the crown survives scores or awards being wiped.
 insert into public.awards (key, title, description, hint, icon, hidden, target, sort) values
   ('wordle_month_champ', 'Word of the Month', 'Finish a month on top of the Final Wordle standings.', null, '👑', false, null, 95),
   ('thermo_month_champ', 'Hottest of the Month', 'Finish a month on top of the Thermometers standings.', null, '👑', false, null, 125)
@@ -98,9 +130,17 @@ declare
   g text;
   c record;
   n int := 0;
+  v_month int := public.month_key_before(public.est_day_key() / 100);
 begin
   foreach g in array array['wordle', 'thermo'] loop
-    for c in select * from public.get_monthly_champion(g) loop
+    insert into public.monthly_champions (game, month, user_id, name, points, days_played, wins)
+    select g, v_month, s.user_id, s.name, s.points, s.days_played, s.wins
+    from public.get_monthly_standings(g, v_month) s
+    limit 1
+    on conflict (game, month) do nothing;
+
+    for c in select * from public.monthly_champions mc
+             where mc.game = g and mc.month = v_month and mc.user_id is not null loop
       insert into public.user_awards as cur (user_id, award_key, progress, unlocked_at)
       values (c.user_id, g || '_month_champ', 0, now())
       on conflict (user_id, award_key) do update set unlocked_at = coalesce(cur.unlocked_at, excluded.unlocked_at);

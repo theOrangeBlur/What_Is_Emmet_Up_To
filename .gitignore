@@ -37,3 +37,6 @@ supabase/awards-hidden.sql
 
 # Hidden unlock seeds and secret page content
 supabase/unlocks-hidden.sql
+
+# One-time data resets
+supabase/reset-*.sql

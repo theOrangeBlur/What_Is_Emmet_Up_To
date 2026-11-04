@@ -354,7 +354,31 @@ window.Awards = (function () {
     });
   }
 
+  // ── Records reset ───────────────────────────────────────────────────────
+  // When awards and records are wiped on the server, bump RESET_EPOCH so
+  // every browser forgets what it had cached. Otherwise the "already granted"
+  // list would stop awards from being earned again, and saved progress (pages
+  // visited, signed-out awards, streaks) would hand them straight back.
+  const RESET_EPOCH = '2026-11-03';
+  const RESET_KEY = 'records_reset';
+  const RESET_PREFIXES = ['awards_done_', 'records_reads_', 'records_visit_', 'unlocks_'];
+  const RESET_KEYS = ['awards_pages', 'awards_pending', 'awards_nudged', 'records_pending', 'balance_streak'];
+
+  function applyReset() {
+    try {
+      if (localStorage.getItem(RESET_KEY) === RESET_EPOCH) return;
+      const doomed = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (RESET_KEYS.includes(k) || RESET_PREFIXES.some(p => k.startsWith(p)))) doomed.push(k);
+      }
+      doomed.forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(RESET_KEY, RESET_EPOCH);
+    } catch {}
+  }
+
   async function init() {
+    applyReset();
     if (window.Auth) window.Auth.onAuthStateChange(session => { if (session) onSignedIn(session); else syncedUid = null; });
     await onSignedIn(await getSession());
     trackPage();
