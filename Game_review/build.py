@@ -195,8 +195,12 @@ def fetch_game_image(name: str, cache: dict, rawg_id: str = '') -> str:
                     cache[name] = image_url
                     return image_url
     except Exception as e:
+        # RAWG was down or slow. Don't cache the miss, so the next build
+        # tries again instead of leaving the card blank for good.
         print(f"    Warning: Could not fetch image for '{name}': {e}")
+        return ""
 
+    # RAWG answered but had no match: remember that so we don't keep asking.
     cache[name] = ""
     return ""
 
