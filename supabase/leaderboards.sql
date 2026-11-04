@@ -141,4 +141,8 @@ grant execute on function public.claim_wordle_scores(text) to authenticated;
 -- ── Retiring the family leaderboard ───────────────────────────────────────
 drop table if exists public.wordle_family_points;
 drop table if exists public.wordle_family_members;
-alter table public.wordle_scores drop column if exists is_family;
+-- is_family stays as an unused column: browsers still holding the old
+-- final-wordle.js send it on every insert, and PostgREST rejects the whole
+-- insert (PGRST204) if the column is missing. Drop it once caches have
+-- turned over (a few weeks after 2026-11-03).
+alter table public.wordle_scores add column if not exists is_family boolean;
