@@ -25,6 +25,12 @@ declare global {
     };
     Comments?: { mount(container: HTMLElement, page: string, item: string): void };
     Unlocks?: { has(key: string): Promise<boolean> };
+    MonthBoard?: {
+      mount(root: HTMLElement, game: string, drawDay: (el: HTMLElement) => Promise<void> | void): Promise<void>;
+      championId(game: string): Promise<string | null>;
+      crown(): Node;
+      announce(game: string): Promise<void>;
+    };
   }
 }
 
@@ -187,14 +193,25 @@ async function profileNames(rows: ScoreRow[]): Promise<Map<string, string>> {
   }
 }
 
-/** Today's board. Times stay hidden until you've finished, so they can't be chased. */
+/**
+ * Today's board, behind a today/month toggle (shared/month-board.js) when that's loaded.
+ * Times stay hidden until you've finished, so they can't be chased.
+ */
 export async function renderLeaderboard(root: HTMLElement, showTimes: boolean): Promise<void> {
-  root.innerHTML = '<div class="lb-loading">loading scores...</div>';
   if (!configured()) {
     root.innerHTML = '';
     return;
   }
-  const scores = await fetchTodayScores();
+  if (!window.MonthBoard) return drawDailyBoard(root, showTimes);
+  return window.MonthBoard.mount(root, 'thermo', (el) => drawDailyBoard(el, showTimes));
+}
+
+async function drawDailyBoard(root: HTMLElement, showTimes: boolean): Promise<void> {
+  root.innerHTML = '<div class="lb-loading">loading scores...</div>';
+  const [scores, champId] = await Promise.all([
+    fetchTodayScores(),
+    window.MonthBoard ? window.MonthBoard.championId('thermo') : Promise.resolve(null),
+  ]);
   const names = await profileNames(scores);
   root.innerHTML = '';
   root.appendChild(el('div', 'lb-title', "today's scores"));
@@ -213,6 +230,7 @@ export async function renderLeaderboard(root: HTMLElement, showTimes: boolean): 
     const nameTd = el('td');
     const username = s.user_id ? names.get(s.user_id) : null;
     nameTd.appendChild(window.AuthWidget ? window.AuthWidget.profileLink(username, s.name) : document.createTextNode(s.name));
+    if (champId && s.user_id === champId) nameTd.appendChild(window.MonthBoard!.crown());
     tr.appendChild(nameTd);
     tr.appendChild(el('td', '', showTimes ? String(s.hints) : '—'));
     tr.appendChild(el('td', '', showTimes ? formatTime(s.time_ms) : '—'));

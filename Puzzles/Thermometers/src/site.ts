@@ -576,6 +576,7 @@ async function claimScores() {
   renderLeaderboard($('#leaderboard'), !!(local.done || local.revealed));
 }
 claimScores();
+window.MonthBoard?.announce('thermo');
 window.Auth?.onAuthStateChange?.((session) => {
   if (session) claimScores();
 });

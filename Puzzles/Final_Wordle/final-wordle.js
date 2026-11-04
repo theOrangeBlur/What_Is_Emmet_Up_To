@@ -15,9 +15,6 @@ const MAX_PUZZLE_SCORE_DAILY = 35; // daily challenge: harder ceiling, one shot 
 const MAX_PUZZLE_SCORE_FREE = 60;  // free play: looser ceiling, higher throughput
 const MAX_TRIES_PER_WORD = 1500; // guess-path attempts on one answer before giving up and moving to a new word
 
-const FAMILY_CODE = 'COOPERSTUPOR';
-const MIN_FAMILY_DAY_KEY = 20260711; // day the family leaderboard shipped — no is_family rows exist before this
-
 // Templates for the "copy score" share button — {score} is replaced with a mode-appropriate
 // formatted string (a time like "1:23.4" for Daily, "N words" for Free Play). Add more freely.
 const SHARE_PHRASES = [
@@ -37,8 +34,6 @@ function buildShareText(scoreText) {
   return template.replace('{score}', scoreText) + '\n' + location.href;
 }
 
-const POINTS_TABLE = [15, 12, 10, 9, 8, 7, 6, 5, 4, 3];
-function pointsForPlace(place) { return place <= POINTS_TABLE.length ? POINTS_TABLE[place - 1] : 3; }
 
 function seededRng(seed) {
   let s = seed % 2147483647;
@@ -66,12 +61,6 @@ function addDays(dayKey, delta) {
   const date = dayKeyToDate(dayKey);
   date.setUTCDate(date.getUTCDate() + delta);
   return dateToDayKey(date);
-}
-
-const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-function formatDayKeyDisplay(dayKey) {
-  const d = dayKeyToDate(dayKey);
-  return `${MONTH_ABBR[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
 function getDaySeed() {
@@ -275,10 +264,6 @@ function getDeviceId() {
   return id;
 }
 
-function isFamilyUnlocked() {
-  return localStorage.getItem('wordle_family') === '1';
-}
-
 async function authHeader() {
   if (window.Auth) {
     try { return await window.Auth.getAuthHeader(); } catch {}
@@ -320,104 +305,6 @@ async function fetchTodayScores() {
   } catch { return []; }
 }
 
-async function fetchFamilyScores(dayKey, membersMap) {
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
-  const deviceIds = [...membersMap.keys()];
-  if (!deviceIds.length) return [];
-  try {
-    const date = String(dayKey);
-    const idsParam = deviceIds.map(id => `"${id}"`).join(',');
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?date=eq.${date}&device_id=in.(${idsParam})&order=time_ms.asc&limit=20`;
-    const res = await fetch(url, {
-      headers: {
-        'apikey': window.SUPABASE_ANON_KEY,
-        'Authorization': await authHeader()
-      }
-    });
-    return res.ok ? await res.json() : [];
-  } catch { return []; }
-}
-
-let familyMembersCache = null; // Map<device_id, display_name>, fetched once per page load
-let familyUserByName = new Map(); // Map<display_name, user_id> for members who've signed in
-let familyPointsCache = null;  // Map<display_name, total_points>, fetched once per page load
-
-async function getFamilyMembers() {
-  if (familyMembersCache) return familyMembersCache;
-  familyMembersCache = new Map();
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return familyMembersCache;
-  try {
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?select=device_id,display_name,user_id`;
-    const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
-    });
-    if (res.ok) (await res.json()).forEach(r => {
-      familyMembersCache.set(r.device_id, r.display_name);
-      if (r.user_id) familyUserByName.set(r.display_name, r.user_id);
-    });
-  } catch {}
-  return familyMembersCache;
-}
-
-async function getFamilyPoints() {
-  if (familyPointsCache) return familyPointsCache;
-  familyPointsCache = new Map();
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return familyPointsCache;
-  try {
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_points?select=display_name,total_points`;
-    const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
-    });
-    if (res.ok) (await res.json()).forEach(r => familyPointsCache.set(r.display_name, r.total_points));
-  } catch {}
-  return familyPointsCache;
-}
-
-function computeFamilyPoints(scores, membersMap) {
-  const recognized = scores
-    .filter(s => membersMap.has(s.device_id))
-    .slice()
-    .sort((a, b) => a.time_ms - b.time_ms || new Date(a.created_at) - new Date(b.created_at));
-  const byId = new Map(); // row id -> { points, firstBonus, lastBonus }
-  recognized.forEach((s, i) => byId.set(s.id, { points: pointsForPlace(i + 1), firstBonus: false, lastBonus: false }));
-  if (recognized.length) {
-    const first = recognized.reduce((a, b) => new Date(a.created_at) < new Date(b.created_at) ? a : b);
-    const last = recognized.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
-    byId.get(first.id).firstBonus = true;
-    byId.get(last.id).lastBonus = true;
-  }
-  return byId;
-}
-
-function computeTodayPointsByName(todayScores, membersMap) {
-  const pointsById = computeFamilyPoints(todayScores, membersMap);
-  const byName = new Map();
-  todayScores.forEach(s => {
-    const name = membersMap.get(s.device_id);
-    const info = pointsById.get(s.id);
-    if (!name || !info) return;
-    const total = info.points + (info.firstBonus ? 3 : 0) + (info.lastBonus ? 1 : 0);
-    byName.set(name, (byName.get(name) || 0) + total);
-  });
-  return byName;
-}
-
-async function fetchFamilySubmitCounts(membersMap) {
-  const counts = new Map(); // device_id -> total plays since the family leaderboard shipped
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return counts;
-  const deviceIds = [...membersMap.keys()];
-  if (!deviceIds.length) return counts;
-  try {
-    const idsParam = deviceIds.map(id => `"${id}"`).join(',');
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_scores?select=device_id&device_id=in.(${idsParam})&date=gte.${MIN_FAMILY_DAY_KEY}`;
-    const res = await fetch(url, {
-      headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() }
-    });
-    if (res.ok) (await res.json()).forEach(r => counts.set(r.device_id, (counts.get(r.device_id) || 0) + 1));
-  } catch {}
-  return counts;
-}
-
 async function fetchDeviceScore() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
   try {
@@ -453,7 +340,7 @@ async function insertScore(name, timeMs, guesses) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), is_family: isFamilyUnlocked(), user_id: await getUserId() })
+      body: JSON.stringify({ date: String(getDayKey()), name: name.toUpperCase().slice(0, 6), time_ms: timeMs, guesses, device_id: getDeviceId(), user_id: await getUserId() })
     });
     if (!res.ok) { console.error('insertScore failed:', res.status, await res.text()); return false; }
     reportDailySolveCount();
@@ -596,10 +483,18 @@ async function renderFreeLeaderboard() {
 }
 
 async function renderLeaderboard(solved = false) {
-  const lb = document.getElementById('leaderboard');
-  if (!lb) return;
+  const root = document.getElementById('leaderboard');
+  if (!root) return;
+  if (!window.MonthBoard) return drawDailyBoard(root, solved);
+  return window.MonthBoard.mount(root, 'wordle', el => drawDailyBoard(el, solved));
+}
+
+async function drawDailyBoard(lb, solved) {
   lb.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  const scores = await fetchTodayScores();
+  const [scores, champId] = await Promise.all([
+    fetchTodayScores(),
+    window.MonthBoard ? window.MonthBoard.championId('wordle') : null
+  ]);
   const usernames = await fetchProfileNames(scores.map(s => s.user_id));
   if (!scores.length) {
     lb.innerHTML = '<div class="lb-empty">no scores yet today</div>';
@@ -614,7 +509,9 @@ async function renderLeaderboard(solved = false) {
   scores.forEach((s, i) => {
     const tr = document.createElement('tr'); tr.className = 'lb-row';
     const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
-    tr.appendChild(nameCell(s.name, s.user_id, usernames));
+    const nameTd = nameCell(s.name, s.user_id, usernames);
+    if (champId && s.user_id === champId) nameTd.appendChild(window.MonthBoard.crown());
+    tr.appendChild(nameTd);
     const time = document.createElement('td'); time.textContent = solved ? formatTime(s.time_ms) : '—'; tr.appendChild(time);
     table.appendChild(tr);
   });
@@ -624,270 +521,25 @@ async function renderLeaderboard(solved = false) {
   lb.appendChild(table);
 }
 
-let familyView = 'day'; // 'day' | 'standings'
-let familySolvedToday = false; // whether this device has solved today's daily puzzle
-
-function appendFamilyViewToggle(lb) {
-  const toggle = document.createElement('div'); toggle.className = 'lb-view-toggle';
-  const dayBtn = document.createElement('button');
-  dayBtn.className = 'lb-view-btn' + (familyView === 'day' ? ' active' : ''); dayBtn.textContent = 'daily';
-  const standingsBtn = document.createElement('button');
-  standingsBtn.className = 'lb-view-btn' + (familyView === 'standings' ? ' active' : ''); standingsBtn.textContent = 'standings';
-  dayBtn.addEventListener('click', () => { if (familyView !== 'day') { familyView = 'day'; renderFamilyLeaderboard(familySolvedToday); } });
-  standingsBtn.addEventListener('click', () => { if (familyView !== 'standings') { familyView = 'standings'; renderFamilyStandings(); } });
-  toggle.appendChild(dayBtn); toggle.appendChild(standingsBtn);
-  lb.appendChild(toggle);
-}
-
-async function updateFamilyLeaderboard(solved = false) {
-  if (familyView === 'standings') return renderFamilyStandings();
-  return renderFamilyLeaderboard(solved);
-}
-
-async function renderFamilyStandings() {
-  const lb = document.getElementById('family-leaderboard');
-  if (!lb) return;
-  lb.style.display = '';
-  lb.innerHTML = '';
-  appendFamilyViewToggle(lb);
-
-  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'family standings';
-  lb.appendChild(title);
-
-  const body = document.createElement('div'); body.className = 'lb-body';
-  body.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  lb.appendChild(body);
-
-  const membersMap = await getFamilyMembers();
-  const [todayScores, pointsMap, submitCounts] = await Promise.all([
-    fetchFamilyScores(getDayKey(), membersMap), getFamilyPoints(), fetchFamilySubmitCounts(membersMap)
-  ]);
-  const todayPointsByName = computeTodayPointsByName(todayScores, membersMap);
-  const usernames = await fetchProfileNames([...familyUserByName.values()]);
-
-  const submitsByName = new Map();
-  for (const [deviceId, count] of submitCounts) {
-    const name = membersMap.get(deviceId);
-    if (!name) continue;
-    submitsByName.set(name, (submitsByName.get(name) || 0) + count);
-  }
-
-  const names = [...new Set(membersMap.values())];
-  body.innerHTML = '';
-  if (!names.length) {
-    const empty = document.createElement('div'); empty.className = 'lb-empty';
-    empty.textContent = 'no family members yet';
-    body.appendChild(empty); return;
-  }
-
-  const rows = names.map(name => ({
-    name,
-    today: todayPointsByName.get(name) || 0,
-    submits: submitsByName.get(name) || 0,
-    pts: pointsMap.get(name) || 0
-  })).sort((a, b) => b.pts - a.pts);
-
-  const table = document.createElement('table'); table.className = 'lb-table lb-table-standings';
-  const header = document.createElement('tr'); header.className = 'lb-header';
-  ['NAME', 'TODAY', 'SUBMITS', 'PTS'].forEach(h => {
-    const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
-  });
-  table.appendChild(header);
-  rows.forEach(r => {
-    const tr = document.createElement('tr'); tr.className = 'lb-row';
-    tr.appendChild(nameCell(r.name, familyUserByName.get(r.name), usernames));
-    [r.today, r.submits, r.pts].forEach(v => {
-      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
-    });
-    table.appendChild(tr);
-  });
-  body.appendChild(table);
-}
-
-async function renderFamilyLeaderboard(solved = false, dayKey = getDayKey()) {
-  const lb = document.getElementById('family-leaderboard');
-  if (!lb) return;
-  lb.style.display = '';
-  lb.innerHTML = '';
-  appendFamilyViewToggle(lb);
-
-  const isToday = dayKey === getDayKey();
-
-  const headerRow = document.createElement('div'); headerRow.className = 'lb-header-row';
-  const prevBtn = document.createElement('button'); prevBtn.className = 'lb-nav-btn';
-  prevBtn.innerHTML = '&#9664;'; prevBtn.setAttribute('aria-label', 'previous day');
-  const title = document.createElement('div'); title.className = 'lb-title'; title.textContent = 'family scores';
-  const nextBtn = document.createElement('button'); nextBtn.className = 'lb-nav-btn';
-  nextBtn.innerHTML = '&#9654;'; nextBtn.setAttribute('aria-label', 'next day');
-  prevBtn.disabled = dayKey <= MIN_FAMILY_DAY_KEY;
-  nextBtn.disabled = isToday;
-  prevBtn.addEventListener('click', () => renderFamilyLeaderboard(familySolvedToday, addDays(dayKey, -1)));
-  nextBtn.addEventListener('click', () => renderFamilyLeaderboard(familySolvedToday, addDays(dayKey, 1)));
-  headerRow.appendChild(prevBtn); headerRow.appendChild(title); headerRow.appendChild(nextBtn);
-  lb.appendChild(headerRow);
-
-  if (!isToday) {
-    const dateEl = document.createElement('div'); dateEl.className = 'lb-date';
-    dateEl.textContent = formatDayKeyDisplay(dayKey);
-    lb.appendChild(dateEl);
-  }
-
-  const body = document.createElement('div'); body.className = 'lb-body';
-  body.innerHTML = '<div class="lb-loading">loading scores...</div>';
-  lb.appendChild(body);
-
-  const membersMap = await getFamilyMembers();
-  const [scores, pointsMap] = await Promise.all([
-    fetchFamilyScores(dayKey, membersMap), getFamilyPoints()
-  ]);
-  const showTimes = !isToday || solved;
-  const pointsById = computeFamilyPoints(scores, membersMap);
-  const usernames = await fetchProfileNames(scores.map(s => s.user_id || familyUserByName.get(membersMap.get(s.device_id))));
-
-  body.innerHTML = '';
-  if (!scores.length) {
-    const empty = document.createElement('div'); empty.className = 'lb-empty';
-    empty.textContent = isToday ? 'no scores yet today' : 'no scores that day';
-    body.appendChild(empty); return;
-  }
-  const table = document.createElement('table'); table.className = 'lb-table';
-  const header = document.createElement('tr'); header.className = 'lb-header';
-  ['#', 'NAME', 'TIME', 'PTS', 'ALL-TIME', 'TOTAL'].forEach(h => {
-    const th = document.createElement('th'); th.textContent = h; header.appendChild(th);
-  });
-  table.appendChild(header);
-  scores.forEach((s, i) => {
-    const tr = document.createElement('tr'); tr.className = 'lb-row';
-    const rank = document.createElement('td'); rank.textContent = i + 1; tr.appendChild(rank);
-    tr.appendChild(nameCell(s.name, s.user_id || familyUserByName.get(membersMap.get(s.device_id)), usernames));
-    const time = document.createElement('td'); time.textContent = showTimes ? formatTime(s.time_ms) : '—'; tr.appendChild(time);
-    const ptsTd = document.createElement('td'); ptsTd.className = 'lb-pts-cell';
-    const info = pointsById.get(s.id);
-    const numSpan = document.createElement('span'); numSpan.className = 'lb-pts-num';
-    const bonusSpan = document.createElement('span'); bonusSpan.className = 'lb-pts-bonus';
-    if (showTimes && info) {
-      numSpan.textContent = String(info.points);
-      let bonus = '';
-      if (info.firstBonus) bonus += '+3!';
-      if (info.lastBonus) bonus += '+1!';
-      bonusSpan.textContent = bonus;
-    } else {
-      numSpan.textContent = '—';
-    }
-    ptsTd.appendChild(numSpan); ptsTd.appendChild(bonusSpan);
-    tr.appendChild(ptsTd);
-    const allTd = document.createElement('td');
-    const displayName = membersMap.get(s.device_id);
-    const allTimePts = (displayName && pointsMap.has(displayName)) ? pointsMap.get(displayName) : null;
-    allTd.textContent = allTimePts !== null ? String(allTimePts) : '—';
-    tr.appendChild(allTd);
-    const totalTd = document.createElement('td'); totalTd.className = 'lb-sky';
-    const todayPts = info ? info.points + (info.firstBonus ? 3 : 0) + (info.lastBonus ? 1 : 0) : 0;
-    totalTd.textContent = (showTimes && info && allTimePts !== null) ? String(todayPts + allTimePts) : '—';
-    tr.appendChild(totalTd);
-    table.appendChild(tr);
-  });
-  body.appendChild(table);
-}
-
-async function applyFamilyUnlock() {
-  const link = document.getElementById('family-link');
-  if (link) link.style.display = 'none';
-  if (currentMode !== 'daily') return;
-  const deviceScore = await fetchDeviceScore();
-  familySolvedToday = !!deviceScore;
-  updateFamilyLeaderboard(familySolvedToday);
-}
+let dailySolvedToday = false; // whether this device/account has solved today's daily puzzle
 
 async function recheckDailySolved() {
-  if (currentMode !== 'daily' || familySolvedToday) return;
+  if (currentMode !== 'daily' || dailySolvedToday) return;
   const deviceScore = await fetchDeviceScore();
   if (deviceScore) {
-    familySolvedToday = true;
+    dailySolvedToday = true;
     buildGame('daily');
   }
 }
 
-function showFamilyCodeModal() {
-  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
-  const card = document.createElement('div'); card.className = 'arcade-card';
-  const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'family code';
-  const codeInp = document.createElement('input');
-  codeInp.className = 'arcade-input'; codeInp.maxLength = 20; codeInp.placeholder = 'code';
-  codeInp.autocomplete = 'off'; codeInp.spellcheck = false;
-  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
-  const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'unlock';
-  const cancelBtn = document.createElement('button'); cancelBtn.className = 'arcade-btn'; cancelBtn.textContent = 'cancel';
-  function tryUnlock() {
-    if (codeInp.value.trim().toUpperCase() === FAMILY_CODE.toUpperCase()) {
-      localStorage.setItem('wordle_family', '1');
-      overlay.remove();
-      applyFamilyUnlock();
-    } else {
-      codeInp.classList.remove('invalid'); void codeInp.offsetWidth; codeInp.classList.add('invalid');
-    }
-  }
-  submitBtn.addEventListener('click', tryUnlock);
-  codeInp.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
-  cancelBtn.addEventListener('click', () => overlay.remove());
-  btnRow.appendChild(submitBtn); btnRow.appendChild(cancelBtn);
-  card.appendChild(heading); card.appendChild(codeInp); card.appendChild(btnRow);
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
-  setTimeout(() => codeInp.focus(), 50);
-}
-
-// Once per session, right after sign-in: if this browser's device_id matches an
-// unlinked family-member row, offer to attach the new account to it so future
-// family-standings computation can eventually count this person's account.
-async function checkClaimableData() {
-  if (!window.Auth || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
-  const session = await window.Auth.getSession();
-  if (!session) return;
-  const deviceId = getDeviceId();
-  if (localStorage.getItem('wordle_claim_dismissed_' + deviceId)) return;
+// A daily solved signed out has no account on it, so it wouldn't count toward the
+// month. Once signed in, claim today's/yesterday's solves from this browser.
+async function claimDailyScores() {
+  if (!window.Auth || !window.Auth.rpc || !await getUserId()) return;
   try {
-    const url = `${window.SUPABASE_URL}/rest/v1/wordle_family_members?device_id=eq.${deviceId}&user_id=is.null&select=device_id,display_name`;
-    const res = await fetch(url, { headers: { 'apikey': window.SUPABASE_ANON_KEY, 'Authorization': await authHeader() } });
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (rows.length) showClaimModal(rows[0], session);
+    const { data, error } = await window.Auth.rpc('claim_wordle_scores', { p_device_id: getDeviceId() });
+    if (!error && data > 0 && currentMode === 'daily') renderLeaderboard(dailySolvedToday);
   } catch {}
-}
-
-function showClaimModal(row, session) {
-  const overlay = document.createElement('div'); overlay.className = 'arcade-overlay';
-  const card = document.createElement('div'); card.className = 'arcade-card';
-  const heading = document.createElement('div'); heading.className = 'arcade-heading'; heading.textContent = 'link your scores?';
-  const msg = document.createElement('div'); msg.className = 'arcade-inscribe-text';
-  msg.textContent = `we found existing scores for ${row.display_name} on this device — link them to your account?`;
-  const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
-  const confirmBtn = document.createElement('button'); confirmBtn.className = 'arcade-btn arcade-btn-primary'; confirmBtn.textContent = 'link';
-  const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
-  function dismiss() {
-    localStorage.setItem('wordle_claim_dismissed_' + row.device_id, '1');
-    overlay.remove();
-  }
-  confirmBtn.addEventListener('click', async () => {
-    try {
-      await fetch(`${window.SUPABASE_URL}/rest/v1/wordle_family_members?device_id=eq.${row.device_id}&user_id=is.null`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': window.SUPABASE_ANON_KEY,
-          'Authorization': await authHeader(),
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ user_id: session.user.id })
-      });
-    } catch {}
-    dismiss();
-  });
-  skipBtn.addEventListener('click', dismiss);
-  btnRow.appendChild(confirmBtn); btnRow.appendChild(skipBtn);
-  card.appendChild(heading); card.appendChild(msg); card.appendChild(btnRow);
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
 }
 
 function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
@@ -928,9 +580,8 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   }
   async function finish() {
     overlay.remove();
-    familySolvedToday = true;
+    dailySolvedToday = true;
     await renderLeaderboard(true);
-    if (isFamilyUnlocked()) await updateFamilyLeaderboard(true);
     const lbEl = document.getElementById('leaderboard');
     const shareBtn = createShareButton(() => formatTime(timeMs));
     lbEl.insertAdjacentElement('afterend', shareBtn);
@@ -1117,19 +768,17 @@ async function buildGame(mode) {
   if (mode === 'daily') {
     lb.style.display = '';
     const deviceScore = await fetchDeviceScore();
-    familySolvedToday = !!deviceScore;
+    dailySolvedToday = !!deviceScore;
     showWordleComments('daily', !!deviceScore);
     if (deviceScore) {
       checkGiantSlayer();
       root.innerHTML = '';
       showDailyRecap(deviceScore, root);
       renderLeaderboard(true);
-      if (isFamilyUnlocked()) updateFamilyLeaderboard(true);
       return;
     }
     root.innerHTML = '';
     renderLeaderboard(false);
-    if (isFamilyUnlocked()) updateFamilyLeaderboard(false);
   } else {
     showWordleComments('free');
     renderFreeLeaderboard();  // async, fire-and-forget here
@@ -1401,15 +1050,11 @@ let freeSession = { active: false, startTime: null, wordsSolved: 0, timerInterva
   dailyStartTime = savedStart ? parseInt(savedStart, 10) : null;
   buildGame('daily');
 
-  const familyLink = document.getElementById('family-link');
-  if (familyLink) {
-    familyLink.style.display = isFamilyUnlocked() ? 'none' : '';
-    familyLink.addEventListener('click', showFamilyCodeModal);
-  }
+  if (window.MonthBoard) window.MonthBoard.announce('wordle');
 
-  checkClaimableData();
+  claimDailyScores();
   if (window.Auth) {
-    window.Auth.onAuthStateChange(() => { checkClaimableData(); recheckDailySolved(); });
+    window.Auth.onAuthStateChange(session => { if (session) claimDailyScores(); recheckDailySolved(); });
   }
 
   const yDate = new Date(Date.now() - 5 * 60 * 60 * 1000 - 24 * 60 * 60 * 1000); // yesterday in EST
@@ -1444,8 +1089,6 @@ document.getElementById('mode-daily').addEventListener('click', () => {
   document.getElementById('free-play-bar').style.display = 'none';
   document.getElementById('mode-daily').classList.add('active');
   document.getElementById('mode-free').classList.remove('active');
-  const familyLink = document.getElementById('family-link');
-  if (familyLink) familyLink.style.display = isFamilyUnlocked() ? 'none' : '';
   buildGame('daily');
 });
 document.getElementById('fp-restart').addEventListener('click', () => {
@@ -1466,9 +1109,5 @@ document.getElementById('mode-free').addEventListener('click', () => {
   prefetchedPuzzle = null; prefetchInProgress = false;
   document.getElementById('mode-free').classList.add('active');
   document.getElementById('mode-daily').classList.remove('active');
-  const familyBoard = document.getElementById('family-leaderboard');
-  if (familyBoard) familyBoard.style.display = 'none';
-  const familyLink = document.getElementById('family-link');
-  if (familyLink) familyLink.style.display = 'none';
   buildGame('free');
 });

@@ -1,0 +1,125 @@
+/* Monthly standings (shared/month-board.js). Builds on each puzzle's own
+   .lb-* table and .arcade-* modal styles; colours fall back for pages that
+   don't define the Wordle palette. */
+
+.lb-view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.lb-view-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text3, #444);
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.lb-view-btn:hover { color: var(--text2, #7a7670); }
+.lb-view-btn.active {
+  color: var(--text, #e5e0d8);
+  border-bottom-color: var(--green, var(--accent, #538d4e));
+}
+
+.mb-sub {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3, #444);
+  text-align: center;
+  margin: -4px 0 10px;
+}
+
+.mb-table th:not(:nth-child(2)),
+.mb-table td:not(:nth-child(2)) { text-align: right; }
+.mb-table th:first-child,
+.mb-table td:first-child { text-align: left; }
+.mb-table td.mb-pts { color: var(--sky, var(--cool, #6ec6ff)); font-weight: 700; }
+
+.mb-crown {
+  margin-left: 4px;
+  font-size: 10px;
+  cursor: help;
+}
+
+.mb-champ {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px 8px;
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  border: 1px solid #d4b94a;
+  background: rgba(212, 185, 74, 0.08);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mb-champ-label { color: #d4b94a; font-weight: 700; }
+.mb-champ-name { color: var(--text, #e5e0d8); font-weight: 700; }
+.mb-champ-name a { color: inherit; }
+.mb-champ-pts { color: var(--text2, #7a7670); }
+
+/* Champion announcement */
+.mb-card {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  border-color: #d4b94a;
+}
+.mb-card > :not(.mb-confetti) { position: relative; }
+.mb-card-crown {
+  font-size: 44px;
+  line-height: 1;
+  margin: 6px 0 10px;
+  animation: mb-bob 1.6s ease-in-out infinite;
+}
+.mb-card-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #d4b94a;
+  margin: 4px 0 6px;
+}
+.mb-card-name a { color: inherit; }
+.mb-card-stats {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text2, #7a7670);
+  margin-bottom: 12px;
+}
+.mb-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mb-confetti i {
+  position: absolute;
+  top: -10px;
+  width: 6px;
+  height: 10px;
+  opacity: 0;
+  animation: mb-fall linear 1 forwards;
+}
+@keyframes mb-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(420px) rotate(540deg); opacity: 0; }
+}
+@keyframes mb-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mb-confetti { display: none; }
+  .mb-card-crown { animation: none; }
+}
