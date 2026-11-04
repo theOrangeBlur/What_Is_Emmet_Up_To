@@ -61,12 +61,17 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- Last month's winner for p_game, or no row if nobody signed in played.
-create or replace function public.get_monthly_champion(p_game text)
-returns table (user_id uuid, name text, points int, days_played int, wins int, month int)
+-- color is their profile's favorite color (color1), which profile pages
+-- already hand every visitor as `theme`; null if they haven't picked one.
+-- name_font is the typeface they've picked for their name (shared/name-fonts.js).
+drop function if exists public.get_monthly_champion(text); -- return columns changed; replace can't do that
+create function public.get_monthly_champion(p_game text)
+returns table (user_id uuid, name text, points int, days_played int, wins int, month int, color text, name_font text)
 language sql stable security definer set search_path = public as $$
-  select s.user_id, s.name, s.points, s.days_played, s.wins, p.month
-  from (select public.month_key_before(public.est_day_key() / 100) as month) p,
-       lateral public.get_monthly_standings(p_game, p.month) s
+  select s.user_id, s.name, s.points, s.days_played, s.wins, p.month, pr.answers->>'color1', pr.name_font
+  from (select public.month_key_before(public.est_day_key() / 100) as month) p
+  cross join lateral public.get_monthly_standings(p_game, p.month) s
+  left join public.profiles pr on pr.user_id = s.user_id
   limit 1;
 $$;
 

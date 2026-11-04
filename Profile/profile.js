@@ -96,41 +96,18 @@ function themeOf(p) {
 }
 
 // ── Name font ───────────────────────────────────────────────────────────
-// The typeface the name (and the avatar's fallback letter) is set in. Everyone
-// gets the default; the rest unlock after ten games (perk:name_fonts in
-// supabase/unlocks.sql). Keys are what profiles.name_font stores, so keep them.
-// Only the default and the page's own faces load with the page; the others
-// are fetched when a profile or the picker needs them.
-const NAME_FONT_DEFAULT = 'bricolage';
+// The typeface the name (and the avatar's fallback letter) is set in. The
+// list lives in shared/name-fonts.js so other pages can show a name in its
+// owner's font too. Only the default and the page's own faces load with the
+// page; the others are fetched when a profile or the picker needs them.
+const NAME_FONT_DEFAULT = NameFonts.DEFAULT;
 const NAME_FONT_UNLOCK = 'perk:name_fonts';
-const NAME_FONTS = {
-  bricolage:         { label: 'Bricolage Grotesque',     family: "'Bricolage Grotesque', sans-serif", weight: 800, gf: 'Bricolage+Grotesque:opsz,wght@12..96,800' },
-  syne:              { label: 'Syne',                    family: "'Syne', sans-serif",                weight: 800, gf: 'Syne:wght@800' },
-  fraunces:          { label: 'Fraunces',                family: "'Fraunces', serif",                 weight: 800, gf: 'Fraunces:opsz,wght@9..144,800' },
-  instrument:        { label: 'Instrument Serif',        family: "'Instrument Serif', serif",         weight: 400, gf: 'Instrument+Serif:ital@0;1' },
-  instrument_italic: { label: 'Instrument Serif Italic', family: "'Instrument Serif', serif",         weight: 400, gf: 'Instrument+Serif:ital@0;1', italic: true },
-  dm_serif:          { label: 'DM Serif Display',        family: "'DM Serif Display', serif",         weight: 400, gf: 'DM+Serif+Display' },
-  young_serif:       { label: 'Young Serif',             family: "'Young Serif', serif",              weight: 400, gf: 'Young+Serif' },
-  archivo:           { label: 'Archivo Black',           family: "'Archivo Black', sans-serif",       weight: 400, gf: 'Archivo+Black' },
-  space_mono:        { label: 'Space Mono',              family: "'Space Mono', monospace",           weight: 700, gf: 'Space+Mono:wght@700' },
-  fraktur:           { label: 'Blackletter',             family: "'UnifrakturMaguntia', serif",       weight: 400, gf: 'UnifrakturMaguntia' },
-};
+const NAME_FONTS = NameFonts.FONTS;
 
 // The page's <link> already carries these.
-const loadedFonts = new Set(['Bricolage+Grotesque:opsz,wght@12..96,800', 'Syne:wght@800', 'Space+Mono:wght@700']);
-function loadNameFont(key) {
-  const f = NAME_FONTS[key];
-  if (!f || loadedFonts.has(f.gf)) return;
-  loadedFonts.add(f.gf);
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = 'https://fonts.googleapis.com/css2?family=' + f.gf + '&display=swap';
-  document.head.appendChild(link);
-}
-
-function nameFontKey(key) {
-  return NAME_FONTS[key] ? key : NAME_FONT_DEFAULT;
-}
+NameFonts.markLoaded('Bricolage+Grotesque:opsz,wght@12..96,800', 'Syne:wght@800', 'Space+Mono:wght@700');
+const loadNameFont = NameFonts.load;
+const nameFontKey = NameFonts.keyOf;
 
 function applyNameFont(key) {
   const f = NAME_FONTS[nameFontKey(key)];

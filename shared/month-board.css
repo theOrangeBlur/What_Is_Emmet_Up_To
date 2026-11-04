@@ -37,6 +37,15 @@
   margin: -4px 0 10px;
 }
 
+.mb-newmonth {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d4b94a;
+  text-align: center;
+  margin-top: 12px;
+}
+
 .mb-table th:not(:nth-child(2)),
 .mb-table td:not(:nth-child(2)) { text-align: right; }
 .mb-table th:first-child,
@@ -91,6 +100,12 @@
   margin: 4px 0 6px;
 }
 .mb-card-name a { color: inherit; }
+/* A light outline so a very dark favorite color still reads on the dark card. */
+.mb-card-name-outline {
+  text-shadow:
+    -1px -1px 0 #e5e0d8, 1px -1px 0 #e5e0d8, -1px 1px 0 #e5e0d8, 1px 1px 0 #e5e0d8,
+    0 -1px 0 #e5e0d8, 0 1px 0 #e5e0d8, -1px 0 0 #e5e0d8, 1px 0 0 #e5e0d8;
+}
 .mb-card-stats {
   font-size: 9px;
   letter-spacing: 0.15em;

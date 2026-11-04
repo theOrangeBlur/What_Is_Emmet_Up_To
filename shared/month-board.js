@@ -7,7 +7,6 @@
 // game is 'wordle' or 'thermo'. Everything fails quietly: no network, no board.
 
 window.MonthBoard = (function () {
-  const GAME_NAMES = { wordle: 'Final Wordle', thermo: 'Thermometers' };
   const championCache = new Map(); // game -> Promise<row|null>
 
   function el(tag, cls, text) {
@@ -75,9 +74,22 @@ window.MonthBoard = (function () {
     }
   }
 
+  // Monthly views go by the account's username, not the arcade name typed on a
+  // given day (one account can post as several names over a month). The arcade
+  // name is only a fallback for an account that hasn't picked a username.
   function nameNode(name, userId, names) {
     const username = userId ? names.get(userId) : null;
-    return window.AuthWidget ? window.AuthWidget.profileLink(username, name) : document.createTextNode(name);
+    const label = username || name;
+    return window.AuthWidget ? window.AuthWidget.profileLink(username, label) : document.createTextNode(label);
+  }
+
+  // True when a #rrggbb color would be hard to read on the dark card.
+  function isDark(hex) {
+    const lin = (i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * lin(1) + 0.7152 * lin(3) + 0.0722 * lin(5) < 0.12;
   }
 
   function champion(game) {
@@ -146,6 +158,25 @@ window.MonthBoard = (function () {
     root.appendChild(table);
   }
 
+  // Whether today is the first day this browser has opened p_game's board this
+  // month. The first visit of a month records today's date, so the line under
+  // the board stays up for the rest of that day, then goes until next month.
+  function isFirstVisitDayOfMonth(game) {
+    const d = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    const today = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    const key = 'month_first_visit_' + game;
+    try {
+      let first = Number(localStorage.getItem(key)) || 0;
+      if (Math.floor(first / 100) !== Math.floor(today / 100)) {
+        first = today;
+        localStorage.setItem(key, String(today));
+      }
+      return first === today;
+    } catch {
+      return false;
+    }
+  }
+
   // The view ('day' | 'month') lives on the root, so a page redrawing its
   // daily board after a solve stays on whichever tab the visitor picked.
   function mount(root, game, drawDay) {
@@ -167,6 +198,7 @@ window.MonthBoard = (function () {
     });
     const body = el('div', 'mb-body');
     root.append(toggle, body);
+    if (isFirstVisitDayOfMonth(game)) root.appendChild(el('div', 'mb-newmonth', 'A new game has begun. Who will take the crown?'));
     return view === 'month' ? renderMonth(body) : Promise.resolve(drawDay(body));
   }
 
@@ -198,9 +230,15 @@ window.MonthBoard = (function () {
       confetti.appendChild(p);
     }
     const who = el('div', 'mb-card-name');
+    if (/^#[0-9a-f]{6}$/i.test(champ.color || '')) {
+      who.style.color = champ.color; // else the gold default
+      if (isDark(champ.color)) who.classList.add('mb-card-name-outline');
+    }
+    // Their chosen name font; with none picked, the card keeps its own Syne.
+    if (champ.name_font && window.NameFonts) window.NameFonts.applyTo(who, champ.name_font);
     who.appendChild(nameNode(champ.name, champ.user_id, names));
     const mine = me && me === champ.user_id;
-    const ok = el('button', 'arcade-btn arcade-btn-primary', mine ? 'long may i reign' : 'all hail');
+    const ok = el('button', 'arcade-btn arcade-btn-primary', mine ? "it's good to be king" : 'mad respect, dawg');
     ok.type = 'button';
     const close = () => overlay.remove();
     ok.addEventListener('click', close);
@@ -209,12 +247,11 @@ window.MonthBoard = (function () {
     btns.appendChild(ok);
     card.append(
       confetti,
-      el('div', 'arcade-heading', 'new champion'),
+      el('div', 'arcade-heading', `${monthName(champ.month)} champion`),
       el('div', 'mb-card-crown', '👑'),
-      el('div', 'arcade-inscribe-text', `${monthName(champ.month)}'s ${GAME_NAMES[game] || ''} champion is`),
+      el('div', 'arcade-inscribe-text', 'The Enquirer proudly exalts'),
       who,
       el('div', 'mb-card-stats', `${champ.points} pts · ${champ.wins} win${champ.wins === 1 ? '' : 's'} · ${champ.days_played} day${champ.days_played === 1 ? '' : 's'}`),
-      el('div', 'arcade-inscribe-text', mine ? "that's you! the crown is yours all month." : 'the standings have reset. the throne is up for grabs.'),
       btns
     );
     overlay.appendChild(card);
