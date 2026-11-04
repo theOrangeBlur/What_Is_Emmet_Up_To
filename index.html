@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=4">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared/auth-widget.css">
     <link rel="stylesheet" href="shared/awards.css">
@@ -23,7 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="shared/auth.js?v=20261104"></script>
     <script src="shared/auth-widget.js"></script>
-    <script src="shared/awards.js"></script>
+    <script src="shared/awards.js?v=20261104"></script>
     <script src="shared/unlocks.js"></script>
 </head>
 <body>
@@ -73,7 +73,7 @@
                 <span class="nav-dropdown-item-link"><a href="https://networds-site.github.io/" target="_blank">Net-Words &middot; Pg. E3</a><span class="collab-tooltip">Collab with <a href="https://jamiesimon.io/" target="_blank">Jamie Simon</a>!</span></span>
                 <a href="Puzzles/Balance/balance.html">Coin Riddle &middot; Pg. E4</a>
                 <a href="Puzzles/Final_Wordle/final-wordle.html">Final Wordle &middot; Pg. E5</a>
-                <a href="Puzzles/Thermometers/play/thermometers.html">Thermometers &middot; Pg. E6<span class="new-badge">NEW!</span></a>
+                <a href="Puzzles/Absolute/play/absolute.html">Absolute 25 &middot; Pg. E6<span class="new-badge">NEW!</span></a>
             </div>
         </div>
     </nav>
@@ -119,7 +119,7 @@
                     <p class="article-subheadline">Arrange a Chat With an Engineer of Wonder</p>
                     <div class="byline">By E. C. Eckman IV &nbsp;&middot;&nbsp; Designer of Curiosities</div>
                     <p class="article-body">It is my mission to inspire more wonder and awe for the world. I do this by designing puzzling, 
-                        strange, and/or intersting mechanisms, events, and experiences in general. I find puzzle hunts to be a particularly
+                        strange, and/or interesting mechanisms, events, and experiences in general. I find puzzle hunts to be a particularly
                         lovely way of getting people to see the world in a new light - to see the world as again full of mystery, secrets, and magic.
                     </p>
                     <p class="article-body">If you are interested in having a puzzling experience designed, want to work together on a project,
@@ -182,7 +182,7 @@
                     <div class="media-caption">ABOVE: 20-gallon wooded tank.</div>
                 </div>
                 <p class="article-body">Finned sources close to the substrate report the recent addition of a few species of snails was met with optimistic curiosity by local inhabitants.
-                    These Pomacea bridgesii &mdash; or more commonly "Mystery Snails" for their curious behavoirs &mdash; joyously devour scum on plant leaves and tank glass.</p>
+                    These Pomacea bridgesii &mdash; or more commonly "Mystery Snails" for their curious behaviors &mdash; joyously devour scum on plant leaves and tank glass.</p>
                 <a href="Fish_Tanks/fish.html" class="page-ref">Read more on Page D-3 &rarr;</a>
                 </div>
 
@@ -190,6 +190,17 @@
 
             <!-- Column 4: Side Desk -->
             <aside class="col col-4">
+
+                <!-- Article 4-0: Absolute 25 (yesterday's daily, solved, and its winner) -->
+                <div class="side-article">
+                    <span class="section-label">New Puzzle! Absolute 25</span>
+                    <h3 class="article-headline-sm">Yesterday&rsquo;s Daily, Solved</h3>
+                    <div class="thermo-preview">
+                        <svg id="thermo-preview-board" class="thermo-preview-board" role="img" aria-label="Yesterday's Absolute 25 puzzle, solved"></svg>
+                    </div>
+                    <p id="thermo-preview-winner" class="thermo-preview-winner">Consulting the record books&hellip;</p>
+                    <a href="Puzzles/Absolute/play/absolute.html" class="page-ref">Best today&rsquo;s on Page E-6 &rarr;</a>
+                </div>
 
                 <!-- Article 4A: Movies -->
                 <div class="side-article">
@@ -308,6 +319,6 @@
         });
       })();
     </script>
-    <script src="script.js"></script>
+    <script src="script.js?v=20261104"></script>
 </body>
 </html>

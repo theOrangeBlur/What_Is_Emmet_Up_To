@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitest/config';
 
-// The website serves the build from Puzzles/Thermometers/play/, so asset paths are relative.
-// thermometers.html is the public Daily / Free Play page; lab.html is the designer's lab.
+// The website serves the build from Puzzles/Absolute/play/, so asset paths are relative.
+// absolute.html is the public Daily / Free Play page; lab.html is the designer's lab.
 export default defineConfig({
   base: './',
   worker: { format: 'es' },
   build: {
     rollupOptions: {
       input: {
-        thermometers: 'thermometers.html',
+        absolute: 'absolute.html',
         lab: 'lab.html',
       },
     },

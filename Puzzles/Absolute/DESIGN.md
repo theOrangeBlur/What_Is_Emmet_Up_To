@@ -91,6 +91,9 @@ The designer asked for the puzzle on the site, working like Final Wordle: a Dail
 - **Daily scoring:** your time, plus 30 s per hint. Check is free. Reveal ends the run with no score.
 - **Free Play** keeps personal bests per size and difficulty, counting only solves with no hints. There's no global board: with 18 combos it would be spread thin.
 
+## The name: Absolute N (2026-11-04)
+The designer renamed the game from Thermometers to **Absolute 25**. The number is the board's cell count, so the daily (5×5) is Absolute 25 and Free Play's name follows the size: 4×4 is Absolute 16, 10×10 is Absolute 100. The page moved to `Puzzles/Absolute/play/absolute.html`; the old URL redirects. Data keys (`thermo_*`) were left alone so scores, awards and comments carry over.
+
 ## Open threads
 - **Budget explanations** for crossing-line hints (see Hints, item 3).
 - **Expert range.** Expert is open-ended and some puzzles need 14–20 jumps. Consider capping it around 10 if those feel like nothing but contradictions.

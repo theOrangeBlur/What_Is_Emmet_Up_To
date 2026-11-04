@@ -73,6 +73,14 @@ function message(text: string, kind: 'info' | 'good' | 'bad' = 'info') {
   m.className = `message ${kind}`;
 }
 
+/** The game is named for its cell count: the 5x5 daily is Absolute 25, a 10x10 is Absolute 100. */
+const gameName = (size: number) => `Absolute ${size * size}`;
+
+function applyName(size: number) {
+  $('#game-name').textContent = gameName(size);
+  document.title = gameName(size);
+}
+
 function setMeta(text: string) {
   $('#meta').textContent = text;
 }
@@ -202,6 +210,7 @@ async function openDaily() {
   const my = ++epoch;
   const k = dayKey();
   const local = load<DailyLocal>(dailyKey(k), {});
+  applyName(5);
   setMeta(`Daily · ${dayLabel(k)} · 5×5 Medium`);
   document.body.classList.add('is-daily');
   showControls(false);
@@ -293,7 +302,7 @@ async function finishDaily(k: number, g: Game) {
 
 function dailyRecap(k: number, title: string, timeMs: number, hints: number, name?: string) {
   const stats = `${name ? `${name} — ` : ''}${formatTime(timeMs)}${hints ? ` · ${hints} hint${hints === 1 ? '' : 's'}` : ''}`;
-  const share = () => `Thermometers daily ${dayKeyToString(k)}: ${formatTime(timeMs)}${hints ? ` (${hints} hint${hints === 1 ? '' : 's'})` : ' no hints'} · whatisemmetupto.com`;
+  const share = () => `${gameName(5)} daily ${dayKeyToString(k)}: ${formatTime(timeMs)}${hints ? ` (${hints} hint${hints === 1 ? '' : 's'})` : ' no hints'} · whatisemmetupto.com`;
   const box = div('daily-recap');
   box.append(div('recap-solved', title), div('recap-stats', stats), nextDailyCountdown(), shareButton(share));
   after(box);
@@ -352,6 +361,7 @@ async function openFree() {
   document.body.classList.remove('is-daily');
   $<HTMLSelectElement>('#free-size').value = String(s.size);
   $<HTMLSelectElement>('#free-diff').value = s.diff;
+  applyName(s.size);
   setMeta(`Free Play · ${s.size}×${s.size} ${DIFF_LABEL[s.diff]}`);
   showControls(false);
   after();

@@ -105,7 +105,8 @@ async function loadPreviews() {
         loadProjectPreview(),
         loadMoviePreview(),
         loadGamePreview(),
-        loadDisciplinePreview()
+        loadDisciplinePreview(),
+        loadThermoPreview()
     ]);
 }
 
@@ -137,6 +138,125 @@ async function loadProjectPreview() {
             }
         }
     } catch (e) { /* silently fail */ }
+}
+
+// ── Absolute 25 Preview ──
+// Yesterday's daily (EST day, like the puzzle page), drawn solved, plus the
+// fastest time posted for it. Tables: supabase/thermometers.sql.
+function thermoDayKey(offsetDays) {
+    const d = new Date(Date.now() - 5 * 60 * 60 * 1000);
+    d.setUTCDate(d.getUTCDate() + offsetDays);
+    return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+}
+
+async function loadThermoPreview() {
+    const svg = document.getElementById('thermo-preview-board');
+    const winnerEl = document.getElementById('thermo-preview-winner');
+    if (!svg || !winnerEl) return;
+    const article = svg.closest('.side-article');
+    const hide = () => { if (article) article.style.display = 'none'; };
+    const url = window.SUPABASE_URL, key = window.SUPABASE_ANON_KEY;
+    if (!url || !key) return hide();
+    const headers = { apikey: key, Authorization: `Bearer ${key}` };
+    const day = thermoDayKey(-1);
+    try {
+        const [pRes, sRes] = await Promise.all([
+            fetch(`${url}/rest/v1/thermo_daily?date=eq.${day}&select=puzzle`, { headers }),
+            fetch(`${url}/rest/v1/thermo_scores?date=eq.${day}&select=name,time_ms,hints,user_id&order=time_ms.asc,created_at.asc&limit=1`, { headers })
+        ]);
+        const rows = pRes.ok ? await pRes.json() : [];
+        const puzzle = rows[0] && rows[0].puzzle;
+        if (!puzzle || !Array.isArray(puzzle.thermos) || !Array.isArray(puzzle.solution)) return hide();
+        renderThermoPreview(svg, puzzle);
+
+        const best = sRes.ok ? (await sRes.json())[0] : null;
+        winnerEl.replaceChildren();
+        if (!best) {
+            winnerEl.textContent = 'Nobody bested it. Will you best today’s?';
+            return;
+        }
+        let username = null;
+        if (best.user_id && window.Auth && window.Auth.usernamesFor) {
+            try { username = (await window.Auth.usernamesFor([best.user_id])).get(best.user_id) || null; } catch (e) { /* plain name */ }
+        }
+        const name = document.createElement('strong');
+        name.append(window.AuthWidget ? AuthWidget.profileLink(username, best.name) : document.createTextNode(best.name));
+        const s = Math.floor(best.time_ms / 1000);
+        const time = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${Math.floor((best.time_ms % 1000) / 100)}`;
+        const hints = best.hints ? ` (${best.hints} hint${best.hints === 1 ? '' : 's'})` : '';
+        winnerEl.append('Bested by ', name, ` in ${time}${hints}.`);
+    } catch (e) {
+        hide();
+    }
+}
+
+// A trimmed-down port of Puzzles/Absolute/src/ui/board.ts renderBoard():
+// grid, thermometers filled to the solution, and the clues.
+function renderThermoPreview(svg, p) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const CELL = 40, O = 30, n = p.size;
+    const size = O + n * CELL + 6;
+    const el = (tag, attrs) => {
+        const e = document.createElementNS(NS, tag);
+        for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+        return e;
+    };
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.replaceChildren();
+    const cx = c => O + (c % n) * CELL + CELL / 2;
+    const cy = c => O + Math.floor(c / n) * CELL + CELL / 2;
+
+    svg.append(el('rect', { x: O, y: O, width: n * CELL, height: n * CELL, class: 'tp-bg' }));
+    const grid = el('g', { class: 'tp-grid' });
+    for (let i = 0; i <= n; i++) {
+        grid.append(el('line', { x1: O, y1: O + i * CELL, x2: O + n * CELL, y2: O + i * CELL }));
+        grid.append(el('line', { x1: O + i * CELL, y1: O, x2: O + i * CELL, y2: O + n * CELL }));
+    }
+    svg.append(grid);
+
+    const tubeW = CELL * 0.38, bulbR = CELL * 0.34, fillW = CELL * 0.22, fillR = CELL * 0.24;
+    const tip = 0.15, fillStep = 0.5 - fillW / CELL / 2 - 0.04;
+    const tubes = el('g', {}), fills = el('g', {});
+    p.thermos.forEach((t, id) => {
+        const pts = t.cells.map(c => [cx(c), cy(c)]);
+        const last = pts.length - 1;
+        const ext = (k, amt) => {
+            const [x, y] = pts[k];
+            let dx, dy;
+            if (k < last) { dx = pts[k + 1][0] - x; dy = pts[k + 1][1] - y; }
+            else if (k > 0) { dx = x - pts[k - 1][0]; dy = y - pts[k - 1][1]; }
+            else return [x, y];
+            const len = Math.hypot(dx, dy);
+            return [x + dx / len * CELL * amt, y + dy / len * CELL * amt];
+        };
+        const path = arr => arr.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
+        if (pts.length > 1) tubes.append(el('path', { d: path([...pts, ext(last, tip)]), class: 'tp-tube', 'stroke-width': tubeW }));
+        tubes.append(el('circle', { cx: pts[0][0], cy: pts[0][1], r: bulbR, class: 'tp-bulb' }));
+        const s = p.solution[id];
+        if (s && s.level > 0) {
+            const cls = s.color === 'R' ? 'tp-red' : 'tp-blue';
+            if (pts.length > 1) {
+                const end = s.level - 1 === last ? ext(last, tip) : ext(s.level - 1, fillStep);
+                fills.append(el('path', { d: path([...pts.slice(0, s.level), end]), class: `tp-fill ${cls}`, 'stroke-width': fillW }));
+            }
+            fills.append(el('circle', { cx: pts[0][0], cy: pts[0][1], r: fillR, class: `tp-fill-bulb ${cls}` }));
+        }
+    });
+    svg.append(tubes, fills);
+    svg.append(el('rect', { x: O, y: O, width: n * CELL, height: n * CELL, class: 'tp-border' }));
+
+    const clues = el('g', {});
+    const put = (clue, x, y) => {
+        if (!clue || clue.kind === 'none') return;
+        const t = el('text', { x, y, class: `tp-clue tp-clue-${clue.kind}` });
+        t.textContent = String(clue.value);
+        clues.append(t);
+    };
+    for (let i = 0; i < n; i++) {
+        put(p.rowClues[i], O / 2, O + i * CELL + CELL / 2);
+        put(p.colClues[i], O + i * CELL + CELL / 2, O / 2);
+    }
+    svg.append(clues);
 }
 
 // ── Movie Preview ──

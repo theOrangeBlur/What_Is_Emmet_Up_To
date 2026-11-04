@@ -15,7 +15,7 @@ window.Awards = (function () {
   const SITE_PAGES = [
     'index.html', 'snapshots.html', 'blog.html', 'projects.html', 'movies.html',
     'games.html', 'discipline.html', 'fish.html', 'hexdoku.html', 'boat.html',
-    'balance.html', 'final-wordle.html', 'thermometers.html', 'awards.html'
+    'balance.html', 'final-wordle.html', 'absolute.html', 'awards.html'
   ];
 
   function load(k, fallback) {
@@ -319,7 +319,9 @@ window.Awards = (function () {
   function trackPage() {
     const page = currentPage();
     if (!SITE_PAGES.includes(page)) return;
-    const visited = load(PAGES_KEY, []).filter(p => SITE_PAGES.includes(p));
+    // Thermometers became Absolute 25 (2026-11-04); an old visit still counts.
+    const visited = [...new Set(load(PAGES_KEY, []).map(p => p === 'thermometers.html' ? 'absolute.html' : p))]
+      .filter(p => SITE_PAGES.includes(p));
     if (!visited.includes(page)) { visited.push(page); save(PAGES_KEY, visited); }
     progress('paperboy', visited.length, PAPERBOY_COUNT);
     progress('h_s1', visited.length, SITE_PAGES.length);

@@ -1,4 +1,4 @@
--- Weekly and monthly leaderboards for Final Wordle and Thermometers, plus
+-- Weekly and monthly leaderboards for Final Wordle and Absolute 25, plus
 -- yesterday's winner. Paste into the Supabase SQL editor and run, after
 -- thermometers.sql (for est_day_key) and awards.sql (for the champion
 -- awards), then run awards-hidden.sql for the buried champion awards. Safe
@@ -210,7 +210,7 @@ grant execute on function public.get_daily_winner(text) to anon, authenticated;
 -- winner's award is listed here.
 insert into public.awards (key, title, description, hint, icon, hidden, target, sort) values
   ('wordle_day_champ', 'Top Hat', 'Win a day of Final Wordle: the fastest signed-in solve.', null, '🎩', false, null, 93),
-  ('thermo_day_champ', 'Hot Hat', 'Win a day of Thermometers: the fastest signed-in solve.', null, '🎩', false, null, 123)
+  ('thermo_day_champ', 'Hot Hat', 'Win a day of Absolute 25: the fastest signed-in solve.', null, '🎩', false, null, 123)
 on conflict (key) do update set
   title = excluded.title, description = excluded.description, hint = excluded.hint,
   icon = excluded.icon, hidden = excluded.hidden, target = excluded.target, sort = excluded.sort;
@@ -246,7 +246,7 @@ revoke all on function public.crown_monthly_champions() from public, anon, authe
 grant execute on function public.crown_monthly_champions() to service_role;
 
 -- Same as crown_monthly_champions, for last week. b_w4 / b_w5 are the buried
--- weekly awards for Final Wordle / Thermometers.
+-- weekly awards for Final Wordle / Absolute 25.
 create or replace function public.crown_weekly_champions()
 returns int
 language plpgsql security definer set search_path = public as $$

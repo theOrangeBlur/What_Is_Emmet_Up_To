@@ -37,7 +37,7 @@ const RECORD_GROUPS = [
     { key: 'giants_slain',   icon: '🗡️', title: 'Giants slain',                     fmt: plural('day'), personalOnly: true, hiddenUntilEarned: true },
     { key: 'wordle_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
   ]},
-  { title: 'Thermometers', records: [
+  { title: 'Absolute 25', records: [
     { key: 'thermo_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
   ]},
   { title: 'Visits', records: [

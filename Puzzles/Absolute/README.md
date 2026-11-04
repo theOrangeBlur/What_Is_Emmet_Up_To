@@ -1,4 +1,6 @@
-# Thermometers Lab: red & blue
+# Absolute 25 lab: red & blue Thermometers
+
+Published on the site as Absolute N (N = cells on the board); formerly Thermometers.
 
 A two-color variant of the Thermometers logic puzzle, with a lab for generating, playing and grading puzzles. Daily puzzles come from the same generator.
 
@@ -15,7 +17,7 @@ A two-color variant of the Thermometers logic puzzle, with a lab for generating,
 ## Commands
 ```
 npm install
-npm run dev        # Vite dev server: /thermometers.html (public page), /lab.html (lab)
+npm run dev        # Vite dev server: /absolute.html (public page), /lab.html (lab)
 npm test           # exact solver vs brute force, generator uniqueness, presets hit their targets
 npm run typecheck
 npm run build      # static site in dist/
@@ -55,7 +57,7 @@ Analysis scripts (Node, via vite-node):
   - `params.ts`: URL and saved settings
 - `src/worker.ts`: runs generation off the main thread
 - `src/lab.ts`: lab wiring (`lab.html`)
-- `src/site.ts`: the public Daily / Free Play page (`thermometers.html`)
+- `src/site.ts`: the public Daily / Free Play page (`absolute.html`)
 - `src/ui/leaderboard.ts`: Supabase daily scores, name entry, countdown
 - `src/ui/board.css`: board styles shared by both pages
 - `tests/core.test.ts`: the test suite

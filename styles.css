@@ -641,6 +641,49 @@ body {
     display: block;
 }
 
+/* Absolute 25 preview (front page, right column) */
+.thermo-preview {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.thermo-preview-board {
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    display: block;
+}
+
+.thermo-preview-board .tp-bg { fill: #fbf3e0; }
+.thermo-preview-board .tp-grid line { stroke: var(--paper-dark); stroke-width: 1; }
+.thermo-preview-board .tp-border { fill: none; stroke: var(--ink); stroke-width: 2; }
+.thermo-preview-board .tp-tube { fill: none; stroke: #d6c7a4; stroke-linecap: round; stroke-linejoin: round; }
+.thermo-preview-board .tp-bulb { fill: #d6c7a4; }
+.thermo-preview-board .tp-fill { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.thermo-preview-board .tp-fill.tp-red { stroke: #c0392b; }
+.thermo-preview-board .tp-fill.tp-blue { stroke: #2f5fb3; }
+.thermo-preview-board .tp-fill-bulb.tp-red { fill: #c0392b; }
+.thermo-preview-board .tp-fill-bulb.tp-blue { fill: #2f5fb3; }
+.thermo-preview-board .tp-clue {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+.thermo-preview-board .tp-clue-red { fill: #c0392b; }
+.thermo-preview-board .tp-clue-blue { fill: #2f5fb3; }
+.thermo-preview-board .tp-clue-black { fill: var(--ink); }
+
+.thermo-preview-winner {
+    font-family: 'IM Fell English', serif;
+    font-size: 0.85rem;
+    color: var(--ink-mid);
+    text-align: center;
+    margin: 6px 0 0;
+}
+
 .movie-preview {
     display: flex;
     gap: 10px;

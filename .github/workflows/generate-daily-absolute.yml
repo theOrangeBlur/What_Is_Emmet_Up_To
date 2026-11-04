@@ -1,4 +1,4 @@
-name: Publish Daily Thermometers
+name: Publish Daily Absolute 25
 
 # Stores today's and tomorrow's daily puzzles in Supabase (thermo_daily), so a
 # day's puzzle never changes once published. Days already stored are left alone.
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Puzzles/Thermometers
+        working-directory: Puzzles/Absolute
     steps:
       - uses: actions/checkout@v4
 
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: Puzzles/Thermometers/package-lock.json
+          cache-dependency-path: Puzzles/Absolute/package-lock.json
 
       - run: npm ci
 

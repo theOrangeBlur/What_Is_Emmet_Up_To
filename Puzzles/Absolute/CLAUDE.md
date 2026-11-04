@@ -1,6 +1,8 @@
-# Thermometers Lab (red & blue)
+# Absolute 25 (red & blue Thermometers)
 
-A two-color Thermometers logic puzzle, plus a lab for generating, playing and grading puzzles. It's built with Vite + TypeScript, vanilla DOM and SVG, and tested with Vitest. Generation runs in a Web Worker. There's no framework and no runtime dependencies.
+A two-color Thermometers logic puzzle, published on the site as **Absolute N**, where N is the board's cell count: the 5×5 daily is Absolute 25, and Free Play's name follows the chosen size (`gameName()` in `src/site.ts`). It was called Thermometers until 2026-11-04. Supabase tables, award/comment keys and localStorage keys still use `thermo_`, and the pieces in the rules are still thermometers. The old URL `Puzzles/Thermometers/play/thermometers.html` is a hand-written redirect stub.
+
+The project is the puzzle plus a lab for generating, playing and grading puzzles. It's built with Vite + TypeScript, vanilla DOM and SVG, and tested with Vitest. Generation runs in a Web Worker. There's no framework and no runtime dependencies.
 
 - `README.md`: rules, commands, file layout, how generation and difficulty work.
 - `DESIGN.md`: the history. What the designer asked for, what the data showed, and why things are the way they are. **Read it before changing rules, difficulty, generation or hints.**
@@ -36,13 +38,13 @@ The user is the puzzle's designer. They playtest and decide by feel, then ask fo
 
 ## On the website
 - Two pages, both Vite entries:
-  - `thermometers.html` + `src/site.ts`: the public page, with Daily Challenge and Free Play.
+  - `absolute.html` + `src/site.ts`: the public page, with Daily Challenge and Free Play.
   - `lab.html` + `src/lab.ts`: the designer's lab.
-- **Deploy:** `.github/workflows/build-thermometers.yml` builds on every push to `main` and commits `dist/` to `play/`. The site links to `Puzzles/Thermometers/play/thermometers.html`. Don't edit `play/` by hand. `base` is `'./'`.
-- The public page loads the site-wide scripts (`/shared/auth.js`, `awards.js`, `comments.js`, ...) from the site root with `vite-ignore`. They only exist when the **repo root** is served, so test with `python -m http.server` at the repo root and open `/Puzzles/Thermometers/play/thermometers.html`. On localhost, `window.__thermo()` returns the current `Game` for test scripts.
+- **Deploy:** `.github/workflows/build-absolute.yml` builds on every push to `main` and commits `dist/` to `play/`. The site links to `Puzzles/Absolute/play/absolute.html`. Don't edit `play/` by hand. `base` is `'./'`.
+- The public page loads the site-wide scripts (`/shared/auth.js`, `awards.js`, `comments.js`, ...) from the site root with `vite-ignore`. They only exist when the **repo root** is served, so test with `python -m http.server` at the repo root and open `/Puzzles/Absolute/play/absolute.html`. On localhost, `window.__thermo()` returns the current `Game` for test scripts.
 - **The daily:**
   - The day is the EST day key (`dayKey()` in `daily.ts`), the same as Final Wordle's. The seed is still `daily-YYYY-MM-DD`.
-  - `.github/workflows/generate-daily-thermo.yml` runs `npm run publish-daily` each night. It stores today's and tomorrow's puzzles in Supabase `thermo_daily` and never overwrites a stored day, so **a generator change no longer changes published dailies**. The page generates locally only if a day is missing.
+  - `.github/workflows/generate-daily-absolute.yml` runs `npm run publish-daily` each night. It stores today's and tomorrow's puzzles in Supabase `thermo_daily` and never overwrites a stored day, so **a generator change no longer changes published dailies**. The page generates locally only if a day is missing.
   - Scores go to `thermo_scores`. A hint adds 30 s, Check is free, and Reveal ends the run with no score. Schema: `/supabase/thermometers.sql`.
 - Free Play keeps personal bests per size and difficulty in localStorage (clean solves only), and builds the next puzzle in the background.
 - Keep `worker: { format: 'es' }`. The generator worker is an ES module.

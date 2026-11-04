@@ -77,7 +77,7 @@ language sql stable security definer set search_path = public as $$
     when 'visit_days'    then (select count(*) from public.user_visit_days d where d.user_id = p_uid)
     when 'wordle_daily_solves' then (select count(distinct s.date) from public.wordle_scores s where s.user_id = p_uid)
     -- Every game finished anywhere on the site: daily and free play Wordles and
-    -- Thermometers, each Hexdoku level, the River Crossing once, and up to
+    -- Absolute 25s, each Hexdoku level, the River Crossing once, and up to
     -- three Coin Riddle solves (solves from before balance_solves was counted
     -- still earn one, through the award).
     when 'games_played' then

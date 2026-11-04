@@ -1,4 +1,5 @@
--- Thermometers: published daily puzzles and the daily leaderboard.
+-- Absolute 25 (formerly Thermometers; the tables keep their thermo_ names):
+-- published daily puzzles and the daily leaderboard.
 -- Run this before the thermo_* additions in unlocks.sql (unlock_stat_value reads thermo_scores).
 --
 -- Days are YYYYMMDD integers on EST (UTC-5), the same as Final Wordle's getDayKey().

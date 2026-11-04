@@ -736,7 +736,7 @@ async function renderEdit(p) {
     const target = (st && st.target) || 10;
     const played = Math.min((st && st.value) || 0, target);
     fontLock.textContent = `🔒 Play ${target} games to pick your own — ${played} / ${target} so far. ` +
-      'Wordle, Thermometers, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
+      'Wordle, Absolute 25, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
   }).catch(() => {});
 
   // Questions

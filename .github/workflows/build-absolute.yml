@@ -1,21 +1,21 @@
-name: Build Thermometers
+name: Build Absolute
 
-# The site is served straight from the repo, but Thermometers is a Vite + TypeScript
-# project. This builds it and commits the static output to Puzzles/Thermometers/play/.
+# The site is served straight from the repo, but Absolute is a Vite + TypeScript
+# project. This builds it and commits the static output to Puzzles/Absolute/play/.
 on:
   push:
     branches: [main]
     paths:
-      - 'Puzzles/Thermometers/**'
-      - '!Puzzles/Thermometers/play/**'
-      - '.github/workflows/build-thermometers.yml'
+      - 'Puzzles/Absolute/**'
+      - '!Puzzles/Absolute/play/**'
+      - '.github/workflows/build-absolute.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: build-thermometers
+  group: build-absolute
   cancel-in-progress: true
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Puzzles/Thermometers
+        working-directory: Puzzles/Absolute
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: Puzzles/Thermometers/package-lock.json
+          cache-dependency-path: Puzzles/Absolute/package-lock.json
 
       - run: npm ci
       - run: npm run typecheck
@@ -49,6 +49,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A play
           git diff --cached --quiet && { echo "Build unchanged."; exit 0; }
-          git commit -m "Build Thermometers [automated]"
+          git commit -m "Build Absolute [automated]"
           git pull --rebase
           git push
