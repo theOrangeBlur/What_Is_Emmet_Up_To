@@ -51,6 +51,12 @@ def fetch_reviews_from_gdoc(known_slugs: set = None) -> bool:
     a known game title from games.csv (via known_slugs). This is robust to
     whatever style the heading happens to have.
 
+    A short line shaped like a title (see looks_like_heading) is also a
+    heading, even when no game in games.csv has that name yet. That way a
+    review for a game without a sheet row gets its own section, which is
+    left off the page until the row exists, instead of being glued onto the
+    end of the previous game's review.
+
     Returns True if successful, False otherwise (falls back to local file).
     """
     url = f"https://docs.google.com/document/d/{REVIEWS_DOC_ID}/export?format=html"
@@ -63,6 +69,16 @@ def fetch_reviews_from_gdoc(known_slugs: set = None) -> bool:
     except Exception as e:
         print(f"  Warning: Could not fetch reviews from Google Doc: {e}")
         return False
+
+
+def looks_like_heading(text: str) -> bool:
+    """A short standalone line with no sentence punctuation at the end,
+    e.g. "Pikmin 2". Review prose never looks like this; a one-word body
+    line like "Wow" would, so end those with punctuation."""
+    return (len(text) <= 60
+            and len(text.split()) <= 8
+            and '\n' not in text
+            and not re.search(r'[.!?…,;:)]$', text))
 
 
 def _convert_gdoc_html_to_md(html: str, known_slugs: set) -> bool:
@@ -101,7 +117,7 @@ def _convert_gdoc_html_to_md(html: str, known_slugs: set) -> bool:
         if not text:
             continue
 
-        is_heading = 'title' in classes or slugify(text) in known_slugs
+        is_heading = 'title' in classes or slugify(text) in known_slugs or looks_like_heading(text)
         if is_heading:
             # This is a game title heading
             md_lines.append(f'\n# {text}\n')
