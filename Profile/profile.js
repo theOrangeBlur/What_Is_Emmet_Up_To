@@ -9,6 +9,10 @@ const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
 const USERNAME_RULES = '3–16 letters, numbers or underscores';
 const BIO_MAX = 140;
 const ANSWER_MAX = 140;
+// "Another name you might go by": stored in answers like a question, but
+// shown under the username rather than in the questions list.
+const ALT_NAME_ID = 'alt_name';
+const ALT_NAME_MAX = 40;
 const AVATAR_SIZE = 256;
 const ART_SIZE = 1200;       // longest side of an art window picture
 const ART_TITLE_MAX = 80;
@@ -154,6 +158,8 @@ function renderHeader(p) {
   head.appendChild(avatarEl(p));
   const info = el('div', 'profile-info');
   info.appendChild(el('h1', 'profile-name', p.username));
+  const altName = (p.answers || {})[ALT_NAME_ID];
+  if (altName) info.appendChild(withPrivateTag(el('p', 'profile-alt-name', 'a.k.a. ' + altName), p, ALT_NAME_ID));
   if (p.bio) info.appendChild(withPrivateTag(el('p', 'profile-bio', p.bio), p, 'bio'));
   if (p.member_since) info.appendChild(el('div', 'profile-since', 'resident since ' + formatDate(p.member_since)));
   if (p.is_me) {
@@ -488,10 +494,16 @@ async function renderEdit(p) {
   // Username
   const nameInp = el('input', 'authw-input');
   nameInp.value = p.username; nameInp.maxLength = 16; nameInp.spellcheck = false; nameInp.autocomplete = 'username';
-  form.appendChild(field('name', nameInp, el('span', 'profile-note', USERNAME_RULES)));
+  form.appendChild(field('username - what should we call you?', nameInp, el('span', 'profile-note', USERNAME_RULES)));
 
   // Which fields anyone can see. Ids for removed questions are kept as is.
   const publicSet = new Set(p.public_fields || []);
+
+  // Another name: optional, free text, kept in answers under ALT_NAME_ID.
+  const altNameInp = el('input', 'authw-input');
+  altNameInp.value = (p.answers || {})[ALT_NAME_ID] || ''; altNameInp.maxLength = ALT_NAME_MAX;
+  altNameInp.placeholder = 'optional';
+  form.appendChild(field('another name you might go by', altNameInp, null, privacyToggle(ALT_NAME_ID, publicSet)));
   form.appendChild(el('p', 'profile-note',
     'Fill in as much or as little as you like. Everything stays 🔒 private until you flip it to 🌐 public. ' +
     'Your favorite colors stay private, but they paint your page for everyone who visits.'));
@@ -704,6 +716,7 @@ async function renderEdit(p) {
       if (problem) { showMsg(problem); return; }
       answers[q.id] = value;
     }
+    answers[ALT_NAME_ID] = altNameInp.value.trim();
     saveBtn.disabled = true;
     try {
       if (name !== p.username) {
