@@ -262,11 +262,26 @@ window.Awards = (function () {
     };
   }
 
+  // Fills an icon box. Pixel art is 16×16, shown at exactly 2×: either a data URI
+  // from the awards table (so secret art is never a public file) or a file in
+  // media/badges. Anything else is an emoji, shown as text.
+  const PIXEL_ART = /^(data:image\/png;base64,[A-Za-z0-9+/=]+|\/media\/badges\/[\w-]+\.png)$/;
+  function fillIcon(box, icon) {
+    const src = icon === '❓' ? '/media/badges/mystery.png' : icon; // get_awards' mask for hidden awards
+    if (!PIXEL_ART.test(src)) { box.textContent = icon; return; }
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = '';
+    img.width = img.height = 32;
+    img.style.imageRendering = 'pixelated';
+    box.appendChild(img);
+  }
+
   // A glowing toast that waits for the visitor to dismiss it, then flies into
   // the trophy case. Clicking anywhere else on it goes to the trophy case.
   function toast(opts) {
     const toast = document.createElement('div'); toast.className = 'awd-toast awd-glow';
-    const icon = document.createElement('div'); icon.className = 'awd-icon'; icon.textContent = opts.icon || '🏆';
+    const icon = document.createElement('div'); icon.className = 'awd-icon'; fillIcon(icon, opts.icon || '🏆');
     const body = document.createElement('div'); body.className = 'awd-body';
     const label = document.createElement('div'); label.className = 'awd-label'; label.textContent = opts.label;
     const title = document.createElement('div'); title.className = 'awd-title'; title.textContent = opts.title;
@@ -398,5 +413,5 @@ window.Awards = (function () {
     init();
   }
 
-  return { unlock, progress, tally, tallyActiveTime, markRead, toast };
+  return { unlock, progress, tally, tallyActiveTime, markRead, toast, fillIcon };
 })();

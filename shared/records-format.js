@@ -29,27 +29,35 @@ function formatRecordDate(s) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// The icon box for a record. Needs shared/awards.js.
+function recordIcon(def) {
+  const box = document.createElement('div');
+  box.className = 'award-icon';
+  window.Awards.fillIcon(box, `/media/badges/${def.icon}.png`);
+  return box;
+}
+
 const RECORD_GROUPS = [
   { title: 'Final Wordle', records: [
-    { key: 'wordle_fastest', icon: '⏱️', title: 'Fastest daily solve',              fmt: formatSolveTime },
-    { key: 'wordle_firsts',  icon: '🥇', title: 'Days finishing first',             fmt: plural('day') },
-    { key: 'freeplay_best',  icon: '✒️', title: 'Most freeplay words in 5 minutes', fmt: plural('word') },
-    { key: 'giants_slain',   icon: '🗡️', title: 'Giants slain',                     fmt: plural('day'), personalOnly: true, hiddenUntilEarned: true },
-    { key: 'wordle_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
+    { key: 'wordle_fastest',        icon: 'stopwatch',        title: 'Fastest daily solve',                fmt: formatSolveTime },
+    { key: 'wordle_firsts',         icon: 'medal',            title: 'Days finishing first',               fmt: plural('day') },
+    { key: 'freeplay_best',         icon: 'pen',              title: 'Most freeplay words in 5 minutes',   fmt: plural('word') },
+    { key: 'giants_slain',          icon: 'sling',            title: 'Giants slain',                       fmt: plural('day'), personalOnly: true, hiddenUntilEarned: true },
+    { key: 'wordle_month_titles',   icon: 'crown',            title: 'Months as champion',                 fmt: plural('month') }
   ]},
   { title: 'Absolute 25', records: [
-    { key: 'thermo_month_titles', icon: '👑', title: 'Months as champion',          fmt: plural('month') }
+    { key: 'thermo_month_titles',   icon: 'crown',            title: 'Months as champion',                 fmt: plural('month') }
   ]},
   { title: 'Visits', records: [
-    { key: 'visit_days',           icon: '🚪', title: 'Days dropped by',          fmt: plural('day') },
-    { key: 'visit_streak_longest', icon: '📆', title: 'Longest visiting streak',  fmt: plural('day') },
-    { key: 'visit_streak_current', icon: '🔥', title: 'Current visiting streak',  fmt: plural('day'), personalOnly: true },
-    { key: 'member_since',         icon: '🗝️', title: 'Member since',             fmt: formatRecordDate }
+    { key: 'visit_days',            icon: 'door',             title: 'Days dropped by',                    fmt: plural('day') },
+    { key: 'visit_streak_longest',  icon: 'calendar-streak',  title: 'Longest visiting streak',            fmt: plural('day') },
+    { key: 'visit_streak_current',  icon: 'flame',            title: 'Current visiting streak',            fmt: plural('day'), personalOnly: true },
+    { key: 'member_since',          icon: 'key',              title: 'Member since',                       fmt: formatRecordDate }
   ]},
   { title: 'Grab-bag', records: [
-    { key: 'movie_reads',       icon: '🎬', title: 'Movie reviews read',               fmt: plural('review') },
-    { key: 'game_reads',        icon: '🎮', title: 'Game reviews read',                fmt: plural('review') },
-    { key: 'snapshot_watch_ms', icon: '🎞️', title: "Time spent watching Emmet's life", fmt: formatDuration },
-    { key: 'fish_nips',         icon: '🐟', title: 'Times nipped by a fish',           fmt: plural('nip') }
+    { key: 'movie_reads',           icon: 'clapper',          title: 'Movie reviews read',                 fmt: plural('review') },
+    { key: 'game_reads',            icon: 'gamepad',          title: 'Game reviews read',                  fmt: plural('review') },
+    { key: 'snapshot_watch_ms',     icon: 'film',             title: "Time spent watching Emmet's life",   fmt: formatDuration },
+    { key: 'fish_nips',             icon: 'fish',             title: 'Times nipped by a fish',             fmt: plural('nip') }
   ]}
 ];

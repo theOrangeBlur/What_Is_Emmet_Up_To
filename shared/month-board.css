@@ -52,19 +52,27 @@
 .mb-table td:first-child { text-align: left; }
 .mb-table td.mb-pts { color: var(--sky, var(--cool, #6ec6ff)); font-weight: 700; }
 
-/* Name marks: 👑 last month's champion, small 👑 last week's, 🎩 yesterday's winner. */
-.mb-crown,
-.mb-hat {
-  margin-left: 4px;
-  font-size: 10px;
+/* Name marks: gold crown last month's champion, silver last week's, hat yesterday's
+   winner. 9×7 art shown at exactly 2×, so the pixels stay even. */
+.mb-badge {
+  display: inline-block;
+  vertical-align: middle;
+  width: 18px;
+  height: 14px;
+  margin: -2px 0 -2px 4px; /* taller than the 10px text; don't stretch the row */
+  background: center / 100% 100% no-repeat;
+  image-rendering: pixelated;
   cursor: help;
 }
-.mb-crown-week { font-size: 7px; }
+.mb-crown { background-image: url('../media/badges/crown-month.png'); }
+.mb-crown-week { background-image: url('../media/badges/crown-week.png'); }
+.mb-hat { background-image: url('../media/badges/hat.png'); }
+.mb-champ .mb-badge { margin: 0; }
 
 .mb-champ {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   gap: 4px 8px;
   margin: 0 0 14px;
@@ -89,9 +97,11 @@
 }
 .mb-card > :not(.mb-confetti) { position: relative; }
 .mb-card-crown {
-  font-size: 44px;
-  line-height: 1;
-  margin: 6px 0 10px;
+  width: 48px;
+  height: 48px;
+  margin: 6px auto 10px;
+  background: url('../media/badges/crown-card.png') center / 100% 100% no-repeat;
+  image-rendering: pixelated;
   animation: mb-bob 1.6s ease-in-out infinite;
 }
 .mb-card-name {

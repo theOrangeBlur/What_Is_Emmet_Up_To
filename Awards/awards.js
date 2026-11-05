@@ -44,7 +44,9 @@ function renderSignedOut(root) {
 function renderAward(a, rewarding) {
   const unlocked = !!a.unlocked_at;
   const row = el('article', 'award' + (unlocked ? ' award-unlocked' : ' award-locked') + (a.hidden && !unlocked ? ' award-secret' : ''));
-  row.appendChild(el('div', 'award-icon', a.icon));
+  const icon = el('div', 'award-icon');
+  window.Awards.fillIcon(icon, a.icon);
+  row.appendChild(icon);
 
   const body = el('div', 'award-body');
   const title = el('h3', 'award-title', a.title);
@@ -127,7 +129,7 @@ function renderRecord(def, personal, site) {
   const has = v => v != null && v !== 0;
 
   const row = el('article', 'record' + (site && site.mine ? ' record-held' : ''));
-  row.appendChild(el('div', 'award-icon', def.icon));
+  row.appendChild(recordIcon(def));
 
   const body = el('div', 'award-body');
   body.appendChild(el('h3', 'award-title', def.title));

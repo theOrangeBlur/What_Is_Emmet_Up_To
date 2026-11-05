@@ -352,3 +352,11 @@ drop table if exists public.wordle_family_members;
 -- insert (PGRST204) if the column is missing. Drop it once caches have
 -- turned over (a few weeks after 2026-11-03).
 alter table public.wordle_scores add column if not exists is_family boolean;
+
+-- BEGIN pixel-art award icons
+-- Each icon is a 16x16 PNG stored right in the icon column, so secret art never
+-- has to be a public file. Runs after the seed above, which would otherwise put
+-- the emoji back. Shown by Awards.fillIcon in shared/awards.js.
+update public.awards set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUElEQVR4nGNgoDZYcef7fxiO3/IAjvXz54MxUQYga0Q3ZNQAehjwwNXqPza8WA2CaW/AwIQBruSLzQBkDDcAXYJYjOIKde+2/6RggmFBLAAAggxWJDAc7eoAAAAASUVORK5CYII=' where key = 'wordle_day_champ'; -- topHat
+update public.awards set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAd0lEQVR4nGNgwAIeuFr9h7E/LHD4j00NXgAyAGYIyABkQ5ANx6kZpgnE/v+yC85GNxyvASCNMM3IhiAbhtf56HixGgQT7X9chgwBA17st/+PDa+okgFj2hswMGEASxyEMCwtYKQJdAliMYorDqRq/ScFEwwLYgEAmwA5Bzc5jIgAAAAASUVORK5CYII=' where key = 'thermo_day_champ'; -- hotHat
+-- END pixel-art award icons

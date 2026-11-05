@@ -309,7 +309,9 @@ function renderTrivia(p) {
 
 function renderAwardRow(a) {
   const row = el('article', 'award award-unlocked' + (a.secret ? ' award-secret' : ''));
-  row.appendChild(el('div', 'award-icon', a.icon));
+  const icon = el('div', 'award-icon');
+  window.Awards.fillIcon(icon, a.icon);
+  row.appendChild(icon);
   const body = el('div', 'award-body');
   if (a.secret) {
     body.appendChild(el('h3', 'award-title', 'This person has discovered a super-secret award!'));
@@ -345,7 +347,7 @@ function renderRecords(p) {
       const r = raw != null && typeof raw === 'object' ? raw : { value: raw };
       if (def.hiddenUntilEarned && !has(r.value)) return;
       const row = el('article', 'record');
-      row.appendChild(el('div', 'award-icon', def.icon));
+      row.appendChild(recordIcon(def));
       const body = el('div', 'award-body');
       body.appendChild(el('h3', 'award-title', def.title));
       const val = el('p', 'record-you', has(r.value) ? def.fmt(r.value) : '—');

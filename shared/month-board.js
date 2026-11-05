@@ -3,7 +3,7 @@
 //   MonthBoard.mount(root, game, drawDay)  today/week/month toggle; drawDay(el) draws the daily board into el
 //   MonthBoard.marks(game)                 { month, week, day }: the user ids of last month's champion,
 //                                          last week's champion and yesterday's winner (each may be null)
-//   MonthBoard.badges(userId, marks)       the 👑 / small 👑 / 🎩 to put after that player's name
+//   MonthBoard.badges(userId, marks)       the gold crown / silver crown / hat to put after that player's name
 //   MonthBoard.announce(game)              once a month, a card naming last month's champion
 //   MonthBoard.championId(game), crown()   the older monthly-only calls, still used by cached pages
 // game is 'wordle' or 'thermo'. Everything fails quietly: no network, no board.
@@ -139,22 +139,25 @@ window.MonthBoard = (function () {
     return (await marks(game)).month;
   }
 
+  // A pixel-art mark from media/badges; month-board.css supplies the image.
+  function badge(cls, label) {
+    const b = el('span', 'mb-badge ' + cls);
+    b.setAttribute('role', 'img');
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    return b;
+  }
+
   function crown() {
-    const c = el('span', 'mb-crown', '👑');
-    c.title = "last month's champion";
-    return c;
+    return badge('mb-crown', "last month's champion");
   }
 
   function weekCrown() {
-    const c = el('span', 'mb-crown mb-crown-week', '👑');
-    c.title = "last week's champion";
-    return c;
+    return badge('mb-crown-week', "last week's champion");
   }
 
   function hat() {
-    const h = el('span', 'mb-hat', '🎩');
-    h.title = 'won yesterday';
-    return h;
+    return badge('mb-hat', 'won yesterday');
   }
 
   function badges(userId, m) {
@@ -167,8 +170,9 @@ window.MonthBoard = (function () {
   }
 
   // ── Standings views ───────────────────────────────────────────────────
-  function banner(label, champ, names) {
+  function banner(mark, label, champ, names) {
     const b = el('div', 'mb-champ');
+    b.appendChild(mark);
     b.appendChild(el('span', 'mb-champ-label', label));
     const who = el('span', 'mb-champ-name');
     who.appendChild(nameNode(champ.name, champ.user_id, names));
@@ -194,8 +198,8 @@ window.MonthBoard = (function () {
     root.innerHTML = '';
     if (champ) {
       root.appendChild(isWeek
-        ? banner(`👑 week of ${weekName(champ.week)} champion`, champ, names)
-        : banner(`👑 ${monthName(champ.month)} champion`, champ, names));
+        ? banner(weekCrown(), `week of ${weekName(champ.week)} champion`, champ, names)
+        : banner(crown(), `${monthName(champ.month)} champion`, champ, names));
     }
     root.appendChild(el('div', 'lb-title', isWeek ? "this week's standings" : `${monthName(currentMonth())} standings`));
     const left = isWeek ? daysLeftInWeek() : daysLeftInMonth();
@@ -313,7 +317,7 @@ window.MonthBoard = (function () {
     card.append(
       confetti,
       el('div', 'arcade-heading', `${monthName(champ.month)} champion`),
-      el('div', 'mb-card-crown', '👑'),
+      el('div', 'mb-card-crown'),
       el('div', 'arcade-inscribe-text', 'The Enquirer proudly exalts'),
       who,
       el('div', 'mb-card-stats', `${champ.points} pts · ${champ.wins} win${champ.wins === 1 ? '' : 's'} · ${champ.days_played} day${champ.days_played === 1 ? '' : 's'}`),
