@@ -19,6 +19,19 @@ window.NameFonts = (function () {
     fraktur:           { label: 'Blackletter',             family: "'UnifrakturMaguntia', serif",       weight: 400, gf: 'UnifrakturMaguntia' },
   };
 
+  const TEXT_DEFAULT = 'mono';
+  const TEXT_FONTS = {
+    mono:       { label: 'Space Mono',            family: "'Space Mono', monospace",             gf: 'Space+Mono:wght@400;700' },
+    courier:    { label: 'Courier Prime',         family: "'Courier Prime', monospace",          gf: 'Courier+Prime:ital,wght@0,400;0,700;1,400' },
+    lora:       { label: 'Lora',                  family: "'Lora', serif",                       gf: 'Lora:ital,wght@0,400;0,700;1,400' },
+    literata:   { label: 'Literata',              family: "'Literata', serif",                   gf: 'Literata:ital,wght@0,400;0,700;1,400' },
+    atkinson:   { label: 'Atkinson Hyperlegible', family: "'Atkinson Hyperlegible', sans-serif", gf: 'Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400' },
+    comic:      { label: 'Comic Neue',            family: "'Comic Neue', cursive",               gf: 'Comic+Neue:ital,wght@0,400;0,700;1,400' },
+    typewriter: { label: 'Special Elite',         family: "'Special Elite', monospace",          gf: 'Special+Elite' },
+    caveat:     { label: 'Caveat',                family: "'Caveat', cursive",                   gf: 'Caveat:wght@400;700', scale: 1.35 },
+    pixel:      { label: 'VT323',                 family: "'VT323', monospace",                  gf: 'VT323', scale: 1.4 },
+  };
+
   const loaded = new Set();
 
   // Tell the loader a page's own <link> already carries these (FONTS[*].gf values).
@@ -27,7 +40,7 @@ window.NameFonts = (function () {
   }
 
   function load(key) {
-    const f = FONTS[key];
+    const f = FONTS[key] || TEXT_FONTS[key];
     if (!f || loaded.has(f.gf)) return;
     loaded.add(f.gf);
     const link = document.createElement('link');
@@ -41,6 +54,11 @@ window.NameFonts = (function () {
     return FONTS[key] ? key : DEFAULT;
   }
 
+  // A known text font key, or the text default.
+  function textKeyOf(key) {
+    return TEXT_FONTS[key] ? key : TEXT_DEFAULT;
+  }
+
   // Set element el in the font for key (loading it), or leave it alone for an unknown key.
   function applyTo(el, key) {
     const f = FONTS[key];
@@ -52,5 +70,5 @@ window.NameFonts = (function () {
     return true;
   }
 
-  return { DEFAULT, FONTS, markLoaded, load, keyOf, applyTo };
+  return { DEFAULT, FONTS, TEXT_DEFAULT, TEXT_FONTS, markLoaded, load, keyOf, textKeyOf, applyTo };
 })();

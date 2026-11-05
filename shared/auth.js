@@ -141,7 +141,7 @@ window.Auth = (function () {
 
   // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
   async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null, artPath = null, artTitle = null, nameFont = null,
-                                 soundPath = null, soundTitle = null } = {}) {
+                                 soundPath = null, soundTitle = null, textFont = null } = {}) {
     const args = { p_bio: bio, p_answers: answers, p_avatar_path: avatarPath, p_public_fields: publicFields };
     // Sent only when set, so saves still work against an update_profile from
     // before the art window and name fonts existed.
@@ -150,6 +150,7 @@ window.Auth = (function () {
     if (nameFont != null) args.p_name_font = nameFont;
     if (soundPath != null) args.p_sound_path = soundPath;
     if (soundTitle != null) args.p_sound_title = soundTitle;
+    if (textFont != null) args.p_text_font = textFont;
     const { data, error } = await rpc('update_profile', args);
     if (error || !data) return { ok: false, reason: 'error' };
     if (data.ok) profileCache = null;   // avatar may have changed

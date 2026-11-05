@@ -41,7 +41,11 @@
   overflow-wrap: anywhere;
 }
 .profile-alt-name { font-size: 13px; color: var(--muted); font-style: italic; margin: 0 0 8px; overflow-wrap: anywhere; }
-.profile-bio { font-size: 13px; color: var(--text); line-height: 1.6; margin: 0 0 8px; overflow-wrap: anywhere; }
+.profile-bio {
+  font-family: var(--text-font, 'Space Mono', monospace);
+  font-size: calc(13px * var(--text-scale, 1));
+  color: var(--text); line-height: 1.6; margin: 0 0 8px; overflow-wrap: anywhere;
+}
 .profile-since { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
 .profile-edit-btn { margin-top: 14px; }
 
@@ -51,7 +55,7 @@
 .profile-emmet-notes { margin-bottom: 4px; }
 .profile-emmet-note-text {
   font-size: 13px; color: var(--text); line-height: 1.7; margin: 0;
-  white-space: pre-line; overflow-wrap: anywhere;
+  overflow-wrap: anywhere;
 }
 .profile-emmet-note-sig { font-size: 12px; color: var(--muted); font-style: italic; text-align: right; margin: 8px 0 0; }
 .profile-emmet-edit-btn { margin: 0 0 20px; }
@@ -63,7 +67,25 @@
   margin-bottom: 8px;
 }
 .profile-q { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.profile-a { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.profile-a {
+  font-family: var(--text-font, 'Space Mono', monospace);
+  font-size: calc(14px * var(--text-scale, 1));
+  font-weight: 700; overflow-wrap: anywhere;
+}
+
+/* Formatted text (shared/rich-text.js): paragraphs, lists and links inside
+   the bio, answers and Emmet's notes. Answers are already bold, so bold
+   inside one shows in the accent color. */
+.profile-bio p, .profile-a p, .profile-emmet-note-text p { margin: 0 0 .6em; }
+.profile-bio > :last-child, .profile-a > :last-child, .profile-emmet-note-text > :last-child { margin-bottom: 0; }
+.profile-bio ul, .profile-bio ol, .profile-a ul, .profile-a ol,
+.profile-emmet-note-text ul, .profile-emmet-note-text ol { margin: 0 0 .6em; padding-left: 1.4em; }
+.profile-bio li, .profile-a li, .profile-emmet-note-text li { margin: .15em 0; }
+.profile-bio a, .profile-a a, .profile-emmet-note-text a {
+  color: var(--green-hi); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere;
+}
+.profile-bio a:hover, .profile-a a:hover, .profile-emmet-note-text a:hover { color: var(--green); }
+.profile-a strong { color: var(--green-hi); }
 
 /* Art window: the owner's own heading over a framed picture. The heading is
    whatever they typed, so it keeps its case rather than the shouty section
@@ -128,7 +150,7 @@
 .profile-sound-edit { display: flex; flex-direction: column; gap: 10px; }
 .profile-sound-edit .profile-note { min-width: 0; overflow-wrap: anywhere; }
 
-/* Name font picker: each option shows the name in its own face. */
+/* Font pickers (name and text): each option shows a sample in its own face. */
 .profile-fonts { display: flex; flex-direction: column; gap: 10px; }
 .profile-font-lock { font-size: 12px; color: var(--soft); line-height: 1.5; margin: 0; }
 .profile-font-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
@@ -152,7 +174,7 @@
 .profile-fonts.is-locked .profile-font-opt { opacity: .45; }
 .profile-fonts.is-locked .profile-font-opt[aria-pressed="true"] { opacity: 1; }
 .profile-font-sample {
-  font-size: 24px;
+  font-size: calc(24px * var(--sample-scale, 1));
   line-height: 1.15;
   max-width: 100%;
   overflow: hidden;
@@ -176,6 +198,16 @@
 .profile-note { font-size: 10px; color: var(--muted); }
 .profile-email { font-size: 13px; overflow-wrap: anywhere; }
 .profile-textarea { resize: vertical; font-family: 'Space Mono', monospace; }
+/* Formatting buttons over a text field (shared/rich-text.js toolbar). */
+.rt-toolbar { display: flex; flex-wrap: wrap; gap: 4px; }
+.rt-btn {
+  min-width: 30px; padding: 3px 8px;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--soft);
+  font: 700 11px 'Space Mono', monospace; cursor: pointer;
+}
+.rt-btn:hover { border-color: var(--muted); color: var(--text); }
+.rt-btn:focus-visible { outline: 1px solid var(--green); outline-offset: 1px; }
+.rt-italic { font-style: italic; font-weight: 400; }
 .profile-avatar-row { display: flex; align-items: center; gap: 10px; }
 .profile-avatar-row .authw-btn { flex: 0 0 auto; padding: 9px 14px; }
 .profile-btns { max-width: 320px; }

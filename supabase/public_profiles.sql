@@ -77,6 +77,7 @@ language sql stable security definer set search_path = public as $$
     'sound_path',   case when p.user_id = auth.uid() or 'sound' = any (p.public_fields) then p.sound_path end,
     'sound_title',  case when p.user_id = auth.uid() or 'sound' = any (p.public_fields) then p.sound_title end,
     'name_font',    p.name_font,
+    'text_font',    p.text_font,
     'updated_at',   p.updated_at,
     'answers',      (select coalesce(jsonb_object_agg(a.key, a.value), '{}'::jsonb)
                      from jsonb_each(p.answers) a
@@ -151,19 +152,22 @@ $$;
 -- ── Writing ───────────────────────────────────────────────────────────────
 -- Update the caller's bio, question answers, public fields, avatar and/or art
 -- window. A null argument leaves that field alone; '' clears the bio, avatar,
--- art picture, art heading, sound, sound heading or name font (back to the
--- default). Any other name
--- font takes the perk:name_fonts unlock (unlocks.sql). Answers
+-- art picture, art heading, sound, sound heading, name font or text font
+-- (fonts go back to the default). Any other name font takes the
+-- perk:name_fonts unlock (unlocks.sql), and any other text font
+-- perk:text_fonts (unlocks-hidden.sql). Answers
 -- and public fields each replace the whole set, and blank answers are dropped. The username is changed through
 -- set_username() in profiles.sql.
 drop function if exists public.update_profile(text, jsonb, text);
 drop function if exists public.update_profile(text, jsonb, text, text[]);
 drop function if exists public.update_profile(text, jsonb, text, text[], text, text);
 drop function if exists public.update_profile(text, jsonb, text, text[], text, text, text);
+drop function if exists public.update_profile(text, jsonb, text, text[], text, text, text, text, text);
 create or replace function public.update_profile(
   p_bio text default null, p_answers jsonb default null, p_avatar_path text default null,
   p_public_fields text[] default null, p_art_path text default null, p_art_title text default null,
-  p_name_font text default null, p_sound_path text default null, p_sound_title text default null)
+  p_name_font text default null, p_sound_path text default null, p_sound_title text default null,
+  p_text_font text default null)
 returns json
 language plpgsql security definer set search_path = public as $$
 declare
@@ -237,6 +241,15 @@ begin
     end if;
   end if;
 
+  if p_text_font is not null and p_text_font <> '' then
+    if p_text_font !~ '^[a-z_]{1,24}$' then
+      return json_build_object('ok', false, 'reason', 'invalid');
+    end if;
+    if not exists (select 1 from public.get_my_unlocks() m where m.key = 'perk:text_fonts') then
+      return json_build_object('ok', false, 'reason', 'locked');
+    end if;
+  end if;
+
   update public.profiles set
     bio         = case when p_bio is null then bio else nullif(trim(p_bio), '') end,
     answers     = case when p_answers is null then answers else v_clean end,
@@ -244,6 +257,7 @@ begin
     art_path    = case when p_art_path is null then art_path else nullif(p_art_path, '') end,
     art_title   = case when p_art_title is null then art_title else nullif(trim(p_art_title), '') end,
     name_font   = case when p_name_font is null then name_font else nullif(p_name_font, '') end,
+    text_font   = case when p_text_font is null then text_font else nullif(p_text_font, '') end,
     sound_path  = case when p_sound_path is null then sound_path else nullif(p_sound_path, '') end,
     sound_title = case when p_sound_title is null then sound_title else nullif(trim(p_sound_title), '') end,
     public_fields = case when p_public_fields is null then public_fields
@@ -256,9 +270,9 @@ $$;
 
 revoke all on function public.get_public_profile(text) from public;
 revoke all on function public.usernames_for(uuid[]) from public;
-revoke all on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text) from public, anon;
+revoke all on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text, text) from public, anon;
 grant execute on function public.get_public_profile(text) to anon, authenticated;
 grant execute on function public.usernames_for(uuid[]) to anon, authenticated;
-grant execute on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text) to authenticated;
+grant execute on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text, text) to authenticated;
 revoke all on function public.set_profile_notes(text, text, text) from public, anon;
 grant execute on function public.set_profile_notes(text, text, text) to authenticated;

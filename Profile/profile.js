@@ -110,7 +110,7 @@ const PIXEL_ICON_UNLOCK = 'perk:pixel_icon';
 const NAME_FONTS = NameFonts.FONTS;
 
 // The page's <link> already carries these.
-NameFonts.markLoaded('Bricolage+Grotesque:opsz,wght@12..96,800', 'Syne:wght@800', 'Space+Mono:wght@700');
+NameFonts.markLoaded('Bricolage+Grotesque:opsz,wght@12..96,800', 'Syne:wght@800', 'Space+Mono:wght@700', 'Space+Mono:wght@400;700');
 const loadNameFont = NameFonts.load;
 const nameFontKey = NameFonts.keyOf;
 
@@ -121,6 +121,51 @@ function applyNameFont(key) {
   style.setProperty('--name-font', f.family);
   style.setProperty('--name-weight', String(f.weight));
   style.setProperty('--name-style', f.italic ? 'italic' : 'normal');
+}
+
+// ── Text font ───────────────────────────────────────────────────────────
+// The typeface for the rest of the owner's own words: bio and answers. Opened
+// up by perk:text_fonts, the reward for a hidden award (unlocks-hidden.sql).
+const TEXT_FONT_DEFAULT = NameFonts.TEXT_DEFAULT;
+const TEXT_FONT_UNLOCK = 'perk:text_fonts';
+const TEXT_FONTS = NameFonts.TEXT_FONTS;
+const textFontKey = NameFonts.textKeyOf;
+
+function applyTextFont(key) {
+  const k = textFontKey(key);
+  const f = TEXT_FONTS[k];
+  NameFonts.load(k);
+  const style = document.documentElement.style;
+  style.setProperty('--text-font', f.family);
+  style.setProperty('--text-scale', String(f.scale || 1));
+}
+
+// ── Visiting other profiles ─────────────────────────────────────────────
+// Dropping in on three other residents earns the hidden h_v3 award. Who's
+// been visited is kept per account (or for signed-out browsing), and the
+// awards system holds signed-out progress until sign-in.
+const NEIGHBOR_AWARD = 'h_v3';
+const NEIGHBOR_TARGET = 3;
+
+async function countVisit(p) {
+  if (p.is_me || !window.Awards) return;
+  const session = await window.Auth.getSession();
+  const key = 'awards_profiles_' + (session ? session.user.id : 'anon');
+  let seen = [];
+  try { seen = JSON.parse(localStorage.getItem(key)) || []; } catch {}
+  const name = p.username.toLowerCase();
+  if (!seen.includes(name)) {
+    seen.push(name);
+    try { localStorage.setItem(key, JSON.stringify(seen)); } catch {}
+  }
+  window.Awards.progress(NEIGHBOR_AWARD, Math.min(seen.length, NEIGHBOR_TARGET), NEIGHBOR_TARGET);
+}
+
+// Text people typed, with its **bold**, *italics*, links and lists.
+function richEl(tag, className, text, block) {
+  const node = el(tag, className);
+  node.appendChild(window.RichText.render(text, { block }));
+  return node;
 }
 
 function card(icon, heading, text, button) {
@@ -161,7 +206,15 @@ function renderHeader(p) {
   info.appendChild(el('h1', 'profile-name', p.username));
   const altName = (p.answers || {})[ALT_NAME_ID];
   if (altName) info.appendChild(withPrivateTag(el('p', 'profile-alt-name', 'a.k.a. ' + altName), p, ALT_NAME_ID));
-  if (p.bio) info.appendChild(withPrivateTag(el('p', 'profile-bio', p.bio), p, 'bio'));
+  if (p.bio) {
+    const bio = richEl('div', 'profile-bio', p.bio, true);
+    if (isPrivate(p, 'bio')) {
+      // After the last paragraph, not after a list.
+      const last = bio.lastElementChild;
+      withPrivateTag(last && last.tagName === 'P' ? last : bio, p, 'bio');
+    }
+    info.appendChild(bio);
+  }
   if (p.member_since) info.appendChild(el('div', 'profile-since', 'resident since ' + formatDate(p.member_since)));
   if (p.is_me) {
     const btn = el('button', 'case-btn profile-edit-btn', 'edit profile');
@@ -192,6 +245,9 @@ function formatAnswer(q, value) {
     text = q.money
       ? '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : n.toLocaleString('en-US');
+  } else if (!q.type || q.type === 'text' || q.type === 'long') {
+    wrap.appendChild(window.RichText.render(value, { block: q.type === 'long' }));
+    return wrap;
   }
   wrap.textContent = text;
   return wrap;
@@ -314,7 +370,7 @@ function noteBlock(heading, text, tag) {
   const title = el('h2', 'case-section-title', heading);
   if (tag) { title.appendChild(document.createTextNode(' ')); title.appendChild(el('span', 'profile-private', tag)); }
   section.appendChild(title);
-  section.appendChild(el('p', 'profile-emmet-note-text', text));
+  section.appendChild(richEl('div', 'profile-emmet-note-text', text, true));
   section.appendChild(el('p', 'profile-emmet-note-sig', '— Emmet'));
   return section;
 }
@@ -326,11 +382,13 @@ function renderNotesEditor(p, wrap) {
   const pubInp = el('textarea', 'authw-input profile-textarea');
   pubInp.value = p.emmet_note || ''; pubInp.maxLength = NOTE_MAX; pubInp.rows = 4;
   pubInp.placeholder = 'everyone who visits sees this';
-  form.appendChild(field('public note', pubInp, charCounter(pubInp, NOTE_MAX)));
+  form.appendChild(field('public note', pubInp, charCounter(pubInp, NOTE_MAX), null,
+    window.RichText.toolbar(pubInp, { block: true })));
   const privInp = el('textarea', 'authw-input profile-textarea');
   privInp.value = p.emmet_private_note || ''; privInp.maxLength = NOTE_MAX; privInp.rows = 4;
   privInp.placeholder = p.is_me ? 'only you see this' : 'only ' + p.username + ' sees this';
-  form.appendChild(field('private note', privInp, charCounter(privInp, NOTE_MAX)));
+  form.appendChild(field('private note', privInp, charCounter(privInp, NOTE_MAX), null,
+    window.RichText.toolbar(privInp, { block: true })));
 
   const msg = el('div', 'authw-msg'); msg.style.display = 'none';
   form.appendChild(msg);
@@ -435,7 +493,8 @@ let fieldCount = 0;
 
 // A labelled form row. The label points at real inputs with `for` rather than
 // wrapping them, so the privacy toggle beside it isn't clicked along with it.
-function field(labelText, input, note, toggle) {
+// `tools` (optional) sits between the label and the input: the formatting buttons.
+function field(labelText, input, note, toggle, tools) {
   const wrap = el('div', 'profile-field');
   const head = el('div', 'profile-field-head');
   const isInput = input.matches('input, textarea');
@@ -447,6 +506,7 @@ function field(labelText, input, note, toggle) {
   head.appendChild(label);
   if (toggle) head.appendChild(toggle);
   wrap.appendChild(head);
+  if (tools) wrap.appendChild(tools);
   wrap.appendChild(input);
   if (note) wrap.appendChild(note);
   return wrap;
@@ -478,14 +538,15 @@ function charCounter(inp, max) {
   return count;
 }
 
-// The control for one question, by type: { el, get(), note? }.
+// The control for one question, by type: { el, get(), note?, tools? }.
 function inputFor(q, value, onChange) {
   const type = q.type || 'text';
   if (type === 'color') return window.ColorWheel.create(value, onChange);
   if (type === 'long') {
     const inp = el('textarea', 'authw-input profile-textarea');
     inp.value = value; inp.maxLength = q.max || ANSWER_MAX; inp.rows = 3;
-    return { el: inp, get: () => inp.value.trim(), note: charCounter(inp, inp.maxLength) };
+    return { el: inp, get: () => inp.value.trim(), note: charCounter(inp, inp.maxLength),
+             tools: window.RichText.toolbar(inp, { block: true }) };
   }
   const inp = el('input', 'authw-input');
   inp.value = value;
@@ -497,8 +558,58 @@ function inputFor(q, value, onChange) {
     inp.type = 'date';
   } else {
     inp.maxLength = q.max || ANSWER_MAX;
+    return { el: inp, get: () => inp.value.trim(), tools: window.RichText.toolbar(inp) };
   }
   return { el: inp, get: () => inp.value.trim() };
+}
+
+// A grid of samples to pick a typeface from, locked until `unlockKey` is
+// earned. lockText(status) is the line shown while it's locked.
+// Returns { el, get(), setSample(text) }.
+function fontPicker({ fonts, defaultKey, startKey, unlockKey, lockText, onPick }) {
+  let picked = startKey;
+  const wrap = el('div', 'profile-fonts is-locked');
+  const lock = el('p', 'profile-font-lock', 'checking whether you’ve unlocked these…');
+  wrap.appendChild(lock);
+  const grid = el('div', 'profile-font-grid');
+  const btns = {};
+  Object.entries(fonts).forEach(([key, f]) => {
+    NameFonts.load(key);
+    const b = el('button', 'profile-font-opt');
+    b.type = 'button';
+    b.disabled = true;
+    b.setAttribute('aria-pressed', String(key === picked));
+    const sample = el('span', 'profile-font-sample');
+    sample.style.fontFamily = f.family;
+    if (f.weight) sample.style.fontWeight = f.weight;
+    sample.style.fontStyle = f.italic ? 'italic' : 'normal';
+    if (f.scale) sample.style.setProperty('--sample-scale', String(f.scale));
+    b.appendChild(sample);
+    b.appendChild(el('span', 'profile-font-label', f.label + (key === defaultKey ? ' (default)' : '')));
+    b.addEventListener('click', () => {
+      picked = key;
+      Object.entries(btns).forEach(([k, btn]) => btn.setAttribute('aria-pressed', String(k === key)));
+      onPick(key);
+    });
+    btns[key] = b;
+    grid.appendChild(b);
+  });
+  wrap.appendChild(grid);
+  (window.Unlocks ? window.Unlocks.status([unlockKey]) : Promise.resolve({})).then(all => {
+    const st = all[unlockKey];
+    if (st && st.unlocked) {
+      wrap.classList.remove('is-locked');
+      lock.remove();
+      Object.values(btns).forEach(b => { b.disabled = false; });
+      return;
+    }
+    lock.textContent = lockText(st);
+  }).catch(() => {});
+  return {
+    el: wrap,
+    get: () => picked,
+    setSample: text => grid.querySelectorAll('.profile-font-sample').forEach(s => { s.textContent = text; }),
+  };
 }
 
 // [cleanValue, null], or [null, message] when the answer doesn't fit its type.
@@ -641,7 +752,8 @@ async function renderEdit(p) {
   const bioInp = el('textarea', 'authw-input profile-textarea');
   bioInp.value = p.bio || ''; bioInp.maxLength = BIO_MAX; bioInp.rows = 3;
   bioInp.placeholder = 'a line about yourself';
-  form.appendChild(field('bio', bioInp, charCounter(bioInp, BIO_MAX), privacyToggle('bio', publicSet)));
+  form.appendChild(field('bio', bioInp, charCounter(bioInp, BIO_MAX), privacyToggle('bio', publicSet),
+    window.RichText.toolbar(bioInp, { block: true })));
 
   // Art window: a heading and a picture
   let newArt = null;         // Blob to upload on save
@@ -765,53 +877,31 @@ async function renderEdit(p) {
 
   // Name font: a row of samples, locked until ten games are played.
   const startFont = nameFontKey(p.name_font);
-  let nameFont = startFont;
-  const fontWrap = el('div', 'profile-fonts is-locked');
-  const fontLock = el('p', 'profile-font-lock', 'checking whether you’ve unlocked these…');
-  fontWrap.appendChild(fontLock);
-  const fontGrid = el('div', 'profile-font-grid');
-  const fontBtns = {};
-  Object.entries(NAME_FONTS).forEach(([key, f]) => {
-    loadNameFont(key);
-    const b = el('button', 'profile-font-opt');
-    b.type = 'button';
-    b.disabled = true;
-    b.setAttribute('aria-pressed', String(key === nameFont));
-    const sample = el('span', 'profile-font-sample');
-    sample.style.fontFamily = f.family;
-    sample.style.fontWeight = f.weight;
-    sample.style.fontStyle = f.italic ? 'italic' : 'normal';
-    b.appendChild(sample);
-    b.appendChild(el('span', 'profile-font-label', f.label + (key === NAME_FONT_DEFAULT ? ' (default)' : '')));
-    b.addEventListener('click', () => {
-      nameFont = key;
-      Object.entries(fontBtns).forEach(([k, btn]) => btn.setAttribute('aria-pressed', String(k === key)));
-      applyNameFont(key);
-    });
-    fontBtns[key] = b;
-    fontGrid.appendChild(b);
+  const namePicker = fontPicker({
+    fonts: NAME_FONTS, defaultKey: NAME_FONT_DEFAULT, startKey: startFont, unlockKey: NAME_FONT_UNLOCK,
+    onPick: applyNameFont,
+    lockText: st => {
+      const target = (st && st.target) || 10;
+      const played = Math.min((st && st.value) || 0, target);
+      return `🔒 Play ${target} games to pick your own — ${played} / ${target} so far. ` +
+        'Wordle, Absolute 25, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
+    },
   });
-  fontWrap.appendChild(fontGrid);
-  const syncSamples = () => {
-    const text = nameInp.value.trim() || p.username;
-    fontGrid.querySelectorAll('.profile-font-sample').forEach(s => { s.textContent = text; });
-  };
+  const syncSamples = () => namePicker.setSample(nameInp.value.trim() || p.username);
   nameInp.addEventListener('input', syncSamples);
   syncSamples();
-  form.appendChild(field('name font', fontWrap));
-  (window.Unlocks ? window.Unlocks.status([NAME_FONT_UNLOCK]) : Promise.resolve({})).then(all => {
-    const st = all[NAME_FONT_UNLOCK];
-    if (st && st.unlocked) {
-      fontWrap.classList.remove('is-locked');
-      fontLock.remove();
-      Object.values(fontBtns).forEach(b => { b.disabled = false; });
-      return;
-    }
-    const target = (st && st.target) || 10;
-    const played = Math.min((st && st.value) || 0, target);
-    fontLock.textContent = `🔒 Play ${target} games to pick your own — ${played} / ${target} so far. ` +
-      'Wordle, Absolute 25, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
-  }).catch(() => {});
+  form.appendChild(field('name font', namePicker.el));
+
+  // Text font: for the bio and answers. Its award is hidden, so the lock
+  // doesn't say what it takes.
+  const startTextFont = textFontKey(p.text_font);
+  const textPicker = fontPicker({
+    fonts: TEXT_FONTS, defaultKey: TEXT_FONT_DEFAULT, startKey: startTextFont, unlockKey: TEXT_FONT_UNLOCK,
+    onPick: applyTextFont,
+    lockText: () => '🔒 A secret award opens this one up. Keep exploring the Enquirer.',
+  });
+  textPicker.setSample('the quick brown fox');
+  form.appendChild(field('text font', textPicker.el));
 
   // Questions
   const answers = Object.assign({}, p.answers || {});
@@ -822,7 +912,7 @@ async function renderEdit(p) {
   (window.PROFILE_QUESTIONS || []).forEach(q => {
     const control = inputFor(q, answers[q.id] || '', previewTheme);
     answerInps[q.id] = { q, control };
-    form.appendChild(field(q.q, control.el, control.note, q.private ? null : privacyToggle(q.id, publicSet)));
+    form.appendChild(field(q.q, control.el, control.note, q.private ? null : privacyToggle(q.id, publicSet), control.tools));
   });
 
   const msg = el('div', 'authw-msg'); msg.style.display = 'none';
@@ -865,14 +955,15 @@ async function renderEdit(p) {
         bio: bioInp.value.trim(), answers, publicFields: [...publicSet].filter(id => !ALWAYS_PRIVATE.has(id)),
         artTitle: artTitle !== (p.art_title || '') ? artTitle : null,
         soundTitle: soundTitle !== (p.sound_title || '') ? soundTitle : null,
-        // '' puts the name back on the default.
-        nameFont: nameFont !== startFont ? (nameFont === NAME_FONT_DEFAULT ? '' : nameFont) : null,
+        // '' puts the font back on the default.
+        nameFont: namePicker.get() !== startFont ? (namePicker.get() === NAME_FONT_DEFAULT ? '' : namePicker.get()) : null,
+        textFont: textPicker.get() !== startTextFont ? (textPicker.get() === TEXT_FONT_DEFAULT ? '' : textPicker.get()) : null,
       });
       if (!saved.ok) {
         showMsg(saved.reason === 'bio_too_long' ? 'that bio runs long — trim it a bit'
               : saved.reason === 'art_title_too_long' ? 'that art heading runs long — trim it a bit'
               : saved.reason === 'sound_title_too_long' ? 'that sound heading runs long — trim it a bit'
-              : saved.reason === 'locked' ? 'play ten games to unlock the other fonts'
+              : saved.reason === 'locked' ? "that font isn't unlocked yet"
               : "couldn't save that — try again in a bit");
         return;
       }
@@ -916,6 +1007,7 @@ function render() {
   // Re-applied on every render, so cancelling an edit drops the preview.
   applyTheme(themeOf(profile));
   applyNameFont(profile.name_font);
+  applyTextFont(profile.text_font);
   if (editing && profile.is_me) renderEdit(profile);
   else renderView(profile);
 }
@@ -956,6 +1048,7 @@ async function load() {
   // The name in the URL may differ in case from the real one.
   if (data.username !== wanted) history.replaceState(null, '', window.Auth.profileUrl(data.username));
   render();
+  countVisit(data).catch(() => {});
 }
 
 // Signing in or out changes whether this is "your" profile (and, with no ?u,

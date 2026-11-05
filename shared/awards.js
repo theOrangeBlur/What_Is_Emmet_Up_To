@@ -363,7 +363,7 @@ window.Awards = (function () {
   // visited, signed-out awards, streaks) would hand them straight back.
   const RESET_EPOCH = '2026-11-03';
   const RESET_KEY = 'records_reset';
-  const RESET_PREFIXES = ['awards_done_', 'records_reads_', 'records_visit_', 'unlocks_'];
+  const RESET_PREFIXES = ['awards_done_', 'awards_profiles_', 'records_reads_', 'records_visit_', 'unlocks_'];
   const RESET_KEYS = ['awards_pages', 'awards_pending', 'awards_nudged', 'records_pending', 'balance_streak'];
 
   function applyReset() {

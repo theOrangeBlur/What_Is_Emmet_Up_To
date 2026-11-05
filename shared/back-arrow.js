@@ -50,7 +50,7 @@
   const a = document.createElement('a');
   a.className = 'back-arrow';
   a.href = prev.href;
-  a.innerHTML = '&larr;';
+  a.innerHTML = '&rarr;';
   a.title = 'Back to the previous page';
   a.setAttribute('aria-label', 'Back to the previous page');
   a.addEventListener('click', e => {

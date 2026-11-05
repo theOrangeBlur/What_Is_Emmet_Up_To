@@ -26,6 +26,10 @@ alter table public.profiles add column if not exists sound_title text check (cha
 -- Which typeface the name is set in (Profile/profile.js NAME_FONTS). Null is
 -- the default. Picking one takes the perk:name_fonts unlock (unlocks.sql).
 alter table public.profiles add column if not exists name_font   text check (name_font ~ '^[a-z_]{1,24}$');
+-- Typeface for the rest of their words (bio and answers), a key from
+-- TEXT_FONTS in shared/name-fonts.js; null is the default. Picking one takes
+-- the perk:text_fonts unlock (unlocks-hidden.sql).
+alter table public.profiles add column if not exists text_font   text check (text_font ~ '^[a-z_]{1,24}$');
 
 -- Which profile fields anyone can see: 'bio' for the bio, otherwise a key in
 -- answers. Everything else is shown only to its owner. When the column is
