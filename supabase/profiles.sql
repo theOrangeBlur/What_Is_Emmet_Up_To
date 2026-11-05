@@ -45,6 +45,20 @@ create unique index if not exists profiles_username_lower on public.profiles (lo
 
 alter table public.profiles enable row level security;
 
+-- Notes Emmet writes about a person, shown on their profile: the public one
+-- to every visitor, the private one only to that person. Only admins
+-- (comments.sql) write them, through set_profile_notes() in
+-- public_profiles.sql. They live apart from profiles so update_profile(),
+-- which owners call, can never touch them.
+create table if not exists public.profile_notes (
+  user_id      uuid primary key references public.profiles on delete cascade,
+  public_note  text check (char_length(public_note)  <= 1000),
+  private_note text check (char_length(private_note) <= 1000),
+  updated_at   timestamptz not null default now()
+);
+-- No policies: reached only through the functions in public_profiles.sql.
+alter table public.profile_notes enable row level security;
+
 -- For the sign-up form, before the account exists.
 create or replace function public.username_available(p_name text)
 returns boolean

@@ -131,6 +131,14 @@ window.Auth = (function () {
     return error ? { error } : { data };
   }
 
+  // Emmet's notes on someone's profile (admins only). Null leaves a note
+  // alone, '' clears it. Resolves to { ok: true } or { ok: false, reason }.
+  async function setProfileNotes(username, publicNote = null, privateNote = null) {
+    const { data, error } = await rpc('set_profile_notes', { p_username: username, p_public: publicNote, p_private: privateNote });
+    if (error || !data) return { ok: false, reason: 'error' };
+    return data;
+  }
+
   // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
   async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null, artPath = null, artTitle = null, nameFont = null,
                                  soundPath = null, soundTitle = null } = {}) {
@@ -211,5 +219,5 @@ window.Auth = (function () {
   }
 
   return { getMyProfile, getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc,
-           profileUrl, usernamesFor, getPublicProfile, updateProfile, uploadAvatar, uploadArt, uploadSound, uploadPixelSource, avatarUrl, pixelSourceUrl, soundUrl };
+           profileUrl, usernamesFor, getPublicProfile, setProfileNotes, updateProfile, uploadAvatar, uploadArt, uploadSound, uploadPixelSource, avatarUrl, pixelSourceUrl, soundUrl };
 })();

@@ -1,5 +1,6 @@
 -- Public profile pages (Profile/profile.html). Paste into the Supabase SQL
--- editor and run after profiles.sql, records.sql and awards.sql. Safe to re-run.
+-- editor and run after profiles.sql, records.sql, awards.sql and comments.sql
+-- (which creates is_admin()). Safe to re-run.
 --
 -- Anyone can read a profile by username: name, avatar, member-since date,
 -- earned awards, personal records, and whichever of the bio and question
@@ -97,10 +98,45 @@ language sql stable security definer set search_path = public as $$
       join public.awards a on a.key = ua.award_key
       where ua.user_id = p.user_id and ua.unlocked_at is not null), '[]'::json),
     'awards_total', (select count(*) from public.awards a where not a.buried),
-    'records', public.personal_records(p.user_id, null)
+    'records', public.personal_records(p.user_id, null),
+    -- Emmet's notes (profile_notes): the public one for everyone, the
+    -- private one only for the person it's about (and admins, to edit it).
+    'emmet_note',   n.public_note,
+    'emmet_private_note', case when p.user_id = auth.uid() or public.is_admin() then n.private_note end,
+    'can_note',     public.is_admin()
   )
   from public.profiles p
+  left join public.profile_notes n on n.user_id = p.user_id
   where lower(p.username) = lower(trim(p_username));
+$$;
+
+-- Write Emmet's notes on someone's profile. Admins only. A null argument
+-- leaves that note alone; '' clears it.
+create or replace function public.set_profile_notes(p_username text, p_public text default null, p_private text default null)
+returns json
+language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid;
+begin
+  if not public.is_admin() then
+    return json_build_object('ok', false, 'reason', 'forbidden');
+  end if;
+  select p.user_id into v_uid from public.profiles p where lower(p.username) = lower(trim(p_username));
+  if v_uid is null then
+    return json_build_object('ok', false, 'reason', 'not_found');
+  end if;
+  if char_length(trim(coalesce(p_public, ''))) > 1000 or char_length(trim(coalesce(p_private, ''))) > 1000 then
+    return json_build_object('ok', false, 'reason', 'too_long');
+  end if;
+
+  insert into public.profile_notes as n (user_id, public_note, private_note)
+  values (v_uid, nullif(trim(p_public), ''), nullif(trim(p_private), ''))
+  on conflict (user_id) do update set
+    public_note  = case when p_public  is null then n.public_note  else nullif(trim(p_public), '')  end,
+    private_note = case when p_private is null then n.private_note else nullif(trim(p_private), '') end,
+    updated_at   = now();
+  return json_build_object('ok', true);
+end;
 $$;
 
 -- Usernames for a batch of accounts, so leaderboards can link arcade names
@@ -224,3 +260,5 @@ revoke all on function public.update_profile(text, jsonb, text, text[], text, te
 grant execute on function public.get_public_profile(text) to anon, authenticated;
 grant execute on function public.usernames_for(uuid[]) to anon, authenticated;
 grant execute on function public.update_profile(text, jsonb, text, text[], text, text, text, text, text) to authenticated;
+revoke all on function public.set_profile_notes(text, text, text) from public, anon;
+grant execute on function public.set_profile_notes(text, text, text) to authenticated;

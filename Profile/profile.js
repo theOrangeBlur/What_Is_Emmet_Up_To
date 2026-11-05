@@ -303,10 +303,84 @@ function renderRecords(p) {
   return frag;
 }
 
+// ── Emmet's notes ───────────────────────────────────────────────────────
+// Two notes only admins can write (profile_notes, public_profiles.sql): a
+// public one every visitor sees, and a private one only this person sees.
+
+const NOTE_MAX = 1000;
+
+function noteBlock(heading, text, tag) {
+  const section = el('section', 'case-section profile-emmet-note');
+  const title = el('h2', 'case-section-title', heading);
+  if (tag) { title.appendChild(document.createTextNode(' ')); title.appendChild(el('span', 'profile-private', tag)); }
+  section.appendChild(title);
+  section.appendChild(el('p', 'profile-emmet-note-text', text));
+  section.appendChild(el('p', 'profile-emmet-note-sig', '— Emmet'));
+  return section;
+}
+
+function renderNotesEditor(p, wrap) {
+  wrap.innerHTML = '';
+  const form = el('section', 'case-section profile-emmet-editor');
+  form.appendChild(el('h2', 'case-section-title', 'Your notes on ' + p.username));
+  const pubInp = el('textarea', 'authw-input profile-textarea');
+  pubInp.value = p.emmet_note || ''; pubInp.maxLength = NOTE_MAX; pubInp.rows = 4;
+  pubInp.placeholder = 'everyone who visits sees this';
+  form.appendChild(field('public note', pubInp, charCounter(pubInp, NOTE_MAX)));
+  const privInp = el('textarea', 'authw-input profile-textarea');
+  privInp.value = p.emmet_private_note || ''; privInp.maxLength = NOTE_MAX; privInp.rows = 4;
+  privInp.placeholder = p.is_me ? 'only you see this' : 'only ' + p.username + ' sees this';
+  form.appendChild(field('private note', privInp, charCounter(privInp, NOTE_MAX)));
+
+  const msg = el('div', 'authw-msg'); msg.style.display = 'none';
+  form.appendChild(msg);
+  const btns = el('div', 'authw-btns profile-btns');
+  const saveBtn = el('button', 'authw-btn authw-btn-primary', 'save notes');
+  const cancelBtn = el('button', 'authw-btn', 'never mind');
+  cancelBtn.addEventListener('click', () => renderNotes(p, wrap));
+  saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true;
+    try {
+      const saved = await window.Auth.setProfileNotes(p.username, pubInp.value.trim(), privInp.value.trim());
+      if (!saved.ok) {
+        msg.textContent = saved.reason === 'forbidden' ? "only Emmet can write these"
+          : saved.reason === 'too_long' ? 'that note runs long — trim it a bit'
+          : "couldn't save that — try again in a bit";
+        msg.style.display = 'block';
+        return;
+      }
+      await load();
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+  btns.appendChild(saveBtn); btns.appendChild(cancelBtn);
+  form.appendChild(btns);
+  wrap.appendChild(form);
+  setTimeout(() => pubInp.focus(), 50);
+}
+
+// Fills `wrap` (created when not given) with the notes, plus the edit
+// button for admins. Null when there's nothing to show.
+function renderNotes(p, wrap) {
+  const pub = p.emmet_note, priv = p.emmet_private_note;
+  if (!pub && !priv && !p.can_note) return null;
+  wrap = wrap || el('div', 'profile-emmet-notes');
+  wrap.innerHTML = '';
+  if (pub) wrap.appendChild(noteBlock('A word from Emmet', pub));
+  if (priv) wrap.appendChild(noteBlock('Just between us', priv, p.is_me ? 'only you can see this' : 'only ' + p.username + ' can see this'));
+  if (p.can_note) {
+    const btn = el('button', 'case-btn profile-emmet-edit-btn', pub || priv ? 'edit your notes' : 'write a note');
+    btn.addEventListener('click', () => renderNotesEditor(p, wrap));
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
 function renderView(p) {
   root.innerHTML = '';
   root.appendChild(renderHeader(p));
-  [renderArt(p), renderSound(p), renderTrivia(p), renderAwards(p), renderRecords(p)].forEach(s => { if (s) root.appendChild(s); });
+  [renderNotes(p), renderArt(p), renderSound(p), renderTrivia(p), renderAwards(p), renderRecords(p)].forEach(s => { if (s) root.appendChild(s); });
 }
 
 // ── Editing (own profile only) ──────────────────────────────────────────

@@ -47,6 +47,15 @@
 
 .profile-empty { font-size: 12px; color: var(--muted); margin: 0; }
 
+/* Emmet's notes (profile.js renderNotes) */
+.profile-emmet-notes { margin-bottom: 4px; }
+.profile-emmet-note-text {
+  font-size: 13px; color: var(--text); line-height: 1.7; margin: 0;
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.profile-emmet-note-sig { font-size: 12px; color: var(--muted); font-style: italic; text-align: right; margin: 8px 0 0; }
+.profile-emmet-edit-btn { margin: 0 0 20px; }
+
 .profile-qa {
   background: var(--panel);
   border: 1px solid var(--line);
