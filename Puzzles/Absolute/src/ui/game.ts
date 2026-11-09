@@ -1,7 +1,7 @@
 import { buildIndex, cellStates, sameCells, type CellIndex } from '../core/model';
 import { M_BLUE, M_EMPTY, M_RED, type Grade, type Step } from '../core/solver/logic';
 import type { FillColor, Puzzle, ThermoState } from '../core/types';
-import { cellAt, renderBoard, type BoardView } from './board';
+import { cellAt, renderBoard, type BoardView, type GhostCell } from './board';
 
 /** 'any' fills with a neutral color: filled, but red/blue not decided yet. */
 export type Tool = 'red' | 'blue' | 'any' | 'x' | 'xr' | 'xb';
@@ -25,6 +25,7 @@ interface Overlay {
   cells?: { cell: number; mask: number }[];
   focus?: number;
   errors?: number[];
+  ghost?: GhostCell[];
 }
 
 export interface GameEvents {
@@ -101,6 +102,7 @@ export class Game {
       highlightCells: this.overlay?.cells,
       focusCell: this.overlay?.focus,
       errorCells: this.overlay?.errors,
+      ghostCells: this.overlay?.ghost,
     };
     renderBoard(this.svg, v);
   }

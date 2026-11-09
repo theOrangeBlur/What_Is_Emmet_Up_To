@@ -81,7 +81,7 @@ body {
 /* mode toggle */
 .mode-toggle {
   display: flex;
-  width: 340px;
+  width: 420px;
   max-width: 100%;
   border: 1px solid var(--line2);
   margin-bottom: 16px;
@@ -776,7 +776,150 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .beta,
   .beta-badge,
-  .beta-text {
+  .beta-text,
+  #controls.tut-spot,
+  .tut-box.tut-waiting .tut-cue {
     animation: none;
   }
+}
+
+/* tutorial: click-through text box under the board */
+.tut-box {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--line2);
+  border-left: 3px solid var(--accent);
+  padding: 14px 16px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s;
+}
+.tut-box:hover,
+.tut-box:focus-visible {
+  border-color: var(--text2);
+  border-left-color: var(--accent-light);
+  outline: none;
+}
+/* the little arrow pointing up at the board */
+.tut-box::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--line2);
+  border-left: 1px solid var(--line2);
+  transform: translateX(-50%) rotate(45deg);
+}
+.tut-text {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.tut-text b.t-red {
+  color: var(--accent-light);
+}
+.tut-text b.t-blue {
+  color: var(--cool);
+}
+.tut-text b.t-white {
+  color: #fff;
+}
+.tut-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.tut-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--text2);
+  cursor: pointer;
+}
+.tut-link:hover {
+  color: var(--text);
+}
+.tut-cue {
+  margin-left: auto;
+  color: var(--accent-light);
+}
+/* waiting on the player's move: the box isn't a click-to-continue */
+.tut-box.tut-waiting {
+  cursor: default;
+}
+.tut-box.tut-waiting .tut-cue {
+  color: var(--text2);
+  animation: tut-blink 1.4s ease-in-out infinite;
+}
+@keyframes tut-blink {
+  50% {
+    opacity: 0.4;
+  }
+}
+/* "Absolute x": the x is highlighted and shows its tip on hover, focus or tap */
+.tut-x {
+  position: relative;
+  display: inline-block;
+  padding: 0 5px;
+  margin: 0 1px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1.4;
+  cursor: help;
+}
+.tut-x::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 11px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.tut-x:hover::after,
+.tut-x:focus-visible::after,
+.tut-x.open::after {
+  opacity: 1;
+}
+#controls.tut-spot {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+  animation: tut-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tut-pulse {
+  50% {
+    outline-color: transparent;
+  }
+}
+.is-tutorial .timer,
+.is-tutorial #btn-reveal {
+  display: none;
+}
+.tut-nudge {
+  margin-top: 14px;
 }

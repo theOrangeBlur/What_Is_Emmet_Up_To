@@ -34,6 +34,7 @@ Analysis scripts (Node, via vite-node):
 | `npm run dailies -- [days] [start date]` | upcoming daily puzzles and their difficulty |
 | `npm run bench -- [sizes…]` | raw generation timing with default settings |
 | `npm run publish-daily -- [days ahead] [--dry]` | store upcoming dailies in Supabase (needs `SUPABASE_SERVICE_ROLE_KEY`) |
+| `npm run tutorial-pick -- [tries] [show]` | candidate 4×4 counting-only puzzles for the tutorial, with solve paths |
 
 ## Layout
 - `src/core/`: pure TypeScript with no DOM, so it also runs in Node.
@@ -59,6 +60,8 @@ Analysis scripts (Node, via vite-node):
 - `src/lab.ts`: lab wiring (`lab.html`)
 - `src/site.ts`: the public Daily / Free Play page (`absolute.html`)
 - `src/ui/leaderboard.ts`: Supabase daily scores, name entry, countdown
+- `src/ui/tutorial.ts`: the Tutorial tab's click-through text boxes and ghost-previewed moves
+- `src/core/tutorial-puzzle.ts`: the tutorial's fixed 4×4 puzzle (counting only), picked with `npm run tutorial-pick`
 - `src/ui/board.css`: board styles shared by both pages
 - `tests/core.test.ts`: the test suite
 - `scripts/`: the analysis scripts above
@@ -78,6 +81,8 @@ Analysis scripts (Node, via vite-node):
 Filling a cell clears its ✕ marks.
 
 Keys: 1–6 pick the tools, W toggles Mark thermo, H gives a hint, Ctrl+Z undoes and Ctrl+Y redoes.
+
+The **Tutorial** tab (`absolute.html?tutorial`) walks new players through a fixed 4×4 puzzle: goal, white/red/blue clues, controls, then two guided moves (a faded preview plays each move until the player makes it) before they finish it themselves. The board stays playable throughout. First-time visitors get a link to it on the daily's BEGIN screen (`thermo_tutorial_seen` in localStorage). The box text names that puzzle's rows and columns, so change both together.
 
 Hint shows the next solver step the board doesn't reflect yet. It highlights the lines involved and explains why the step follows.
 

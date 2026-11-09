@@ -15,7 +15,8 @@
     "jumps": "vite-node scripts/jumps.ts",
     "path": "vite-node scripts/path.ts",
     "dailies": "vite-node scripts/dailies.ts",
-    "publish-daily": "vite-node scripts/publish-daily.ts"
+    "publish-daily": "vite-node scripts/publish-daily.ts",
+    "tutorial-pick": "vite-node scripts/tutorial-pick.ts"
   },
   "devDependencies": {
     "typescript": "5.6.3",

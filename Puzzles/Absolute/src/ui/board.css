@@ -68,6 +68,28 @@
 .fill-bulb.fill-blue {
   fill: var(--blue);
 }
+.ghost {
+  opacity: 0.35;
+  stroke-linecap: round;
+}
+circle.ghost-red {
+  fill: var(--red);
+}
+circle.ghost-blue {
+  fill: var(--blue);
+}
+path.ghost-red {
+  stroke: var(--red);
+}
+path.ghost-blue {
+  stroke: var(--blue);
+}
+.ghost-x {
+  stroke: #8a9099;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.45;
+}
 .xmarks path {
   stroke: #8a9099;
   stroke-width: 2.2;

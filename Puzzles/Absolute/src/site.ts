@@ -7,6 +7,8 @@ import { logicSolve } from './core/solver/logic';
 import type { GenParams, Puzzle, ThermoState } from './core/types';
 import { Game, type Tool } from './ui/game';
 import { GenClient } from './ui/gen-client';
+import { runTutorial, type TutorialRun } from './ui/tutorial';
+import { TUTORIAL_PUZZLE } from './core/tutorial-puzzle';
 import {
   claimDeviceScores,
   fetchDaily,
@@ -31,10 +33,13 @@ const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySe
 const svg = document.querySelector<SVGSVGElement>('#board')!;
 const client = new GenClient();
 
-let mode: 'daily' | 'free' = 'daily';
+type Mode = 'daily' | 'free' | 'tutorial';
+let mode: Mode = 'daily';
 let game: Game | null = null;
 let tool: Tool = 'red';
 let wholeMode = false;
+let tutorialRun: TutorialRun | null = null;
+const TUTORIAL_SEEN = 'thermo_tutorial_seen';
 /** Bumped on every mode switch / new puzzle so stale async work can tell it's stale. */
 let epoch = 0;
 
@@ -259,6 +264,11 @@ async function openDaily() {
     // The board stays covered until BEGIN so the clock is fair.
     const wrap = div('start-container');
     wrap.append(div('cover-text', '5×5 · Medium · timed'), button('start-btn', 'BEGIN', begin));
+    // First visit: point new players at the tutorial before the clock starts.
+    if (!load<boolean>(TUTORIAL_SEEN, false)) {
+      const nudge = button('pill tut-nudge', 'New here? Try the tutorial', () => setMode('tutorial'));
+      wrap.append(nudge);
+    }
     cover(wrap);
   }
 }
@@ -452,21 +462,76 @@ function renderBest(s: FreeSettings) {
   lb.appendChild(div('lb-note', 'solves without hints'));
 }
 
+// ---- tutorial ----------------------------------------------------------------------
+
+function openTutorial() {
+  ++epoch;
+  save(TUTORIAL_SEEN, true);
+  document.body.classList.remove('is-daily');
+  applyName(TUTORIAL_PUZZLE.size);
+  setMeta(`Tutorial · ${TUTORIAL_PUZZLE.size}×${TUTORIAL_PUZZLE.size} · no timer`);
+  cover(null);
+  after();
+  message('');
+  showComments(null);
+  const lb = $('#leaderboard');
+  lb.innerHTML = '';
+  lb.append(div('lb-title', 'tutorial'), div('lb-note', 'a small practice board · no timer · no score'));
+  setTool('red');
+  setWhole(false);
+  const g = startGame(TUTORIAL_PUZZLE, () => finishTutorial(), () => tutorialRun?.boardChanged());
+  showControls(true);
+  tutorialRun = runTutorial({
+    game: g,
+    box: $('#tutorial-box'),
+    controls: $('#controls'),
+    onHandOff: () => {
+      tutorialRun = null;
+      message('Column 3 needs 2 blue. Right-click (or pick Blue) to fill.', 'info');
+    },
+  });
+}
+
+function finishTutorial() {
+  stopTutorial();
+  showControls(false);
+  message('');
+  const box = div('daily-recap');
+  box.append(
+    div('recap-solved', 'Done! Look at you!'),
+    div('recap-stats', 'Have fun on the bigger boards 😈'),
+    button('start-btn', 'PLAY TODAY’S DAILY', () => setMode('daily')),
+    button('pill', 'Free Play', () => setMode('free')),
+  );
+  after(box);
+}
+
+function stopTutorial() {
+  tutorialRun?.stop();
+  tutorialRun = null;
+  $('#tutorial-box').hidden = true;
+}
+
 // ---- mode toggle + free settings ------------------------------------------------
 
-function setMode(m: 'daily' | 'free') {
+function setMode(m: Mode) {
   mode = m;
   $('#mode-daily').classList.toggle('active', m === 'daily');
   $('#mode-free').classList.toggle('active', m === 'free');
+  $('#mode-tutorial').classList.toggle('active', m === 'tutorial');
   $('#free-bar').hidden = m !== 'free';
+  document.body.classList.toggle('is-tutorial', m === 'tutorial');
   game = null;
+  stopTutorial();
   stopGenerating();
-  history.replaceState(null, '', m === 'free' ? '?free' : location.pathname);
+  history.replaceState(null, '', m === 'daily' ? location.pathname : `?${m}`);
   if (m === 'daily') openDaily();
-  else openFree();
+  else if (m === 'free') openFree();
+  else openTutorial();
 }
 $('#mode-daily').addEventListener('click', () => mode !== 'daily' && setMode('daily'));
 $('#mode-free').addEventListener('click', () => mode !== 'free' && setMode('free'));
+$('#mode-tutorial').addEventListener('click', () => setMode('tutorial'));
 
 function readFreeBar() {
   save(FREE_KEY, { size: Number($<HTMLSelectElement>('#free-size').value), diff: $<HTMLSelectElement>('#free-diff').value });
@@ -576,7 +641,8 @@ setInterval(() => {
 
 // ---- start -------------------------------------------------------------------------
 
-setMode(new URLSearchParams(location.search).has('free') ? 'free' : 'daily');
+const startParams = new URLSearchParams(location.search);
+setMode(startParams.has('tutorial') ? 'tutorial' : startParams.has('free') ? 'free' : 'daily');
 
 // A daily solved signed out has no account on it. Once signed in, claim it so the
 // name links to the profile, then redraw the board (times only if today is finished).

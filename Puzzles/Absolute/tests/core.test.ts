@@ -10,6 +10,7 @@ import { DEFAULT_PARAMS, checkUnique, generate } from '../src/core/generator';
 import type { ClueKind, PuzzleCore } from '../src/core/types';
 import { PRESETS } from '../src/core/presets';
 import { addDays, dailyParams, dayKey, msUntilNextDay, siteDailyParams } from '../src/core/daily';
+import { TUTORIAL_PUZZLE } from '../src/core/tutorial-puzzle';
 
 function randomPuzzle(n: number, seed: string): PuzzleCore {
   const rng = new Rng(seed);
@@ -196,5 +197,29 @@ describe('large free play boards', () => {
     expect(stats.targetMet).toBe(true);
     expect(checkUnique(puzzle!)).toBe('unique');
     for (const c of [...puzzle!.rowClues, ...puzzle!.colClues]) expect(c.kind === 'black' && c.value === 0).toBe(false);
+  });
+});
+
+describe('tutorial puzzle', () => {
+  const p = TUTORIAL_PUZZLE;
+  it('is unique, all counting, and its solution meets every clue', () => {
+    expect(checkUnique(p)).toBe('unique');
+    const g = logicSolve(p);
+    expect(g.solved).toBe(true);
+    expect(g.jumps).toBe(0);
+    const counts = lineCounts(p.size, cellStates(p.size, p.thermos, p.solution));
+    for (let line = 0; line < 2 * p.size; line++) {
+      const c = clueOf(p, line);
+      if (c.kind !== 'none') expect(countFor(c.kind, counts, line)).toBe(c.value);
+      expect(c.kind === 'black' && c.value === 0).toBe(false);
+    }
+  });
+  it('matches the guided moves the tutorial text describes', () => {
+    // src/ui/tutorial.ts walks the player through steps 1-2: column 4 all red, then row 1 empty.
+    const steps = logicSolve(p).steps;
+    expect(steps[0].lines).toEqual([p.size + 3]);
+    expect(steps[1].lines).toEqual([0]);
+    // After those two moves the board must not be solved yet, so the player finishes it alone.
+    expect(steps.length).toBeGreaterThan(2);
   });
 });

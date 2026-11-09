@@ -1,4 +1,4 @@
-import { cellStates, clueOf, countFor, lineCounts } from '../core/model';
+import { buildIndex, cellStates, clueOf, countFor, lineCounts } from '../core/model';
 import { M_BLUE, M_EMPTY, M_RED } from '../core/solver/logic';
 import type { Puzzle, ThermoState } from '../core/types';
 
@@ -14,6 +14,13 @@ export interface BoardView {
   highlightCells?: { cell: number; mask: number }[];
   focusCell?: number;
   errorCells?: number[];
+  /** Faded preview of a move: a fill color (R/B) or a ✕ (X) per cell. */
+  ghostCells?: GhostCell[];
+}
+
+export interface GhostCell {
+  cell: number;
+  kind: 'R' | 'B' | 'X';
 }
 
 function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>): SVGElementTagNameMap[K] {
@@ -116,6 +123,31 @@ export function renderBoard(svg: SVGSVGElement, v: BoardView): void {
     }
   });
   svg.append(tubes, fills);
+
+  // ghost preview: each cell as a faded piece of fill (bulb dot, or a segment from the
+  // previous cell), so a run of them grows along the thermometer like a real fill
+  if (v.ghostCells?.length) {
+    const idx = buildIndex(n, p.thermos);
+    const ghosts = el('g', { class: 'ghosts' });
+    for (const { cell, kind } of v.ghostCells) {
+      const x = cx(cell);
+      const y = cy(cell);
+      if (kind === 'X') {
+        const d = CELL * 0.14;
+        ghosts.append(el('path', { d: `M${x - d},${y - d}L${x + d},${y + d}M${x + d},${y - d}L${x - d},${y + d}`, class: 'ghost-x' }));
+        continue;
+      }
+      const cls = kind === 'R' ? 'ghost ghost-red' : 'ghost ghost-blue';
+      const t = idx.thermo[cell];
+      const pos = idx.pos[cell];
+      if (pos === 0) ghosts.append(el('circle', { cx: x, cy: y, r: fillR, class: cls }));
+      else {
+        const prev = p.thermos[t].cells[pos - 1];
+        ghosts.append(el('path', { d: `M${cx(prev)},${cy(prev)}L${x},${y}`, class: cls, 'stroke-width': fillW, fill: 'none' }));
+      }
+    }
+    svg.append(ghosts);
+  }
 
   // X marks
   const marks = el('g', { class: 'xmarks' });

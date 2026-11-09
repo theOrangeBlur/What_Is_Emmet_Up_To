@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png" vite-ignore />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
     <!-- Site-wide account, awards and comments. They live at the site root, outside this Vite project. -->
     <link rel="stylesheet" href="/shared/auth-widget.css" vite-ignore />
     <link rel="stylesheet" href="/shared/awards.css" vite-ignore />
@@ -28,9 +28,9 @@
     <script src="/shared/comments.js" vite-ignore></script>
     <script src="/shared/name-fonts.js?v=20261105" vite-ignore></script>
     <script src="/shared/month-board.js?v=20261105" vite-ignore></script>
-    <script type="module" crossorigin src="./assets/absolute-CVijVPAR.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/gen-client-1mnWNLr3.js">
-    <link rel="stylesheet" crossorigin href="./assets/absolute-COvh5pGS.css">
+    <script type="module" crossorigin src="./assets/absolute-5i06DxRl.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/gen-client-C10PNgiY.js">
+    <link rel="stylesheet" crossorigin href="./assets/absolute-D2OrhtVy.css">
   </head>
   <body>
     <a class="home-link" href="/index.html">&#8592; home</a>
@@ -45,6 +45,7 @@
     <div class="mode-toggle">
       <button class="mode-btn active" id="mode-daily">Daily Challenge</button>
       <button class="mode-btn" id="mode-free">Free Play</button>
+      <button class="mode-btn" id="mode-tutorial">Tutorial</button>
     </div>
 
     <div id="free-bar" class="free-bar" hidden>
@@ -100,6 +101,8 @@
           <div class="cover" id="cover" hidden></div>
         </div>
 
+        <div class="tut-box" id="tutorial-box" hidden aria-live="polite"></div>
+
         <p class="message" id="message"></p>
         <div id="after"></div>
 
@@ -128,6 +131,6 @@
       <p id="comments-note" class="comments-note" hidden>comments are unlocked after one solve of the daily puzzle!</p>
       <div id="comments"></div>
     </div>
-
+
   </body>
 </html>
