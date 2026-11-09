@@ -561,5 +561,24 @@
       "time_ms": 21038,
       "guesses": 1
     }
+  ],
+  "20261107": [
+    {
+      "name": "JIMBO",
+      "time_ms": 29830,
+      "guesses": 1
+    },
+    {
+      "name": "PUZTAM",
+      "time_ms": 60841,
+      "guesses": 1
+    }
+  ],
+  "20261109": [
+    {
+      "name": "LOV",
+      "time_ms": 23531,
+      "guesses": 1
+    }
   ]
 }
