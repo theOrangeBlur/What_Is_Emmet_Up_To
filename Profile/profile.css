@@ -136,7 +136,7 @@
 }
 .profile-art-drop:hover,
 .profile-art-drop.is-over { border-color: var(--green); color: var(--text); }
-.profile-art-drop-icon { font-size: 32px; }
+.profile-art-drop-icon { display: flex; }
 .profile-art-drop-text { font-size: 12px; }
 
 /* Sound clip: the same frame as the art window, holding a player. */
@@ -153,6 +153,11 @@
 /* Font pickers (name and text): each option shows a sample in its own face. */
 .profile-fonts { display: flex; flex-direction: column; gap: 10px; }
 .profile-font-lock { font-size: 12px; color: var(--soft); line-height: 1.5; margin: 0; }
+/* The pixel lock that leads a locked note or button (setLockLine in profile.js). */
+.pixel-lock {
+  width: 16px; height: 16px; image-rendering: pixelated;
+  vertical-align: -3px; margin-right: 6px;
+}
 .profile-font-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
 .profile-font-opt {
   display: flex;

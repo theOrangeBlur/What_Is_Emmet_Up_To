@@ -234,6 +234,15 @@ on conflict (key) do update set
   sort = excluded.sort, stat_key = excluded.stat_key, stat_target = excluded.stat_target,
   requirement = excluded.requirement;
 
+-- BEGIN pixel-art reward icons
+-- 16x16 PNGs in the icon column, same as the award icons in awards.sql. Runs
+-- after the seeds above, which would otherwise put the emoji back. Shown by
+-- Awards.fillIcon in shared/awards.js.
+update public.unlocks set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAXklEQVR4nGNgoDZYcef7fxjGJ4ZTMzKAaUIXI9oAbIBkV5CkGZufifY/CGjrWvwH4Rf77cEYF5+gRkIGgNgomkGAVAPghsAEyTEA7h1yDcAIB7LCgCqxgM0gfPzBBQB+8GSN644+RwAAAABJRU5ErkJggg==' where key = 'title:hexpert'; -- bee
+update public.unlocks set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAxklEQVR42q2TMQqDMBSGP8VjiDmFILg7dKmbi2fQ3SN00zM46NYuHdwFoafQradIp0jVaGvtD+ElJPnfl7wE/iH5vMgqs+Uv0QCoMlt6D2d34s4dMBRBH18BEE07LugDf9NAlCETAtG0k03zsY7ABIjS5COuaNqxKUVpsiSYS0egyDp3wFJO6g7mR9D13wksgDov8HA28XXGdV4sCXTqA3+V4PA7GKvQuQOiDHdFbfVO51iuZdTNmUf/0WED4xt0ne630gB4Ac4Ok6SzOu0JAAAAAElFTkSuQmCC' where key = 'perk:name_fonts'; -- marquee
+update public.unlocks set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAn0lEQVR42mNgoDb4/7LrPzlyKGBr84P/xIgxMDAwsJBiCDbARIrGLPsFGHKMuDR71cijKNzW8hCiZs8BhmkHExgxXIBNs46eJYOOniWKmLeLA4pLmCiNNawGwJx75dJxhiuXjqOIER0LuDQQdEHZqgicirHJYbigK2wFTkO6wlYQ5wVsColPSHsOMHjXKjDi4+M0ADmRIGtC5yMnJIoBAMClTMc+6LUMAAAAAElFTkSuQmCC' where key = 'perk:pixel_icon'; -- alien
+-- END pixel-art reward icons
+
 insert into public.award_unlocks (award_key, unlock_key) values
   ('hex_all', 'title:hexpert')
 on conflict do nothing;

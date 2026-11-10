@@ -31,7 +31,9 @@ function progressBar(value, max) {
 function renderSignedOut(root) {
   root.innerHTML = '';
   const card = el('div', 'case-locked');
-  card.appendChild(el('div', 'case-locked-icon', '🔒'));
+  const icon = el('div', 'case-locked-icon');
+  window.Awards.fillIcon(icon, '/media/badges/lock.png');
+  card.appendChild(icon);
   card.appendChild(el('div', 'case-locked-heading', 'members only'));
   card.appendChild(el('p', 'case-locked-text',
     "The trophy case is behind the door. Knock, and you'll find a list of challenges waiting — some of them in plain sight, some of them not."));

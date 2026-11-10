@@ -168,11 +168,23 @@ function richEl(tag, className, text, block) {
   return node;
 }
 
-function card(icon, heading, text, button) {
+// A pixel lock in front of a line of text, for the "🔒 do this to unlock" notes.
+function setLockLine(node, text) {
+  node.textContent = '';
+  const img = el('img', 'pixel-lock');
+  img.src = '/media/badges/lock.png'; img.alt = '';
+  node.appendChild(img);
+  node.appendChild(document.createTextNode(text));
+}
+
+// badge is a file name in /media/badges, without the .png.
+function card(badge, heading, text, button) {
   applyTheme(null);
   root.innerHTML = '';
   const c = el('div', 'case-locked');
-  c.appendChild(el('div', 'case-locked-icon', icon));
+  const icon = el('div', 'case-locked-icon');
+  window.Awards.fillIcon(icon, `/media/badges/${badge}.png`);
+  c.appendChild(icon);
   c.appendChild(el('div', 'case-locked-heading', heading));
   c.appendChild(el('p', 'case-locked-text', text));
   if (button) {
@@ -605,7 +617,7 @@ function fontPicker({ fonts, defaultKey, startKey, unlockKey, lockText, onPick }
       Object.values(btns).forEach(b => { b.disabled = false; });
       return;
     }
-    lock.textContent = lockText(st);
+    setLockLine(lock, lockText(st));
   }).catch(() => {});
   return {
     el: wrap,
@@ -693,9 +705,9 @@ async function renderEdit(p) {
       if (st && st.unlocked) { drawBtn.disabled = false; return; }
       const target = (st && st.target) || 3;
       const done = Math.min((st && st.value) || 0, target);
-      drawBtn.textContent = '🔒 draw one';
-      drawLock.textContent = `🔒 Make ${target} fields public to draw your own pixel icon — ${done} / ${target} so far. ` +
-        'Only filled-in fields count, and they count once you save.';
+      setLockLine(drawBtn, 'draw one');
+      setLockLine(drawLock, `Make ${target} fields public to draw your own pixel icon — ${done} / ${target} so far. ` +
+        'Only filled-in fields count, and they count once you save.');
       drawLock.hidden = false;
     }).catch(() => {});
   }
@@ -774,7 +786,9 @@ async function renderEdit(p) {
   const artEmpty = () => {
     artDrop.innerHTML = '';
     artDrop.classList.add('is-empty');
-    artDrop.appendChild(el('span', 'profile-art-drop-icon', '🖼️'));
+    const artIcon = el('span', 'profile-art-drop-icon');
+    window.Awards.fillIcon(artIcon, '/media/badges/frame.png');
+    artDrop.appendChild(artIcon);
     artDrop.appendChild(el('span', 'profile-art-drop-text', 'click or drop a picture here'));
   };
   const artShow = src => {
@@ -885,7 +899,7 @@ async function renderEdit(p) {
     lockText: st => {
       const target = (st && st.target) || 10;
       const played = Math.min((st && st.value) || 0, target);
-      return `🔒 Play ${target} games to pick your own — ${played} / ${target} so far. ` +
+      return `Play ${target} games to pick your own — ${played} / ${target} so far. ` +
         'Wordle, Absolute 25, Hexdoku levels, the River Crossing and up to three Coin Riddle solves all count.';
     },
   });
@@ -900,7 +914,7 @@ async function renderEdit(p) {
   const textPicker = fontPicker({
     fonts: TEXT_FONTS, defaultKey: TEXT_FONT_DEFAULT, startKey: startTextFont, unlockKey: TEXT_FONT_UNLOCK,
     onPick: applyTextFont,
-    lockText: () => '🔒 A secret award opens this one up. Keep exploring the Enquirer.',
+    lockText: () => 'A secret award opens this one up. Keep exploring the Enquirer.',
   });
   textPicker.setSample('the quick brown fox');
   form.appendChild(field('text font', textPicker.el));
@@ -1027,21 +1041,21 @@ async function load() {
     if (mine) { window.location.replace(window.Auth.profileUrl(mine)); return; }
     setOwnPage(!!session);
     if (session) {
-      card('📛', 'no name on the door', "Pick a name and you'll get a page of your own that anyone can drop by.",
+      card('nametag', 'no name on the door', "Pick a name and you'll get a page of your own that anyone can drop by.",
         { label: 'pick a name', onClick: () => window.AuthWidget && window.AuthWidget.showUsernameModal() });
     } else {
-      card('🔒', 'members only', "Knock on the door to get a page of your own — awards, records and all.",
+      card('lock', 'members only', "Knock on the door to get a page of your own — awards, records and all.",
         { label: 'knock on the door', onClick: () => window.AuthWidget && window.AuthWidget.showAuthModal('login') });
     }
     return;
   }
 
   const { data, error } = await window.Auth.getPublicProfile(wanted);
-  if (error) { setOwnPage(false); card('📪', 'directory closed', "the directory is closed for lunch — try again in a bit"); return; }
+  if (error) { setOwnPage(false); card('mailbox', 'directory closed', "the directory is closed for lunch — try again in a bit"); return; }
   if (!data) {
     profile = null;
     setOwnPage(false);
-    card('🚪', 'nobody home', `Nobody by the name “${wanted}” lives here. Maybe they changed it?`);
+    card('door', 'nobody home', `Nobody by the name “${wanted}” lives here. Maybe they changed it?`);
     return;
   }
   profile = data;
