@@ -852,6 +852,9 @@
       lhFrom = lhLevel;
       lhOn = lhWant;
       lhT0 = now;
+      // Starting up from dark and still, the beam begins just short of where
+      // it starts lighting the water, so it sweeps out over the sea first.
+      if (lhOn && lhLevel <= 0 && beamSpeed <= 0 && !motion.matches) beamAng = beamStartAngle();
       if (lhOn) playThoom(); else playWindDown();
     }
 
@@ -958,6 +961,21 @@
       rX0: lanX, rY0: 2 * hy - lanY, rX1: endX, rY1: 2 * hy - endY,
       rA: (ca < 0.2 ? Math.min(1, (0.2 - ca) * 2) : 0) * sea,
     };
+  }
+
+  // The angle a little before the beam's reflection first shows on the water,
+  // turning the way the beam turns (angle increasing). Found by stepping
+  // round from side-on to the right, since it depends on the view's layout.
+  const BEAM_LEAD = 0.12;      // rad short of the water where it starts (~0.6 s at full speed)
+  function beamStartAngle() {
+    const saved = beamAng;
+    let start = Math.PI;       // fallback: pointing straight out to sea
+    for (let a = Math.PI / 2; a < 1.5 * Math.PI; a += 0.01) {
+      beamAng = a;
+      if (beamGeometry().rA > 0.15) { start = a - BEAM_LEAD; break; }
+    }
+    beamAng = saved;
+    return start;
   }
 
   // ── Rendering ─────────────────────────────────────────────────────────
