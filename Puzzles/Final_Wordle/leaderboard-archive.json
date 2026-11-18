@@ -580,5 +580,59 @@
       "time_ms": 23531,
       "guesses": 1
     }
+  ],
+  "20261111": [
+    {
+      "name": "JIMBO",
+      "time_ms": 9192,
+      "guesses": 1
+    }
+  ],
+  "20261112": [
+    {
+      "name": "PUZTAM",
+      "time_ms": 42654,
+      "guesses": 1
+    }
+  ],
+  "20261113": [
+    {
+      "name": "PUZTAM",
+      "time_ms": 13835,
+      "guesses": 1
+    }
+  ],
+  "20261114": [
+    {
+      "name": "PUZTAM",
+      "time_ms": 12610,
+      "guesses": 1
+    }
+  ],
+  "20261115": [
+    {
+      "name": "KEVIN",
+      "time_ms": 17927,
+      "guesses": 1
+    },
+    {
+      "name": "PUZTAM",
+      "time_ms": 59252,
+      "guesses": 1
+    }
+  ],
+  "20261116": [
+    {
+      "name": "PUZTAM",
+      "time_ms": 11538,
+      "guesses": 1
+    }
+  ],
+  "20261117": [
+    {
+      "name": "KEVIN",
+      "time_ms": 20702,
+      "guesses": 1
+    }
   ]
 }
