@@ -1,0 +1,180 @@
+:root {
+  --night: #070605;
+  --paper: #f3ead8;
+  --soft: #c9bda6;
+  --brass: #d8a64a;
+  --brass-hi: #f4cd7a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--night);
+  color: var(--paper);
+  font-family: 'Space Mono', monospace;
+}
+
+/* While dark there is nothing to scroll, so the whole screen can belong to the cord. */
+html:not(.is-lit), html:not(.is-lit) body {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ── Content (revealed by the light) ───────────────────────────────────── */
+.lit {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  max-width: 640px;
+  padding: 24vh 16px 18vh;
+  /* Beside the side wall, JS sets the left margin and width so the words sit
+     just right of it; in the small-screen room they're centred (below). */
+  margin: 0 auto;
+  filter: sepia(.7) brightness(.6);
+  transition: filter 2.6s ease-out;
+  /* Hidden until light falls on it; JS replaces this with the light's shape. */
+  -webkit-mask-image: linear-gradient(transparent, transparent);
+  mask-image: linear-gradient(transparent, transparent);
+}
+html:not(.is-lit) .lit { pointer-events: none; }
+html.is-lit .lit { filter: none; }
+
+/* The "k" in the name is a wind-up key that runs the wall light. The real
+   letter keeps the spacing (and is what screen readers read) but is
+   invisible; over it, an SVG draws the k's upright and, as its "<", a brass
+   butterfly key. JS spins the key's wings about their horizontal axis. Its
+   coordinates are 1000 units per em, from the top of the letter's box. */
+/* Clicking it over and over shouldn't select the title. */
+.windkey { position: relative; -webkit-user-select: none; user-select: none; }
+.windkey .k-real { color: transparent; }
+.windkey svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: .902em;
+  height: 1.2em;
+  overflow: visible;
+}
+.windkey.found { cursor: pointer; pointer-events: auto; }
+/* Fully wound, it hits its stop: a short, hard shudder. */
+.windkey.stopped svg { animation: key-stop .28s ease-out; }
+@keyframes key-stop {
+  0% { transform: translateX(0); }
+  15% { transform: translateX(.035em); }
+  35% { transform: translateX(-.025em); }
+  55% { transform: translateX(.015em); }
+  75% { transform: translateX(-.007em); }
+  100% { transform: translateX(0); }
+}
+
+/* The small-screen room (set by JS when there's no space beside the wall):
+   the words are centred, with room on the right for the cord. They cross
+   the patterned wall, so a soft dark shadow keeps them readable. */
+html.room-view .lit { padding-right: 72px; }
+html.room-view .lit p, html.room-view .lit h1, html.room-view .lit .cta {
+  text-shadow: 0 1px 3px rgba(7, 6, 5, .9), 0 0 10px rgba(7, 6, 5, .7);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+h1 {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 7vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -.01em;
+}
+
+.motto {
+  margin: 14px 0 32px;
+  font-style: italic;
+  color: var(--brass-hi);
+}
+
+.intro {
+  margin: 0 0 16px;
+  line-height: 1.7;
+  color: var(--soft);
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 12px 22px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  color: var(--paper);
+  text-decoration: none;
+  font-weight: 700;
+  transition: background .2s, color .2s;
+}
+.cta:hover, .cta:focus-visible {
+  background: var(--brass);
+  color: var(--night);
+}
+
+/* ── Light ─────────────────────────────────────────────────────────────── */
+#world, #glow, #cord, .zone {
+  position: fixed;
+  pointer-events: none;
+}
+#world, #glow, #cord { inset: 0; }
+
+/* The room and the view through its glass wall, drawn by light. */
+#world {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#glow {
+  z-index: 2;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+#cord {
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+}
+
+/* Follow the grabbable things so touch-dragging them doesn't scroll the page. */
+.zone {
+  z-index: 6;
+  left: 0;
+  top: 0;
+  touch-action: none;
+  pointer-events: auto;
+}
+#crank-zone { display: none; }
+
+/* Keyboard path to the switches: hidden until focused. */
+.switch-btn {
+  position: fixed;
+  z-index: 7;
+  left: 16px;
+  bottom: 16px;
+  padding: 8px 14px;
+  border: 1px solid var(--brass);
+  border-radius: 6px;
+  background: var(--night);
+  color: var(--paper);
+  font: 700 13px 'Space Mono', monospace;
+  cursor: pointer;
+  clip-path: inset(50%);
+  opacity: 0;
+}
+.switch-btn:focus-visible {
+  clip-path: none;
+  opacity: 1;
+}

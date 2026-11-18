@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Light Bulb Factory</title>
+    <meta name="description" content="The Light Bulb Factory: puzzles, mechanisms and experiences designed to make the world feel full of wonder again.">
+    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/media/favicon/site.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=11">
+</head>
+<body>
+    <canvas id="world" aria-hidden="true"></canvas>
+
+    <main class="lit" id="content">
+        <p class="eyebrow">Est. in the dark</p>
+        <h1>Bulbwor<span id="key" class="windkey"><span class="k-real">k</span><svg viewBox="0 0 902 1200" aria-hidden="true">
+            <defs>
+                <linearGradient id="kbrass" x1="0" y1="-1" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#f3d99a"/><stop offset=".45" stop-color="#c49a4c"/><stop offset="1" stop-color="#7e5e28"/></linearGradient>
+                <linearGradient id="kcollar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d99a"/><stop offset=".5" stop-color="#b08a44"/><stop offset="1" stop-color="#6e5222"/></linearGradient>
+            </defs>
+            <!-- The k's upright, in the letter's colour. -->
+            <rect x="55" y="222" width="240" height="703" fill="currentColor"/>
+            <!-- The key: a collar and shaft on the upright, and two wings (its "<") that spin. -->
+            <rect x="282" y="598" width="64" height="114" rx="14" fill="url(#kcollar)" stroke="#5a4018" stroke-width="6"/>
+            <rect x="340" y="634" width="46" height="42" fill="url(#kcollar)"/>
+            <g id="key-wings">
+                <g transform="translate(378 655) rotate(-27) scale(1.1)">
+                    <path d="M0 -26C120 -34 230 -88 360 -92A92 92 0 0 1 360 92C230 88 120 34 0 26Z" fill="url(#kbrass)" stroke="#5a4018" stroke-width="8"/>
+                    <circle cx="335" cy="0" r="34" fill="#4a3412"/>
+                </g>
+                <g transform="translate(378 655) rotate(27) scale(1.1)">
+                    <path d="M0 -26C120 -34 230 -88 360 -92A92 92 0 0 1 360 92C230 88 120 34 0 26Z" fill="url(#kbrass)" stroke="#5a4018" stroke-width="8"/>
+                    <circle cx="335" cy="0" r="34" fill="#4a3412"/>
+                </g>
+                <circle cx="378" cy="655" r="30" fill="url(#kcollar)" stroke="#5a4018" stroke-width="6"/>
+            </g>
+        </svg></span>s</h1>
+        <p class="motto">Crafting lightbulb... moments</p>
+        <p class="intro">We design puzzling, strange and wonderful things: mechanisms, puzzle hunts and
+            experiences that make the world feel full of mystery again.</p>
+        <p class="intro">Have an idea that needs a little light? Let's talk it through.</p>
+        <a class="cta" href="https://cal.com/emmet-eckman-kmbihk/intro" target="_blank" rel="noopener">Book a Consultation</a>
+    </main>
+
+    <div id="glow" aria-hidden="true"></div>
+    <canvas id="cord" aria-hidden="true"></canvas>
+    <div id="grab-zone" class="zone" aria-hidden="true"></div>
+    <div id="crank-zone" class="zone" aria-hidden="true"></div>
+
+    <button id="switch" class="switch-btn" type="button" aria-pressed="false" aria-controls="content">Pull the light cord</button>
+    <button id="flip" class="switch-btn" type="button" aria-pressed="false" hidden>Wind the key (the k in Bulbworks)</button>
+    <button id="wind" class="switch-btn" type="button" hidden>Wind the crank</button>
+    <button id="unwind" class="switch-btn" type="button" hidden>Unwind the crank</button>
+
+    <script src="./scene-art.js?v=11"></script>
+    <script src="./factory.js?v=41"></script>
+</body>
+</html>

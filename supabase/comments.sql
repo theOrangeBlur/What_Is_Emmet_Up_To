@@ -174,6 +174,10 @@ on conflict (key) do update set
   sort = excluded.sort, stat_key = excluded.stat_key, stat_target = excluded.stat_target,
   requirement = null;  -- how to unlock comments is for visitors to discover
 
+-- BEGIN pixel-art reward icons (see unlocks.sql)
+update public.unlocks set icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVR42mNgGGjAiMz5////f6I0MTLC9TGRqpmBgYHh6OkrqGr/kwFghjBRGgYoBngHxDJ4B8QSzaeKCwY+DFCihlibkaOREVv8WploMzAwMDAcO3MVq2XWpjqMBMMDI7GQEphkaUb3G90AAAy30htTmKk6AAAAAElFTkSuQmCC' where key like 'perk:comment\_%'; -- bubble
+-- END pixel-art reward icons
+
 -- Only map awards that exist, so this still runs before awards-hidden.sql.
 insert into public.award_unlocks (award_key, unlock_key)
 select v.award_key, v.unlock_key
