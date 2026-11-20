@@ -1,4 +1,4 @@
-// Bulbworks scene art. Data only: SVG builders for the view out of the
+// The Lightbulb Factory scene art. Data only: SVG builders for the view out of the
 // mansion's glass wall (a night seaside) and for the room's side wall, plus
 // the geometry the lighting engine in factory.js needs. Every layer is drawn
 // as if fully lit; factory.js multiplies it by real light, so anything no
@@ -559,7 +559,7 @@
   // Where the surf breaks along the foot of the cliff (the engine animates it).
   const SURF = [[1000, 716], [1060, 704], [1120, 700], [1180, 696], [1232, 690]];
 
-  window.BulbworksArt = {
+  window.FactoryArt = {
     EW, EH, HORIZON, warp, POSTS, LH, COTTAGE_WIN, MOON, STARS, GLINTS, SURF,
     exterior, interiorGeo, interior, crank, useRoom, wallWidth,
   };

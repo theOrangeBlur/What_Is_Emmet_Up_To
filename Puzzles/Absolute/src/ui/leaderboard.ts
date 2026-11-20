@@ -11,6 +11,7 @@ interface SiteAuth {
   usernamesFor?(ids: (string | null)[]): Promise<Map<string, string>>;
   onAuthStateChange?(fn: (session: { user: { id: string } } | null) => void): void;
   rpc?(name: string, args?: Record<string, unknown>): Promise<{ data: unknown; error: unknown }>;
+  isNameReserved?(name: string): Promise<boolean>;
 }
 declare global {
   interface Window {
@@ -283,7 +284,26 @@ export function showNameModal(timeMs: number, detail: string, submit: (name: str
       const row = el('div', 'arcade-btns');
       const ok = el('button', 'arcade-btn arcade-btn-primary', 'submit');
       const skip = el('button', 'arcade-btn', 'skip');
-      const go = () => attempt(inp.value || 'AAA');
+      const msg = el('div', 'arcade-error-text');
+      let checking = false;
+      const go = async () => {
+        if (checking) return;
+        checking = true;
+        const name = inp.value || 'AAA';
+        // EMMET and BIGRED are reserved for Emmet (an admin account).
+        let reserved = false;
+        try {
+          reserved = !!(await window.Auth?.isNameReserved?.(name));
+        } catch {
+          /* ignore */
+        }
+        checking = false;
+        if (!reserved) return attempt(name);
+        msg.textContent = 'nice try, bucko!';
+        if (!msg.isConnected) inp.after(msg);
+        inp.value = '';
+        inp.focus();
+      };
       ok.addEventListener('click', go);
       inp.addEventListener('keydown', (e) => e.key === 'Enter' && go());
       skip.addEventListener('click', () => done(null));

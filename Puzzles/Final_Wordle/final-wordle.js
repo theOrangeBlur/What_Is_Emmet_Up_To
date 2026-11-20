@@ -290,6 +290,24 @@ async function prefillArcadeName(inp) {
   } catch {}
 }
 
+// The names EMMET and BIGRED are reserved for Emmet. Resolves true, after
+// telling them off under the name box, when someone else tries one.
+async function rejectReservedName(name, inp) {
+  if (!window.Auth || !window.Auth.isNameReserved) return false;
+  let reserved = false;
+  try { reserved = await window.Auth.isNameReserved(name); } catch {}
+  if (!reserved) return false;
+  let msg = inp.parentNode.querySelector('.arcade-error-text');
+  if (!msg) {
+    msg = document.createElement('div'); msg.className = 'arcade-error-text';
+    inp.insertAdjacentElement('afterend', msg);
+  }
+  msg.textContent = 'nice try, bucko!';
+  inp.value = '';
+  inp.focus();
+  return true;
+}
+
 async function fetchTodayScores() {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return [];
   try {
@@ -598,8 +616,9 @@ function showNameModal(timeMs, totalGuesses, dayKey, setNameTarget) {
   async function doSubmit() {
     if (submitting) return;
     submitting = true;
-    if (setNameTarget) setNameTarget(null);
     const name = nameInp.value || 'AAA';
+    if (await rejectReservedName(name, nameInp)) { submitting = false; return; }
+    if (setNameTarget) setNameTarget(null);
     await attemptSubmit(name);
   }
   async function doSkip() {
@@ -632,7 +651,11 @@ function showFreeNameModal(score) {
   const btnRow = document.createElement('div'); btnRow.className = 'arcade-btns';
   const submitBtn = document.createElement('button'); submitBtn.className = 'arcade-btn arcade-btn-primary'; submitBtn.textContent = 'submit';
   const skipBtn = document.createElement('button'); skipBtn.className = 'arcade-btn'; skipBtn.textContent = 'skip';
+  let saving = false;
   async function doSave(name) {
+    if (saving) return;
+    saving = true;
+    if (await rejectReservedName(name, nameInp)) { saving = false; return; }
     overlay.remove();
     await submitFreeScore(name, score);
     await renderFreeLeaderboard();

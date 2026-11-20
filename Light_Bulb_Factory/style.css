@@ -41,19 +41,21 @@ html:not(.is-lit), html:not(.is-lit) body {
 html:not(.is-lit) .lit { pointer-events: none; }
 html.is-lit .lit { filter: none; }
 
-/* The "k" in the name is a wind-up key that runs the wall light. The real
+/* The "T" in the name is a wind-up key that runs the wall light. The real
    letter keeps the spacing (and is what screen readers read) but is
-   invisible; over it, an SVG draws the k's upright and, as its "<", a brass
-   butterfly key. JS spins the key's wings about their horizontal axis. Its
+   invisible; over it, an SVG draws the T's stem and, as its crossbar, a brass
+   T-handle key on a threaded shaft. JS spins the crossbar about the stem's
+   vertical axis and screws it down into the nut as it winds (and back up as
+   it unwinds). Its
    coordinates are 1000 units per em, from the top of the letter's box. */
 /* Clicking it over and over shouldn't select the title. */
 .windkey { position: relative; -webkit-user-select: none; user-select: none; }
-.windkey .k-real { color: transparent; }
+.windkey .key-real { color: transparent; }
 .windkey svg {
   position: absolute;
   left: 0;
   top: 0;
-  width: .902em;
+  width: 1.1em;
   height: 1.2em;
   overflow: visible;
 }

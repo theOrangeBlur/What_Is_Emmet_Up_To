@@ -1,4 +1,4 @@
-// The Light Bulb Factory: a ball-chain pull switch hanging from above the
+// The Lightbulb Factory: a ball-chain pull switch hanging from above the
 // top of the screen. The chain is a Verlet rope. The cursor pushes it around
 // (softly, so it pushes back), any bead can be grabbed and dragged, and
 // pulling it down drags a spring-loaded anchor that clicks the light on/off.
@@ -13,6 +13,7 @@
   const btn = document.getElementById('switch');
   const key = document.getElementById('key');
   const keyWings = document.getElementById('key-wings');
+  const keyScrew = document.getElementById('key-screw');
   const crankZone = document.getElementById('crank-zone');
   const flipBtn = document.getElementById('flip');
   const windBtn = document.getElementById('wind');
@@ -400,14 +401,14 @@
 
   // ══ The view ═════════════════════════════════════════════════════════
   // We're in an old mansion, looking out through a glass wall over the sea
-  // at night. The "k" in the name is a wind-up key that runs a wall sconce; the
+  // at night. The "T" in the name is a wind-up key that runs a wall sconce; the
   // sconce reveals an ornate crank; winding the crank sends lamps out along
   // a cliff path to a lighthouse. The art (scene-art.js) is drawn fully lit,
   // and here it's multiplied by light maps, so only what real light reaches
   // can be seen. Every switch works both ways.
 
   // ── View tuning ───────────────────────────────────────────────────────
-  const Art = window.BulbworksArt;
+  const Art = window.FactoryArt;
   const POSTS = Art.POSTS.length;
   const LS = 4;                // light maps are drawn at 1/LS resolution (soft and cheap)
   const TURNS = 3;             // crank turns from the first lamp to the lighthouse
@@ -423,7 +424,9 @@
   const KEY_WIND_TIME = (KEY_TURN_PER_WIND * KEY_POSITIONS) / KEY_TICKS_PER_SEC;
   const KEY_SURGE = 0.4;       // how much brighter the lamp jumps on each wind
   const KEY_SURGE_TIME = 0.7;  // s for that jump to settle
-  const KEY_AXIS = 655;        // the key's spin axis, in the k's SVG units
+  const KEY_AXIS = 550;        // the key's spin axis (the stem's centre), in the T's SVG units
+  const SCREW_TRAVEL = 100;    // how far the T-handle screws down when fully wound (SVG units: bar to nut)
+  const SCREW_PITCH = SCREW_TRAVEL / (KEY_MAX_WINDS * KEY_TURN_PER_WIND); // drop per turn (the threads' spacing)
   const VIEW_F = 0.8;          // the view's perspective: focal length, as a fraction of width
   const VIEW_CX = 0.5;         // and where its centre is, as a fraction of width
   const CLOUD_EVERY = 150;     // s between passing clouds
@@ -454,7 +457,7 @@
   // ── View state ────────────────────────────────────────────────────────
   let revealT0 = null, keyFound = false;
   // The wind-up key: its stored energy (in winds), the lamp's surge, and the key's angle.
-  let energy = 0, surge = 0, keyAng = 0, keyTick = 0, keyShown = 1;
+  let energy = 0, surge = 0, keyAng = 0, keyTick = 0, keyShown = 1, keyDrop = 0;
   let bumpPos = 0, bumpVel = 0, stopPending = false; // the key hitting its stop
   let lampOn = false, lampLevel = 0;
   let crankAng = 0, crankTarget = 0, crankGrab = false, grabAng = 0, crankNotch = 0, atStop = false;
@@ -1263,7 +1266,7 @@
     try { e.target.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ }
   }
 
-  // The "k" is a wind-up key that runs the wall lamp. Each click winds it a
+  // The "T" is a wind-up key that runs the wall lamp. Each click winds it a
   // notch (half a turn) and stores one wind of energy, up to KEY_MAX_WINDS.
   // Each wind makes the lamp jump brighter, then settle to its normal
   // brightness as the key slowly turns back, spending the energy; on the
@@ -1283,7 +1286,7 @@
   }
 
   // The key hits its stop: a shove forward that judders back, a shudder
-  // through the k, and a heavy thunk with a ring of metal.
+  // through the T, and a heavy thunk with a ring of metal.
   function hitStop() {
     bumpVel += 7;
     playStop();
@@ -1330,15 +1333,23 @@
       if (!motion.matches) playRatchet(winding ? 0.6 : 0.22);
       keyTick = tick;
     }
-    // Turning about its horizontal axis, seen face-on, the key squashes
-    // vertically by cos; its back (cos < 0) is a little darker.
-    if (!keyWings || motion.matches) return;
+    // It's a screw: each turn threads the T-handle down into the nut by one
+    // pitch, so its height shows how wound it is, and fully wound it sits on
+    // the nut. This is state, not decoration, so it shows even with reduced motion.
     const a = keyAng + bumpPos;
+    const drop = Math.max(0, Math.min(SCREW_TRAVEL, a / (2 * Math.PI) * SCREW_PITCH));
+    if (keyScrew && Math.abs(drop - keyDrop) > 0.05) {
+      keyDrop = drop;
+      keyScrew.setAttribute('transform', `translate(0 ${drop.toFixed(2)})`);
+    }
+    // Turning about the T's upright stem, seen face-on, the crossbar squashes
+    // horizontally by cos; its back (cos < 0) is a little darker.
+    if (!keyWings || motion.matches) return;
     const c = Math.cos(a);
-    const sy = Math.sign(c || 1) * Math.max(0.03, Math.abs(c));
-    if (Math.abs(sy - keyShown) < 0.002) return;
-    keyShown = sy;
-    keyWings.setAttribute('transform', `translate(0 ${KEY_AXIS}) scale(1 ${sy.toFixed(3)}) translate(0 ${-KEY_AXIS})`);
+    const sx = Math.sign(c || 1) * Math.max(0.03, Math.abs(c));
+    if (Math.abs(sx - keyShown) < 0.002) return;
+    keyShown = sx;
+    keyWings.setAttribute('transform', `translate(${KEY_AXIS} 0) scale(${sx.toFixed(3)} 1) translate(${-KEY_AXIS} 0)`);
     keyWings.style.filter = `brightness(${((0.72 + 0.28 * Math.abs(c)) * (c < 0 ? 0.8 : 1)).toFixed(3)})`;
   }
 

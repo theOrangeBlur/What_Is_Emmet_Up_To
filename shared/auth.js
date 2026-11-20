@@ -139,6 +139,17 @@ window.Auth = (function () {
     return data;
   }
 
+  // Arcade names only Emmet may post under. Anyone else (signed out, or signed
+  // in but not in public.admins) gets "nice try, bucko!" from the name boxes.
+  const RESERVED_NAMES = ['EMMET', 'BIGRED'];
+  async function isNameReserved(name) {
+    const arcade = String(name || '').replace(/[^a-zA-Z]/g, '').toUpperCase();
+    if (!RESERVED_NAMES.includes(arcade)) return false;
+    if (!(await getSession())) return true;
+    const { data, error } = await rpc('is_admin');
+    return !!error || !data;
+  }
+
   // Resolves to { ok: true } or { ok: false, reason }. Null fields are left alone.
   async function updateProfile({ bio = null, answers = null, avatarPath = null, publicFields = null, artPath = null, artTitle = null, nameFont = null,
                                  soundPath = null, soundTitle = null, textFont = null } = {}) {
@@ -220,5 +231,5 @@ window.Auth = (function () {
   }
 
   return { getMyProfile, getUsername, setUsername, usernameAvailable, getSession, onAuthStateChange, signUp, signIn, signOut, resetPasswordForEmail, getAuthHeader, rpc,
-           profileUrl, usernamesFor, getPublicProfile, setProfileNotes, updateProfile, uploadAvatar, uploadArt, uploadSound, uploadPixelSource, avatarUrl, pixelSourceUrl, soundUrl };
+           profileUrl, usernamesFor, getPublicProfile, setProfileNotes, isNameReserved, updateProfile, uploadAvatar, uploadArt, uploadSound, uploadPixelSource, avatarUrl, pixelSourceUrl, soundUrl };
 })();

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Light Bulb Factory</title>
-    <meta name="description" content="The Light Bulb Factory: puzzles, mechanisms and experiences designed to make the world feel full of wonder again.">
+    <title>The Lightbulb Factory</title>
+    <meta name="description" content="The Lightbulb Factory: puzzles, mechanisms and experiences designed to make the world feel full of wonder again.">
     <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
@@ -12,35 +12,48 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=11">
+    <link rel="stylesheet" href="./style.css?v=13">
 </head>
 <body>
     <canvas id="world" aria-hidden="true"></canvas>
 
     <main class="lit" id="content">
         <p class="eyebrow">Est. in the dark</p>
-        <h1>Bulbwor<span id="key" class="windkey"><span class="k-real">k</span><svg viewBox="0 0 902 1200" aria-hidden="true">
+        <h1><span id="key" class="windkey"><span class="key-real">T</span><svg viewBox="0 0 1100 1200" aria-hidden="true">
             <defs>
-                <linearGradient id="kbrass" x1="0" y1="-1" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#f3d99a"/><stop offset=".45" stop-color="#c49a4c"/><stop offset="1" stop-color="#7e5e28"/></linearGradient>
-                <linearGradient id="kcollar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d99a"/><stop offset=".5" stop-color="#b08a44"/><stop offset="1" stop-color="#6e5222"/></linearGradient>
+                <linearGradient id="tbrass" x1="0" y1="-1" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#f3d99a"/><stop offset=".45" stop-color="#c49a4c"/><stop offset="1" stop-color="#7e5e28"/></linearGradient>
+                <linearGradient id="tcollar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d99a"/><stop offset=".5" stop-color="#b08a44"/><stop offset="1" stop-color="#6e5222"/></linearGradient>
+                <!-- Round shading across the threaded shaft. -->
+                <linearGradient id="tround" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a1d08" stop-opacity=".6"/><stop offset=".35" stop-color="#fff3d0" stop-opacity=".25"/><stop offset="1" stop-color="#2a1d08" stop-opacity=".7"/></linearGradient>
+                <!-- One thread per 20 units: the screw's pitch (SCREW_PITCH in factory.js). -->
+                <pattern id="tthread" patternUnits="userSpaceOnUse" x="505" y="0" width="90" height="20">
+                    <rect width="90" height="20" fill="#c49a4c"/>
+                    <path d="M0 15L90 5M0 35L90 25M0 -5L90 -15" stroke="#5a4018" stroke-width="6"/>
+                    <path d="M0 9L90 -1M0 29L90 19" stroke="#f3d99a" stroke-width="3" opacity=".7"/>
+                </pattern>
+                <!-- The screw disappears into the nut below its top edge; the bar's ends, out beyond the nut, drop past it. -->
+                <clipPath id="tclip"><rect x="0" y="-300" width="1100" height="842"/><rect x="-300" y="-300" width="705" height="1500"/><rect x="695" y="-300" width="705" height="1500"/></clipPath>
             </defs>
-            <!-- The k's upright, in the letter's colour. -->
-            <rect x="55" y="222" width="240" height="703" fill="currentColor"/>
-            <!-- The key: a collar and shaft on the upright, and two wings (its "<") that spin. -->
-            <rect x="282" y="598" width="64" height="114" rx="14" fill="url(#kcollar)" stroke="#5a4018" stroke-width="6"/>
-            <rect x="340" y="634" width="46" height="42" fill="url(#kcollar)"/>
-            <g id="key-wings">
-                <g transform="translate(378 655) rotate(-27) scale(1.1)">
-                    <path d="M0 -26C120 -34 230 -88 360 -92A92 92 0 0 1 360 92C230 88 120 34 0 26Z" fill="url(#kbrass)" stroke="#5a4018" stroke-width="8"/>
-                    <circle cx="335" cy="0" r="34" fill="#4a3412"/>
+            <!-- The T's stem, in the letter's colour. -->
+            <rect x="425" y="590" width="250" height="335" fill="currentColor"/>
+            <!-- The key: a T-handle on a threaded shaft that screws down into a nut on the stem as it's wound. -->
+            <g clip-path="url(#tclip)">
+                <g id="key-screw">
+                    <rect x="505" y="440" width="90" height="280" fill="url(#tthread)"/>
+                    <rect x="505" y="440" width="90" height="280" fill="url(#tround)"/>
+                    <g id="key-wings">
+                        <g transform="translate(550 380)">
+                            <path d="M0 -58C160 -62 300 -91 425 -91A91 91 0 0 1 425 91C300 91 160 62 0 58C-160 62 -300 91 -425 91A91 91 0 0 1 -425 -91C-300 -91 -160 -62 0 -58Z" fill="url(#tbrass)" stroke="#5a4018" stroke-width="8"/>
+                            <circle cx="-425" cy="0" r="34" fill="#4a3412"/>
+                            <circle cx="425" cy="0" r="34" fill="#4a3412"/>
+                            <circle cx="0" cy="0" r="40" fill="url(#tcollar)" stroke="#5a4018" stroke-width="6"/>
+                        </g>
+                    </g>
                 </g>
-                <g transform="translate(378 655) rotate(27) scale(1.1)">
-                    <path d="M0 -26C120 -34 230 -88 360 -92A92 92 0 0 1 360 92C230 88 120 34 0 26Z" fill="url(#kbrass)" stroke="#5a4018" stroke-width="8"/>
-                    <circle cx="335" cy="0" r="34" fill="#4a3412"/>
-                </g>
-                <circle cx="378" cy="655" r="30" fill="url(#kcollar)" stroke="#5a4018" stroke-width="6"/>
             </g>
-        </svg></span>s</h1>
+            <!-- The nut: its top edge (y 542) is where the bar's hub seats when fully wound (SCREW_TRAVEL = 100). -->
+            <rect x="405" y="542" width="290" height="62" rx="14" fill="url(#tcollar)" stroke="#5a4018" stroke-width="6"/>
+        </svg></span>he Lightbulb Factory</h1>
         <p class="motto">Crafting lightbulb... moments</p>
         <p class="intro">We design puzzling, strange and wonderful things: mechanisms, puzzle hunts and
             experiences that make the world feel full of mystery again.</p>
@@ -54,11 +67,11 @@
     <div id="crank-zone" class="zone" aria-hidden="true"></div>
 
     <button id="switch" class="switch-btn" type="button" aria-pressed="false" aria-controls="content">Pull the light cord</button>
-    <button id="flip" class="switch-btn" type="button" aria-pressed="false" hidden>Wind the key (the k in Bulbworks)</button>
+    <button id="flip" class="switch-btn" type="button" aria-pressed="false" hidden>Wind the key (the T in The Lightbulb Factory)</button>
     <button id="wind" class="switch-btn" type="button" hidden>Wind the crank</button>
     <button id="unwind" class="switch-btn" type="button" hidden>Unwind the crank</button>
 
-    <script src="./scene-art.js?v=11"></script>
-    <script src="./factory.js?v=43"></script>
+    <script src="./scene-art.js?v=12"></script>
+    <script src="./factory.js?v=45"></script>
 </body>
 </html>
