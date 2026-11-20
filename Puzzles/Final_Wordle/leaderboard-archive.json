@@ -641,5 +641,19 @@
       "time_ms": 26926,
       "guesses": 1
     }
+  ],
+  "20261119": [
+    {
+      "name": "DEREK",
+      "time_ms": 31201,
+      "guesses": 1
+    }
+  ],
+  "20261120": [
+    {
+      "name": "REETS",
+      "time_ms": 94665,
+      "guesses": 1
+    }
   ]
 }
