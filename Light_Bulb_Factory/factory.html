@@ -11,14 +11,14 @@
     <link rel="manifest" href="/media/favicon/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=13">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=19">
 </head>
 <body>
     <canvas id="world" aria-hidden="true"></canvas>
 
     <main class="lit" id="content">
-        <p class="eyebrow">Est. in the dark</p>
+        <!-- <p class="eyebrow">Est. in the dark</p> -->
         <h1><span id="key" class="windkey"><span class="key-real">T</span><svg viewBox="0 0 1100 1200" aria-hidden="true">
             <defs>
                 <linearGradient id="tbrass" x1="0" y1="-1" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#f3d99a"/><stop offset=".45" stop-color="#c49a4c"/><stop offset="1" stop-color="#7e5e28"/></linearGradient>
@@ -55,11 +55,30 @@
             <rect x="405" y="542" width="290" height="62" rx="14" fill="url(#tcollar)" stroke="#5a4018" stroke-width="6"/>
         </svg></span>he Lightbulb Factory</h1>
         <p class="motto">Crafting lightbulb... moments</p>
-        <p class="intro">We design puzzling, strange and wonderful things: mechanisms, puzzle hunts and
+        <p class="intro">Designing puzzling, strange and wonderful things: mechanisms, puzzle hunts and
             experiences that make the world feel full of mystery again.</p>
-        <p class="intro">Have an idea that needs a little light? Let's talk it through.</p>
+        <p class="intro">Have an idea that needs a little light? Let's make it happen.</p>
         <a class="cta" href="https://cal.com/emmet-eckman-kmbihk/intro" target="_blank" rel="noopener">Book a Consultation</a>
     </main>
+
+    <!-- Below the fold, reachable only while the light is on. Cards come from
+         portfolio.generated.json (built from portfolio.json by build-portfolio.js). -->
+    <section id="work" class="portfolio" aria-labelledby="work-title">
+        <div class="portfolio-head">
+            <h2 id="work-title">Selected work</h2>
+            <div class="carousel-nav">
+                <button type="button" class="carousel-btn" data-dir="-1" aria-label="Previous projects">&larr;</button>
+                <button type="button" class="carousel-btn" data-dir="1" aria-label="Next projects">&rarr;</button>
+            </div>
+        </div>
+        <ul class="carousel-track" tabindex="0" aria-label="Projects"></ul>
+        <div id="work-details" class="work-details" role="region" aria-label="Project details"></div>
+        <noscript><p class="portfolio-fallback"><a href="/Projects/projects.html">See all projects &rarr;</a></p></noscript>
+    </section>
+
+    <a class="scroll-cue" href="#work">See my work &darr;</a>
+
+    <a id="home-link" href="/">The Emmet Enquirer &rarr;</a>
 
     <div id="glow" aria-hidden="true"></div>
     <canvas id="cord" aria-hidden="true"></canvas>
@@ -72,6 +91,7 @@
     <button id="unwind" class="switch-btn" type="button" hidden>Unwind the crank</button>
 
     <script src="./scene-art.js?v=12"></script>
-    <script src="./factory.js?v=45"></script>
+    <script src="./factory.js?v=49"></script>
+    <script src="./portfolio.js?v=2"></script>
 </body>
 </html>

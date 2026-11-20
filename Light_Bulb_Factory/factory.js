@@ -55,7 +55,11 @@
   let W = 0, H = 0, dpr = 1;
   let n = 0, x, y, px, py;
   let anchorX = 0, pull = 0, armed = true;
-  let grab = -1, gx = 0, gy = 0;
+  let grab = -1, gx = 0, gy = 0;    // gx, gy: where the grabbing pointer is, on screen
+  // The cord hangs from the top of the page, not the screen, so scrolling
+  // down to the portfolio carries it up and out of sight. Its beads live in
+  // page coordinates; everything on screen (pointer, light) is offset by this.
+  let scrollOff = 0;
   let cur = null, prevCur = null;   // pointer position (hovering mouse or active touch)
   let curR = CURSOR_R;
   let tugUntil = 0;
@@ -108,7 +112,7 @@
     // A grabbed bead chases the pointer on a spring, so it lags and resists.
     if (grab > 0) {
       x[grab] += (gx - x[grab]) * GRAB_SPRING;
-      y[grab] += (gy - y[grab]) * GRAB_SPRING;
+      y[grab] += (gy + scrollOff - y[grab]) * GRAB_SPRING;
     } else if (cx !== null) {
       // The cursor is a soft ball: beads are only partly pushed out each step,
       // and pick up a little of its motion.
@@ -138,7 +142,7 @@
     // Spring-loaded anchor: it gives when the cord is pulled taut downward.
     let target = 0;
     if (grab > 0) {
-      const dx = gx - anchorX, dy = gy - ANCHOR_REST_Y;
+      const dx = gx - anchorX, dy = gy + scrollOff - ANCHOR_REST_Y;
       const d = Math.hypot(dx, dy);
       const reach = grab * SEG;
       if (d > reach && dy / d > 0.6) target = Math.min(TRAVEL, (d - reach) * PULL_GAIN);
@@ -174,10 +178,10 @@
     }
   }
 
-  // Only the teardrop at the end can be grabbed.
+  // Only the teardrop at the end can be grabbed. (cx, cy: on screen.)
   function hitTest(cx, cy) {
     const k = n - 1;
-    return Math.hypot(x[k] - cx, y[k] - cy) < GRAB_RADIUS ? k : -1;
+    return Math.hypot(x[k] - cx, y[k] - scrollOff - cy) < GRAB_RADIUS ? k : -1;
   }
 
   // ── The light ─────────────────────────────────────────────────────────
@@ -189,6 +193,11 @@
     // starts to faintly glow.
     if (lit && revealT0 === null) { revealT0 = now + 900; syncSceneButtons(); }
     root.classList.toggle('is-lit', lit);
+    // In the dark the page can't scroll and the portfolio below vanishes, so
+    // anyone down there is carried back up to the cord.
+    if (!lit && window.scrollY > 0) {
+      window.scrollTo({ top: 0, behavior: motion.matches ? 'instant' : 'smooth' });
+    }
     btn.setAttribute('aria-pressed', String(lit));
     btn.textContent = lit ? 'Pull the light cord (light is on)' : 'Pull the light cord';
   }
@@ -210,8 +219,8 @@
   }
 
   // The page content is in the room, in front of the glass. It is masked so
-  // it shows only where light falls on it: the bulb's pool, and the
-  // lighthouse beam when it sweeps across the window.
+  // it shows only where light falls on it: the bulb's pool and the wall
+  // lamp's glow.
   const HIDDEN = 'linear-gradient(transparent, transparent)';
   const LIGHT_FULL = 0.55;    // fraction of the pool's radius that's fully readable
   const cta = content.querySelector('.cta');
@@ -226,14 +235,9 @@
     level = warmUp(lit, levelFrom, (now - lightT0) / 1000);
     const box = content.getBoundingClientRect();
     const ox = box.left, oy = box.top;
+    // The lighthouse beam brightens the room but never the text: only the
+    // room bulb and the wall lamp reveal it.
     const layers = [];
-
-    // While the beam faces the house, the page lifts a little (noticeable
-    // when the room light is off; with it on, the text is already lit).
-    if (beamIn > 0.004) {
-      const fa = `rgba(0,0,0,${Math.min(1, PAGE_BRIGHTEN * beamIn).toFixed(3)})`;
-      layers.push(`linear-gradient(${fa}, ${fa})`);
-    }
 
     // The wall lamp lights the text near the wall, so it reads fully there.
     if (lampLevel > 0.004 && G) {
@@ -276,9 +280,10 @@
   }
 
   // ── Drawing ───────────────────────────────────────────────────────────
+  // How much room light falls on a bead (bx, by: page coordinates).
   function lightAt(bx, by) {
     if (level <= 0) return 0;
-    const d = Math.hypot(bx - lx, by - ly);
+    const d = Math.hypot(bx - lx, by - scrollOff - ly);
     return level * Math.max(0, 1 - d / lrRoom);
   }
 
@@ -290,6 +295,8 @@
       : 0.78 + 0.22 * Math.sin((2 * Math.PI * now) / (PULSE_PERIOD * 1000));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    if (y[n - 1] - scrollOff < -KNOB_R * 4) { placeZone(); return; } // scrolled out of sight
+    ctx.setTransform(dpr, 0, 0, dpr, 0, -scrollOff * dpr);
 
     // In the dark the cord is a flat, cartoonish silhouette: one light color,
     // a chunky string, no shading.
@@ -350,7 +357,7 @@
       // Highlight leans toward the light (or straight up in the dark).
       let hx = 0, hy = -1;
       if (l > 0) {
-        const dx = lx - x[i], dy = ly - y[i], d = Math.hypot(dx, dy) || 1;
+        const dx = lx - x[i], dy = ly + scrollOff - y[i], d = Math.hypot(dx, dy) || 1;
         hx = dx / d; hy = dy / d;
       }
       const ox = x[i] + hx * r * 0.4, oy = y[i] + hy * r * 0.4;
@@ -395,7 +402,7 @@
   function placeZone() {
     const s = (GRAB_RADIUS + 6) * 2;
     zone.style.transform =
-      `translate(${(x[n - 1] - s / 2).toFixed(0)}px, ${(y[n - 1] - s / 2).toFixed(0)}px)`;
+      `translate(${(x[n - 1] - s / 2).toFixed(0)}px, ${(y[n - 1] - scrollOff - s / 2).toFixed(0)}px)`;
     zone.style.width = zone.style.height = s + 'px';
   }
 
@@ -433,9 +440,8 @@
   const CLOUD_CROSS = 85;      // s for one to cross the sky
   // While the beam faces the house (each turn, rising and falling smoothly):
   const BEAM_IN_W = 0.45;      // rad either side of dead-on that it has any effect
-  const ROOM_BRIGHTEN = 0.3;   // how much lighter the room gets (0 to 1)
+  const ROOM_BRIGHTEN = 0.6;  // how much lighter the room gets (0 to 1)
   const OUTSIDE_DIM = 0.5;     // how much the view outside darkens (0 to 1)
-  const PAGE_BRIGHTEN = 0.3;   // how much the text lifts when the room light is off (0 to 1)
   const LAMP = [255, 196, 120];
   const WARM = [255, 214, 160];
   // Light the moon casts on the landscape. Black: the moon and stars are just
@@ -1569,6 +1575,7 @@
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     acc += dt;
+    scrollOff = window.scrollY;
     let steps = Math.floor(acc / STEP);
     acc -= steps * STEP;
     steps = Math.min(steps, 8);
@@ -1581,7 +1588,7 @@
       const cvy = cur ? (cur.y - from.y) / steps : 0;
       for (let s = 1; s <= steps; s++) {
         const cx = cur ? from.x + cvx * s : null;
-        const cy = cur ? from.y + cvy * s : null;
+        const cy = cur ? from.y + cvy * s + scrollOff : null;
         step(now, cx, cy, cvx, cvy);
       }
       prevCur = cur ? { x: cur.x, y: cur.y } : null;
@@ -1593,6 +1600,10 @@
     renderWorld(now);
     requestAnimationFrame(frame);
   }
+
+  // The page always opens dark, and so at the top, never where a reload left it.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   layout();
   // If the browser drops the view's canvas contents, redraw the art when it's back.

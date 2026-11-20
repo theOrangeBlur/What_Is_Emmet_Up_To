@@ -156,4 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sortSelect) {
         sortSelect.addEventListener('change', applyFiltersAndSort);
     }
+
+
+    // A link like projects.html#rune-cube (from the Lightbulb Factory's
+    // carousel) opens that project and brings it into view.
+    const linked = location.hash.slice(1);
+    if (linked && document.getElementById(`${linked}-details`)) {
+        toggleProject(linked);
+        document.getElementById(linked).scrollIntoView({ block: 'start' });
+    }
 });

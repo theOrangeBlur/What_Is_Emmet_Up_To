@@ -299,7 +299,7 @@ function generatePage(projects) {
     <script src="../shared/auth.js?v=20261119"></script>
     <script src="../shared/auth-widget.js"></script>
     <script src="../shared/people.js?v=20261104"></script>
-    <script src="../shared/awards.js"></script>
+    <script src="../shared/awards.js?v=20261105b"></script>
     <script src="../shared/unlocks.js"></script>
     <script src="../shared/comments.js"></script>
 </head>
@@ -411,6 +411,11 @@ function build() {
     console.log(`\nGenerated: ${OUTPUT_FILE}`);
 
     generateLatestProjectJson(projects);
+
+    // The Lightbulb Factory's carousel is built from the same projects.
+    require('../Light_Bulb_Factory/build-portfolio.js').buildPortfolio();
 }
 
-build();
+module.exports = { parseFrontMatter, formatDate, findProjectFiles, markdownToHtml, PROJECTS_DIR };
+
+if (require.main === module) build();
