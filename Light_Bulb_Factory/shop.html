@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Cube Gifts | The Lightbulb Factory</title>
+    <meta name="description" content="Order a 3D-printed marble-run puzzle cube as a gift: pick the difficulty, the color and the message revealed when it's solved.">
+    <link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./shop.css?v=3">
+    <script>
+        window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../shared/auth.js?v=20261119"></script>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="./factory.html">&larr; The Lightbulb Factory</a>
+        <a href="/">The Emmet Enquirer &rarr;</a>
+    </nav>
+
+    <header class="shop-head">
+        <p class="eyebrow">Holiday orders? &middot; <span id="cutoff-note"></span></p>
+        <h1>Puzzle Cubes</h1>
+        <p class="lede">Challenge yourself to assemble a cube out of these seven pieces, such that the ball travels through each piece</p>
+    </header>
+
+    <div class="shop">
+        <!-- Left: the preview stays in view while the options scroll. -->
+        <aside class="preview" aria-label="Preview">
+            <div class="preview-card">
+                <svg id="cube" viewBox="0 0 200 200" role="img" aria-labelledby="cube-title">
+                    <title id="cube-title">Preview of your cube</title>
+                </svg>
+                <p class="preview-note">Rough color preview.</p>
+            </div>
+            <video class="preview-video" src="../Projects/SOMA%20Cube/images/Marble_Run.mp4"
+                   poster="../Projects/SOMA%20Cube/images/Final.jpg"
+                   muted loop playsinline controls preload="none"></video>
+        </aside>
+
+        <form id="order" class="options" novalidate>
+            <fieldset class="step">
+                <legend><span class="num">1</span> Difficulty</legend>
+                <div class="cards" id="difficulty"></div>
+            </fieldset>
+
+            <fieldset class="step">
+                <legend><span class="num">2</span> Coloring</legend>
+                <div class="swatches" id="colors"></div>
+                <div class="custom-color" id="custom-color" hidden>
+                    <label>Describe it
+                        <input type="text" name="color_custom" maxlength="200" placeholder="e.g. silk copper, glow-in-the-dark, two-tone red and white">
+                    </label>
+                    <label class="picker">Closest shade (for the preview)
+                        <input type="color" name="color_hex" value="#b06ad8">
+                    </label>
+                    <p class="hint">Special-order filament can add a few days.</p>
+                </div>
+            </fieldset>
+
+            <fieldset class="step">
+                <legend><span class="num">3</span> Solve message</legend>
+                <div class="cards" id="message-type"></div>
+                <div id="custom-message" hidden>
+                    <label>Your message
+                        <input type="text" name="message_custom" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. LOVE YOU MOM">
+                    </label>
+                    <p class="hint"><span id="letter-count"></span> Letters A&ndash;Z and numbers only. Spaces are fine but don't count.</p>
+                </div>
+            </fieldset>
+
+            <fieldset class="step">
+                <legend><span class="num">4</span> Delivery &amp; details</legend>
+                <div class="grid">
+                    <label>Quantity
+                        <input type="number" name="quantity" min="1" max="10" value="1" required>
+                    </label>
+                    <label>Needed by (optional)
+                        <input type="date" name="needed_by">
+                    </label>
+                    <label>Your name
+                        <input type="text" name="name" maxlength="120" autocomplete="name" required>
+                    </label>
+                    <label>Email
+                        <input type="email" name="email" maxlength="200" autocomplete="email" required>
+                    </label>
+                </div>
+                <div class="cards cards-sm" id="delivery"></div>
+                <label id="address-wrap">Shipping address
+                    <textarea name="address" rows="3" maxlength="500" autocomplete="street-address"></textarea>
+                </label>
+                <label>Anything else? (optional)
+                    <textarea name="notes" rows="2" maxlength="1000" placeholder="Gift note, questions, a wild idea..."></textarea>
+                </label>
+                <!-- Honeypot: people never see it; bots fill it in. -->
+                <label class="hp" aria-hidden="true">Leave this empty
+                    <input type="text" name="website" tabindex="-1" autocomplete="off">
+                </label>
+            </fieldset>
+
+            <section class="summary" aria-live="polite">
+                <h2>Estimate</h2>
+                <ul id="lines"></ul>
+                <p class="total"><span>Total</span><span id="total"></span></p>
+                <p class="fine">No payment now. I'll email you within a day to confirm the details and send an invoice.
+                    Your cube goes on the printer once it's paid.</p>
+                <p class="error" id="error" role="alert"></p>
+                <button type="submit" class="cta" id="submit">Request my cube</button>
+            </section>
+        </form>
+    </div>
+
+    <section class="done" id="done" hidden tabindex="-1">
+        <h2>Order request received! 🎁</h2>
+        <p>Order <strong id="done-id"></strong>, estimated <strong id="done-price"></strong>.</p>
+        <p>I'll email <strong id="done-email"></strong> within a day to confirm and send an invoice.
+            If you don't see it, check your spam folder.</p>
+        <a class="cta" href="./shop.html">Order another</a>
+    </section>
+
+    <script src="./shop.js?v=3"></script>
+</body>
+</html>

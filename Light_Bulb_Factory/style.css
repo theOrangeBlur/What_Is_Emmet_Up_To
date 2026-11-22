@@ -123,6 +123,8 @@ h1 {
   background: var(--brass);
   color: var(--night);
 }
+.cta + .cta { margin-left: 10px; }
+.cta-gift { border-style: dashed; }
 
 /* Way back to the main site: appears once the light is on. */
 /* Placed at the top of the page (not pinned to the screen), so it scrolls away with the hero. */

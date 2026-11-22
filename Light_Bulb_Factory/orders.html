@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Cube Orders | The Lightbulb Factory</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./shop.css?v=3">
+    <link rel="stylesheet" href="../shared/auth-widget.css">
+    <script>
+        window.SUPABASE_URL = 'https://nsocmpzeccpoatrfddjf.supabase.co';
+        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2NtcHplY2Nwb2F0cmZkZGpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMTA1NzksImV4cCI6MjA5Njc4NjU3OX0.9seqVuPCI9weANIy3eKDBDH32s6DvrlOcmMbSF8xAsM';
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="../shared/auth.js?v=20261119"></script>
+    <script src="../shared/auth-widget.js"></script>
+    <style>
+        .admin { max-width: 1100px; margin: 0 auto; padding: 16px 16px 80px; }
+        .admin h1 { font-size: 40px; margin-bottom: 4px; }
+        .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+        .filters button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--soft); cursor: pointer; }
+        .filters button.on { border-color: var(--brass-hi); color: var(--brass-hi); }
+        .order { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 16px; margin-bottom: 12px; display: grid; gap: 8px; }
+        .order-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+        .order-top strong { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--brass-hi); }
+        .order dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0; font-size: 13px; }
+        .order dt { color: var(--soft); }
+        .order dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .order-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .order select { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 8px; background: var(--night); color: var(--paper); border: 1px solid var(--line); }
+        .order textarea { font-size: 13px; }
+        .pill { font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--brass); color: var(--brass-hi); }
+        .muted { color: var(--soft); }
+        .small-btn { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--brass); background: none; color: var(--brass-hi); cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="./shop.html">&larr; Shop</a>
+    </nav>
+    <main class="admin">
+        <h1>Cube orders</h1>
+        <p class="muted" id="summary">Sign in with the admin account to see orders.</p>
+        <div class="filters" id="filters"></div>
+        <div id="list"></div>
+    </main>
+
+    <script>
+    const STATUSES = ['requested', 'confirmed', 'paid', 'printing', 'shipped', 'cancelled'];
+    const money = c => '$' + (c / 100).toFixed(c % 100 ? 2 : 0);
+    let orders = [];
+    let filter = 'open';
+
+    const el = (tag, props = {}, kids = []) => {
+        const n = Object.assign(document.createElement(tag), props);
+        kids.forEach(k => n.append(k));
+        return n;
+    };
+
+    function describe(o) {
+        const color = o.color === 'custom' ? `Custom: ${o.color_custom}` : o.color;
+        const msg = o.message_type === 'blank' ? 'Blank'
+            : o.message_type === 'surprise' ? 'Surprise me'
+            : `Custom: ${o.message_text}`;
+        return { color, msg };
+    }
+
+    function mailto(o) {
+        const { color, msg } = describe(o);
+        const subject = `Your puzzle cube order #${o.id}`;
+        const body = [
+            `Hi ${o.name.split(' ')[0]},`,
+            '',
+            `Thanks for ordering a puzzle cube! Here's what I have:`,
+            '',
+            `  ${o.quantity} x ${o.difficulty === 'hard' ? 'Hard' : 'Medium'} cube`,
+            `  Color: ${color}`,
+            `  Message: ${msg}`,
+            `  Delivery: ${o.delivery === 'ship' ? 'Shipping to\n    ' + (o.address || '').replace(/\n/g, '\n    ') : 'Pickup'}`,
+            o.needed_by ? `  Needed by: ${o.needed_by}` : null,
+            '',
+            `Total: ${money(o.est_price_cents)}`,
+            '',
+            `If that all looks right, you can pay here: [INVOICE LINK]`,
+            `I'll start printing as soon as it's paid.`,
+            '',
+            '- Emmet',
+        ].filter(l => l !== null).join('\n');
+        return `mailto:${encodeURIComponent(o.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function render() {
+        const shown = orders.filter(o =>
+            filter === 'all' ? true : filter === 'open' ? !['shipped', 'cancelled'].includes(o.status) : o.status === filter);
+        const open = orders.filter(o => !['shipped', 'cancelled'].includes(o.status));
+        const cubes = open.reduce((s, o) => s + o.quantity, 0);
+        document.getElementById('summary').textContent =
+            `${orders.length} orders total · ${open.length} open (${cubes} cubes to make) · ` +
+            `${money(open.reduce((s, o) => s + o.est_price_cents, 0))} open value`;
+
+        const f = document.getElementById('filters');
+        f.innerHTML = '';
+        ['open', ...STATUSES, 'all'].forEach(s => {
+            const n = orders.filter(o => s === 'all' || (s === 'open' ? !['shipped', 'cancelled'].includes(o.status) : o.status === s)).length;
+            f.append(el('button', { textContent: `${s} (${n})`, className: s === filter ? 'on' : '', onclick: () => { filter = s; render(); } }));
+        });
+
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        if (!shown.length) list.append(el('p', { className: 'muted', textContent: 'Nothing here.' }));
+        shown.forEach(o => {
+            const { color, msg } = describe(o);
+            const dl = el('dl');
+            [
+                ['Cube', `${o.quantity} × ${o.difficulty}`],
+                ['Color', color],
+                ['Message', msg],
+                ['Delivery', o.delivery === 'ship' ? `Ship to:\n${o.address}` : 'Pickup'],
+                ['Needed by', o.needed_by || '—'],
+                ['Email', o.email],
+                ['Notes', o.notes || '—'],
+            ].forEach(([k, v]) => dl.append(el('dt', { textContent: k }), el('dd', { textContent: v })));
+
+            const sel = el('select');
+            STATUSES.forEach(s => sel.append(el('option', { value: s, textContent: s, selected: s === o.status })));
+            const notes = el('textarea', { rows: 2, value: o.admin_notes || '', placeholder: 'Private notes (invoice sent, tracking #, ...)' });
+            const save = el('button', { className: 'small-btn', textContent: 'Save', onclick: async () => {
+                save.textContent = 'Saving…';
+                const { error } = await Auth.rpc('set_cube_order_status', { p_id: o.id, p_status: sel.value, p_admin_notes: notes.value });
+                if (error) { save.textContent = 'Failed'; return; }
+                o.status = sel.value; o.admin_notes = notes.value;
+                render();
+            } });
+
+            list.append(el('article', { className: 'order' }, [
+                el('div', { className: 'order-top' }, [
+                    el('strong', { textContent: `#${o.id} · ${o.name}` }),
+                    el('span', { className: 'muted', textContent: `${new Date(o.created_at).toLocaleString()} · ${money(o.est_price_cents)} ` }, [
+                        el('span', { className: 'pill', textContent: o.status }),
+                    ]),
+                ]),
+                dl,
+                notes,
+                el('div', { className: 'order-actions' }, [
+                    sel, save,
+                    el('a', { className: 'small-btn', href: mailto(o), textContent: 'Draft confirmation email' }),
+                ]),
+            ]));
+        });
+    }
+
+    async function load() {
+        const session = await Auth.getSession();
+        if (!session) {
+            orders = []; document.getElementById('list').innerHTML = ''; document.getElementById('filters').innerHTML = '';
+            document.getElementById('summary').textContent = 'Sign in with the admin account to see orders.';
+            return;
+        }
+        const { data, error } = await Auth.rpc('list_cube_orders');
+        if (error) {
+            document.getElementById('summary').textContent = /not allowed/.test(error.message) ? 'This account isn’t an admin.' : 'Couldn’t load orders: ' + error.message;
+            return;
+        }
+        orders = data || [];
+        render();
+    }
+
+    Auth.onAuthStateChange(() => load());
+    load();
+    </script>
+</body>
+</html>

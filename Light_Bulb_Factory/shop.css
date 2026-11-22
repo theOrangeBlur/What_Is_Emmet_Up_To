@@ -1,0 +1,289 @@
+/* Puzzle cube order page: the Lightbulb Factory's palette, lights left on. */
+:root {
+  --night: #070605;
+  --panel: #14110d;
+  --line: #3a3124;
+  --paper: #f3ead8;
+  --soft: #c9bda6;
+  --brass: #d8a64a;
+  --brass-hi: #f4cd7a;
+  --bad: #e2725b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--night);
+  color: var(--paper);
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  line-height: 1.55;
+}
+body {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(244, 205, 122, .14), transparent 70%),
+    var(--night);
+  min-height: 100vh;
+}
+
+a { color: var(--brass-hi); }
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+  font-size: 13px;
+}
+.top-nav a { text-decoration: none; color: var(--soft); }
+.top-nav a:hover { color: var(--brass-hi); }
+
+.shop-head {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 16px 8px;
+}
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+h1, h2, legend {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(36px, 7vw, 64px);
+  line-height: 1;
+  color: var(--brass-hi);
+}
+.lede { max-width: 640px; color: var(--soft); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.shop {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+  align-items: start;
+}
+.shop[hidden] { display: none; }
+
+.preview {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 16px;
+}
+.preview-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+#cube { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto; }
+.preview-msg {
+  margin: 8px 0 0;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: .08em;
+  min-height: 1.5em;
+}
+.preview-note { margin: 4px 0 0; font-size: 12px; color: var(--soft); opacity: .8; }
+.preview-video {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #000;
+}
+
+/* ── Steps ──────────────────────────────────────────────────────────── */
+.options { display: grid; gap: 20px; }
+.step {
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+legend {
+  padding: 0 6px;
+  font-size: 20px;
+}
+.num {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+  color: var(--night);
+  font-size: 15px;
+  vertical-align: 2px;
+}
+
+/* Radio cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.cards-sm { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.card {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.card:hover { border-color: var(--brass); }
+.card:has(input:checked) {
+  border-color: var(--brass-hi);
+  background: rgba(216, 166, 74, .12);
+  box-shadow: 0 0 0 1px var(--brass-hi) inset;
+}
+.card:has(input:focus-visible) { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+.card input, .swatch input, .chip input { position: absolute; opacity: 0; pointer-events: none; }
+.card-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.card-name { font-weight: 700; }
+.card-price { color: var(--brass-hi); font-size: 13px; white-space: nowrap; }
+.card-time { font-size: 13px; color: var(--brass); }
+.card-blurb { font-size: 12.5px; color: var(--soft); }
+
+/* Color swatches */
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.swatch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.swatch:hover { border-color: var(--brass); }
+.swatch:has(input:checked) { border-color: var(--brass-hi); background: rgba(216, 166, 74, .12); }
+.swatch:has(input:focus-visible) { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+.dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .25);
+}
+.swatch-custom .dot {
+  background: conic-gradient(#e4572e, #f3a712, #76b041, #2a9df4, #8e44ad, #e4572e);
+}
+.custom-color { display: grid; gap: 10px; }
+.custom-color[hidden], #custom-message[hidden], .chips[hidden], #address-wrap[hidden] { display: none; }
+
+/* Set-message chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  position: relative;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  letter-spacing: .06em;
+  font-size: 13px;
+}
+.chip:has(input:checked) { border-color: var(--brass-hi); background: rgba(216, 166, 74, .12); color: var(--brass-hi); }
+.chip:has(input:focus-visible) { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+
+/* Fields */
+label { display: grid; gap: 6px; font-size: 13px; color: var(--soft); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+input[type="text"], input[type="email"], input[type="number"], input[type="date"], textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--night);
+  color: var(--paper);
+  font: inherit;
+  font-size: 14px;
+  color-scheme: dark;
+}
+input:focus, textarea:focus { outline: none; border-color: var(--brass-hi); }
+input[name="message_custom"] { text-transform: uppercase; letter-spacing: .08em; }
+.picker { grid-template-columns: auto 1fr; align-items: center; }
+input[type="color"] { width: 44px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: none; padding: 2px; }
+.hint { margin: 0; font-size: 12px; color: var(--soft); }
+#letter-count.over { color: var(--bad); font-weight: 700; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ── Summary ────────────────────────────────────────────────────────── */
+.summary {
+  padding: 20px;
+  border: 1px solid var(--brass);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(216, 166, 74, .1), rgba(216, 166, 74, .02));
+}
+.summary h2 { margin: 0 0 8px; font-size: 20px; }
+#lines { list-style: none; margin: 0; padding: 0; }
+#lines li, .total { display: flex; justify-content: space-between; gap: 12px; }
+#lines li { padding: 4px 0; color: var(--soft); font-size: 14px; }
+.total {
+  margin: 8px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brass-hi);
+}
+.fine { font-size: 12px; color: var(--soft); }
+.error { min-height: 1.2em; margin: 0 0 8px; color: var(--bad); font-size: 13px; }
+
+.cta {
+  display: inline-block;
+  padding: 12px 26px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  background: var(--brass);
+  color: var(--night);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.cta:hover, .cta:focus-visible { background: var(--brass-hi); }
+.cta:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Done ───────────────────────────────────────────────────────────── */
+.done {
+  max-width: 640px;
+  margin: 32px auto 80px;
+  padding: 28px 20px;
+  border: 1px solid var(--brass);
+  border-radius: 16px;
+  background: var(--panel);
+  text-align: center;
+}
+.done:focus { outline: none; }
+.done h2 { margin-top: 0; color: var(--brass-hi); }
+
+/* ── Phones ─────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .shop { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .preview { position: static; grid-template-columns: minmax(0, 1fr); }
+  .preview-video { display: none; }
+  .step, .summary { padding: 16px; }
+}
