@@ -44,16 +44,17 @@ body {
   position: fixed;
   top: 18px;
   left: 18px;
-  font-size: 9px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: #6aaf63;
   text-decoration: none;
   transition: color 0.15s;
   z-index: 5;
 }
 .home-link:hover {
-  color: var(--text2);
+  color: #8fd488;
 }
 .hd {
   font-family: 'Syne', sans-serif;

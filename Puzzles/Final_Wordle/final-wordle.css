@@ -38,14 +38,15 @@ body {
   position: fixed;
   top: 18px;
   left: 18px;
-  font-size: 9px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: var(--green-light);
   text-decoration: none;
   transition: color .15s;
 }
-.home-link:hover { color: var(--text2); }
+.home-link:hover { color: #8fd488; }
 #yesterday {
   position: fixed;
   bottom: 18px;
