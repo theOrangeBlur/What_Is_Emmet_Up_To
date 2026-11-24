@@ -655,5 +655,17 @@
       "time_ms": 94665,
       "guesses": 1
     }
+  ],
+  "20261124": [
+    {
+      "name": "KEVIN",
+      "time_ms": 27276,
+      "guesses": 1
+    },
+    {
+      "name": "BIGRED",
+      "time_ms": 114434,
+      "guesses": 1
+    }
   ]
 }
